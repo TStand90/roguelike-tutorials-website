@@ -1,0 +1,821 @@
+---
+title: "Part 10 - Saving and loading"
+date: 2019-03-30T09:34:04-07:00
+draft: false
+---
+
+
+        <p>
+            Saving and loading is essential to almost every roguelike, but it can be a pain to manage if you don't start
+        early. By the end of this chapter, our game will be able to save and load one file to the disk, which you
+        could easily expand to multiple saves if you wanted to. But before we get into that, let's focus on our main
+        game loop.
+        </p>
+
+        <p>
+            The <code>engine.py</code> file is about 250 lines long right now. In the grand scheme of things, that
+        really isn't that bad (I've worked on files that are 10,000 lines long), but let's face it: a lot of what's
+        in there doesn't need to be. Furthermore, the <code>main</code> function could be broken up into
+        initialization and the main game loop, which will make saving and loading that much easier.
+        </p>
+
+        <p>
+        The first step is to move the initialization of the variables outside the main game loop as much as we can.
+        We'll create a few functions that will do things like create the player, create the map, and load variables
+        like <code>map_width</code> and <code>fov_algorithm</code>. Let's create a new folder called
+        <code>loader_functions</code>, and put a new file in it called <code>initialize_new_game.py</code>.
+        </p>
+
+        <p>
+        Our first function in this new file will return the variables that are currently at the top of the
+        <code>main</code> function. It looks like this:
+        </p>
+
+    <pre><span style="color: green">import tcod as libtcod
+
+
+def get_constants():
+    window_title = 'Roguelike Tutorial Revised'
+
+    screen_width = 80
+    screen_height = 50
+
+    bar_width = 20
+    panel_height = 7
+    panel_y = screen_height - panel_height
+
+    message_x = bar_width + 2
+    message_width = screen_width - bar_width - 2
+    message_height = panel_height - 1
+
+    map_width = 80
+    map_height = 43
+
+    room_max_size = 10
+    room_min_size = 6
+    max_rooms = 30
+
+    fov_algorithm = 0
+    fov_light_walls = True
+    fov_radius = 10
+
+    max_monsters_per_room = 3
+    max_items_per_room = 2
+
+    colors = {
+        'dark_wall': libtcod.Color(0, 0, 100),
+        'dark_ground': libtcod.Color(50, 50, 150),
+        'light_wall': libtcod.Color(130, 110, 50),
+        'light_ground': libtcod.Color(200, 180, 50)
+    }
+
+    constants = {
+        'window_title': window_title,
+        'screen_width': screen_width,
+        'screen_height': screen_height,
+        'bar_width': bar_width,
+        'panel_height': panel_height,
+        'panel_y': panel_y,
+        'message_x': message_x,
+        'message_width': message_width,
+        'message_height': message_height,
+        'map_width': map_width,
+        'map_height': map_height,
+        'room_max_size': room_max_size,
+        'room_min_size': room_min_size,
+        'max_rooms': max_rooms,
+        'fov_algorithm': fov_algorithm,
+        'fov_light_walls': fov_light_walls,
+        'fov_radius': fov_radius,
+        'max_monsters_per_room': max_monsters_per_room,
+        'max_items_per_room': max_items_per_room,
+        'colors': colors
+    }
+
+    return constants</span></pre>
+
+
+        <p>
+            <i>*Note: <code>window_title</code> is new. Before, we were just passing the title of the window as
+            a string, but we might as well define it as part of this dictionary.</i>
+        </p>
+
+        <p>
+        Why the name "constants"? Python doesn't have a way to declare a variable that never changes (Java has
+        "final", C# has "readonly", etc.), so I wanted a name that conveys the fact that these variable's
+        <i>shouldn't</i> change. The program <i>could, theoretically</i> alter them during the course of the game,
+        but for now, we won't do that. You can use another name if you prefer, like "game_variables" or something
+        to that effect.
+        </p>
+
+        <p>
+        Let's put this function to work in our <code>engine.py</code> file. Import the function first:
+        </p>
+
+
+        <pre>...
+from input_handlers import handle_keys, handle_mouse
+<span style="color: green">from loader_functions.initialize_new_game import get_constants</span>
+from map_objects.game_map import GameMap
+...</pre>
+
+        <p>
+        Then, call it in the first line of <code>main</code>. Let's also remove those same variables :
+        </p>
+
+            <pre>def main():
+    <span style="color: green">constants = get_constants()</span>
+
+    <span style="color: red; text-decoration: line-through">screen_width = 80</span>
+    <span style="color: red; text-decoration: line-through">screen_height = 50</span>
+
+    <span style="color: red; text-decoration: line-through">bar_width = 20</span>
+    <span style="color: red; text-decoration: line-through">panel_height = 7</span>
+    <span style="color: red; text-decoration: line-through">panel_y = screen_height - panel_height</span>
+
+    <span style="color: red; text-decoration: line-through">message_x = bar_width + 2</span>
+    <span style="color: red; text-decoration: line-through">message_width = screen_width - bar_width - 2</span>
+    <span style="color: red; text-decoration: line-through">message_height = panel_height - 1</span>
+
+    <span style="color: red; text-decoration: line-through">map_width = 80</span>
+    <span style="color: red; text-decoration: line-through">map_height = 43</span>
+
+    <span style="color: red; text-decoration: line-through">room_max_size = 10</span>
+    <span style="color: red; text-decoration: line-through">room_min_size = 6</span>
+    <span style="color: red; text-decoration: line-through">max_rooms = 30</span>
+
+    <span style="color: red; text-decoration: line-through">fov_algorithm = 0</span>
+    <span style="color: red; text-decoration: line-through">fov_light_walls = True</span>
+    <span style="color: red; text-decoration: line-through">fov_radius = 10</span>
+
+    <span style="color: red; text-decoration: line-through">max_monsters_per_room = 3</span>
+    <span style="color: red; text-decoration: line-through">max_items_per_room = 2</span>
+
+    <span style="color: red; text-decoration: line-through">colors = {</span>
+        <span style="color: red; text-decoration: line-through">'dark_wall': (0, 0, 100),</span>
+        <span style="color: red; text-decoration: line-through">'dark_ground': (50, 50, 150),</span>
+        <span style="color: red; text-decoration: line-through">'light_wall': (130, 110, 50),</span>
+        <span style="color: red; text-decoration: line-through">'light_ground': (200, 180, 50)</span>
+    <span style="color: red; text-decoration: line-through">}</span></pre>
+
+            <p>
+            Okay, so if you're using an IDE (like PyCharm), then it's probably going crazy right now. Obviously we
+            can't just remove that many variables and expect everything to be just fine. We have to modify all the times
+            we used those "constant" variables directly, and replace then with a lookup to the <code>constants</code>
+            dictionary.
+            </p>
+
+    <pre>    ...
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    <span style="color: red; text-decoration: line-through;">libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)</span>
+    <span style="color: green">libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)</span>
+
+    <span style="color: red; text-decoration: line-through">con = libtcod.console_new(screen_width, screen_height)</span>
+    <span style="color: red; text-decoration: line-through">panel = libtcod.console_new(screen_width, panel_height)</span>
+    <span style="color: green">con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])</span>
+
+    <span style="color: red; text-decoration: line-through">game_map = GameMap(map_width, map_height)</span>
+    <span style="color: red; text-decoration: line-through">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,</span>
+                      <span style="color: red; text-decoration: line-through">max_monsters_per_room, max_items_per_room)</span>
+    <span style="color: green">game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])</span>
+
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    <span style="color: red; text-decoration: line-through">message_log = MessageLog(message_x, message_width, message_height)</span>
+    <span style="color: green">message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])</span>
+
+    key = libtcod.Key()</pre>
+
+<pre>        ...
+        if fov_recompute:
+            <span style="color: red; text-decoration: line-through">recompute_fov(fov_map, player.x, player.y, fov_radius, fov_light_walls, fov_algorithm)</span>
+            <span style="color: green">recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
+                          constants['fov_algorithm'])</span>
+
+        <span style="color: red; text-decoration: line-through">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,</span>
+                   <span style="color: red; text-decoration: line-through">screen_height, bar_width, panel_height, panel_y, mouse, colors, game_state)</span>
+        <span style="color: green">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                   constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                   constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)</span></pre>
+
+            <p>
+            <i>*Note: Why are we using the square bracket notation instead of the <code>get()</code> method? In most
+                other spots, we've used the 'get' notation, but here I would argue it makes more sense to use the
+                square brackets. Square brackets will outright crash our game if the variable isn't found, which in
+                this case, is probably what we'd want. The game can't possibly proceed without these variables, so
+                there's no reason to try to continue the program without them.</i>
+            </p>
+
+            <p>
+            That's a lot of changes, but we've successfully removed the constant variables out of the main loop! Note
+            that if you wanted to, you could shorten a <i>lot</i> of those function definitions by just passing the
+            <code>constants</code> dictionary instead of passing only what the functions need. It doesn't make a huge
+            difference and is really a matter of preference. I'll leave it as is in this tutorial, since changing
+            the functions right now would be a ton of work.
+            </p>
+
+            <p>
+            What's next? Another thing we could do is move the initialization of the player, entities list, and
+            game's map to a separate function. Put the following function in <code>initialize_new_game.py</code>:
+            </p>
+
+            <pre>def get_constants():
+    ...
+
+<span style="color: green">def get_game_variables(constants):
+    fighter_component = Fighter(hp=30, defense=2, power=5)
+    inventory_component = Inventory(26)
+    player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
+                    fighter=fighter_component, inventory=inventory_component)
+    entities = [player]
+
+    game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])
+
+    message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
+
+    game_state = GameStates.PLAYERS_TURN
+
+    return player, entities, game_map, message_log, game_state</span></pre>
+
+        <p>
+            We'll need to include a few imports in <code>initialize_new_game.py</code> for this:
+        </p>
+
+        <pre>import tcod as libtcod
+
+<span style="color: green">from components.fighter import Fighter
+from components.inventory import Inventory
+
+from entity import Entity
+
+from game_messages import MessageLog
+
+from game_states import GameStates
+
+from map_objects.game_map import GameMap
+
+from render_functions import RenderOrder</span>
+
+
+def get_constants():
+    ...</pre>
+
+            <p>
+            Nothing has changed about the way we're initializing these variables. All we're doing is putting it in
+            one function, which we'll call once in our main game loop. Let's do that now. Start by importing the
+            <code>get_game_variables</code> function:
+            </p>
+
+            <pre>...
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, <span style="color: green">get_game_variables</span>
+from map_objects.game_map import GameMap
+...</pre>
+
+            <p>
+            Then modify the <code>main</code> function like this:
+            </p>
+
+    <pre>    ...
+    <span style="color: red; text-decoration: line-through">fighter_component = Fighter(hp=30, defense=2, power=5)</span>
+    <span style="color: red; text-decoration: line-through">inventory_component = Inventory(26)</span>
+    <span style="color: red; text-decoration: line-through">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,</span>
+                    <span style="color: red; text-decoration: line-through">fighter=fighter_component, inventory=inventory_component)</span>
+    <span style="color: red; text-decoration: line-through">entities = [player]</span>
+
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
+
+    con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
+
+    <span style="color: red; text-decoration: line-through">game_map = GameMap(constants['map_width'], constants['map_height'])</span>
+    <span style="color: red; text-decoration: line-through">game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],</span>
+                      <span style="color: red; text-decoration: line-through">constants['map_width'], constants['map_height'], player, entities,</span>
+                      <span style="color: red; text-decoration: line-through">constants['max_monsters_per_room'], constants['max_items_per_room'])</span>
+
+    <span style="color: green">player, entities, game_map, message_log, game_state = get_game_variables(constants)</span>
+
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    <span style="color: red; text-decoration: line-through">message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])</span>
+
+    key = libtcod.Key()
+    mouse = libtcod.Mouse()
+
+    <span style="color: red; text-decoration: line-through">game_state = GameStates.PLAYERS_TURN</span>
+    previous_game_state = game_state
+
+    targeting_item = None
+    ...</pre>
+
+
+            <p>
+            One interesting effect of removing these lines is that we don't need all the imports we did before.
+            Modify your import section at the top of <code>engine.py</code> to look like this:
+            </p>
+
+<pre>import tcod as libtcod
+
+<span style="color: red; text-decoration: line-through">from components.fighter import Fighter</span>
+<span style="color: red; text-decoration: line-through">from components.inventory import Inventory</span>
+from death_functions import kill_monster, kill_player
+from entity import <span style="color: red; text-decoration: line-through">Entity</span>, get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message, <span style="color: red; text-decoration: line-through">MessageLog</span>
+from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span style="color: red; text-decoration: line-through">from map_objects.game_map import GameMap</span>
+from render_functions import clear_all, render_all<span style="color: red; text-decoration: line-through">, RenderOrder</span></pre>
+
+
+        <p>
+            It's time to think about how we're going to save and load our game. In order for this to happen, we'll
+            need to save some (not necessarily all) of our data to some sort of persistent external location. In many
+            applications, this would be a SQL or NoSQL database, but that's probably overkill for our little project.
+            Instead, we'll just save to a data file.
+        </p>
+
+        <p>
+            So what exactly do we need to save? The key things are the entities list (including the player), the game's
+            map, the message log, and the game's state. These are the same variables we got from the game's
+            initialization function too, so we'll be able to start a new game or load an old one by just swapping
+            our the respective functions. More on that later.
+        </p>
+
+        <p>
+            Unfortunately, plain JSON isn't quite enough to save and load our data. Our objects are too complex to just
+            save to straight JSON. There are a few solutions to this. The first would be to write serializers for our
+            classes and objects ourselves, which isn't a bad idea. But in the interest of keeping things simple for this
+            tutorial, we'll just use a library; specifically: <code>shelve</code>. This library allows you to save
+            and load complex Python objects, without needing to write custom serializers.
+        </p>
+
+        <p>
+            Install <code>shelve</code> in your Python installation (pip is the best way). Then, create a new
+            file in <code>loader_functions</code>, called <code>data_loaders.py</code>. We'll start by writing our
+            save function.
+        </p>
+
+        <pre><span style="color: green">import shelve
+
+
+def save_game(player, entities, game_map, message_log, game_state):
+    with shelve.open('savegame.dat', 'n') as data_file:
+        data_file['player_index'] = entities.index(player)
+        data_file['entities'] = entities
+        data_file['game_map'] = game_map
+        data_file['message_log'] = message_log
+        data_file['game_state'] = game_state</span></pre>
+
+        <p>
+            Using <code>shelve</code>, we're encoding the data into a dictionary which we'll save to the file
+            later. Note that we're not actually saving the <code>player</code>, because the
+            player is already part of the <code>entities</code> list. We just need the index in the list, so that
+            we can load the player from that list later.
+        </p>
+
+        <p>
+            And that's all we need to save the game! Without the <code>shelve</code> module, it would have taken
+            far more effort to be able to save our game. Luckily, it also makes loading our game easy too; let's
+            implement that now. In the same file (<code>data_loaders.py</code>), create a new function called
+            <code>load_game</code>. You'll need to import <code>GameMap</code> in order for this to work.
+        </p>
+
+        <pre><span style="color: green">import os</span>
+
+import shelve
+
+
+def save_game(player, entities, game_map, message_log, game_state):
+    ...
+
+<span style="color: green">def load_game():
+    if not os.path.isfile('savegame.dat'):
+        raise FileNotFoundError
+
+    with shelve.open('savegame.dat', 'r') as data_file:
+        player_index = data_file['player_index']
+        entities = data_file['entities']
+        game_map = data_file['game_map']
+        message_log = data_file['message_log']
+        game_state = data_file['game_state']
+
+    player = entities[player_index]
+
+    return player, entities, game_map, message_log, game_state</span></pre>
+
+        <p>
+            This is just the reverse of the save function. We pull the data out of the data file, and return all the
+            variables needed to the engine.
+        </p>
+
+        <p>
+            The functions for saving and loading are done, but now we need a way to use them. Before we do that,
+            it's probably a good time to think about how our game starts up in the first place. Right now, the game
+            just starts, throwing the player straight into a new game. But that's not how games typically work. Almost
+            every game in existence has some sort of starting screen, which lets the player start a new game, load
+            an existing one, exit, or maybe edit some options. Let's implement something similar for ours; we should
+            let the player start a new game, load an existing one, or quit.
+        </p>
+
+        <p>
+            We'll need a new menu function to display our main menu. Open up <code>menus.py</code> and add the following
+            function to it:
+        </p>
+
+
+        <pre>def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
+    ...
+
+
+<span style="color: green">def main_menu(con, background_image, screen_width, screen_height):
+    libtcod.image_blit_2x(background_image, 0, 0, 0)
+
+    libtcod.console_set_default_foreground(0, libtcod.light_yellow)
+    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
+                             'TOMBS OF THE ANCIENT KINGS')
+    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
+                             'By (Your name here)')
+
+    menu(con, '', ['Play a new game', 'Continue last game', 'Quit'], 24, screen_width, screen_height)</span></pre>
+
+        <p>
+            Our "main" function right now operates off the assumption that we're going straight into the game. A better
+        method of handling this would be to have the "main" function open the main menu, and, if the player chooses
+        to either start a new game or continue an old one, the main game starts. We can move the logic of the main
+        game to a separate function, which we'll call <code>play_game</code>. This function will live in our
+            <code>engine.py</code> file (it doesn't have to, but it doesn't make much sense to put it elsewhere right
+        now).</p>
+
+        <p>
+            <i>*Note: I won't bother with code highlighting here, there's just too much to cover.</i>
+        </p>
+
+<pre>def play_game(player, entities, game_map, message_log, game_state, con, panel, constants):
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    key = libtcod.Key()
+    mouse = libtcod.Mouse()
+
+    game_state = GameStates.PLAYERS_TURN
+    previous_game_state = game_state
+
+    targeting_item = None
+
+    while not libtcod.console_is_window_closed():
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+
+        if fov_recompute:
+            recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
+                          constants['fov_algorithm'])
+
+        render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                   constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                   constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)
+
+        fov_recompute = False
+
+        libtcod.console_flush()
+
+        clear_all(con, entities)
+
+        action = handle_keys(key, game_state)
+        mouse_action = handle_mouse(mouse)
+
+        move = action.get('move')
+        pickup = action.get('pickup')
+        show_inventory = action.get('show_inventory')
+        drop_inventory = action.get('drop_inventory')
+        inventory_index = action.get('inventory_index')
+        exit = action.get('exit')
+        fullscreen = action.get('fullscreen')
+
+        left_click = mouse_action.get('left_click')
+        right_click = mouse_action.get('right_click')
+
+        player_turn_results = []
+
+        if move and game_state == GameStates.PLAYERS_TURN:
+            dx, dy = move
+            destination_x = player.x + dx
+            destination_y = player.y + dy
+
+            if not game_map.is_blocked(destination_x, destination_y):
+                target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                if target:
+                    attack_results = player.fighter.attack(target)
+                    player_turn_results.extend(attack_results)
+                else:
+                    player.move(dx, dy)
+
+                    fov_recompute = True
+
+                game_state = GameStates.ENEMY_TURN
+
+        elif pickup and game_state == GameStates.PLAYERS_TURN:
+            for entity in entities:
+                if entity.item and entity.x == player.x and entity.y == player.y:
+                    pickup_results = player.inventory.add_item(entity)
+                    player_turn_results.extend(pickup_results)
+
+                    break
+            else:
+                message_log.add_message(Message('There is nothing here to pick up.', libtcod.yellow))
+
+        if show_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.SHOW_INVENTORY
+
+        if drop_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.DROP_INVENTORY
+
+        if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
+                player.inventory.items):
+            item = player.inventory.items[inventory_index]
+
+            if game_state == GameStates.SHOW_INVENTORY:
+                player_turn_results.extend(player.inventory.use(item, entities=entities, fov_map=fov_map))
+            elif game_state == GameStates.DROP_INVENTORY:
+                player_turn_results.extend(player.inventory.drop_item(item))
+
+        if game_state == GameStates.TARGETING:
+            if left_click:
+                target_x, target_y = left_click
+
+                item_use_results = player.inventory.use(targeting_item, entities=entities, fov_map=fov_map,
+                                                        target_x=target_x, target_y=target_y)
+                player_turn_results.extend(item_use_results)
+            elif right_click:
+                player_turn_results.append({'targeting_cancelled': True})
+
+        if exit:
+            if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+                game_state = previous_game_state
+            elif game_state == GameStates.TARGETING:
+                player_turn_results.append({'targeting_cancelled': True})
+            else:
+                save_game(player, entities, game_map, message_log, game_state)
+
+                return True
+
+        if fullscreen:
+            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get('message')
+            dead_entity = player_turn_result.get('dead')
+            item_added = player_turn_result.get('item_added')
+            item_consumed = player_turn_result.get('consumed')
+            item_dropped = player_turn_result.get('item_dropped')
+            targeting = player_turn_result.get('targeting')
+            targeting_cancelled = player_turn_result.get('targeting_cancelled')
+
+            if message:
+                message_log.add_message(message)
+
+            if dead_entity:
+                if dead_entity == player:
+                    message, game_state = kill_player(dead_entity)
+                else:
+                    message = kill_monster(dead_entity)
+
+                message_log.add_message(message)
+
+            if item_added:
+                entities.remove(item_added)
+
+                game_state = GameStates.ENEMY_TURN
+
+            if item_consumed:
+                game_state = GameStates.ENEMY_TURN
+
+            if item_dropped:
+                entities.append(item_dropped)
+
+                game_state = GameStates.ENEMY_TURN
+
+            if targeting:
+                previous_game_state = GameStates.PLAYERS_TURN
+                game_state = GameStates.TARGETING
+
+                targeting_item = targeting
+
+                message_log.add_message(targeting_item.item.targeting_message)
+
+            if targeting_cancelled:
+                game_state = previous_game_state
+
+                message_log.add_message(Message('Targeting cancelled'))
+
+        if game_state == GameStates.ENEMY_TURN:
+            for entity in entities:
+                if entity.ai:
+                    enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
+
+                    for enemy_turn_result in enemy_turn_results:
+                        message = enemy_turn_result.get('message')
+                        dead_entity = enemy_turn_result.get('dead')
+
+                        if message:
+                            message_log.add_message(message)
+
+                        if dead_entity:
+                            if dead_entity == player:
+                                message, game_state = kill_player(dead_entity)
+                            else:
+                                message = kill_monster(dead_entity)
+
+                            message_log.add_message(message)
+
+                            if game_state == GameStates.PLAYER_DEAD:
+                                break
+
+                    if game_state == GameStates.PLAYER_DEAD:
+                        break
+            else:
+                game_state = GameStates.PLAYERS_TURN</pre>
+
+
+        <p>
+            This is the same as our game code from before, just put into a function. We'll pass all the needed
+            variables in our <code>main</code> function. If the player presses escape during the game, we'll return
+            to the main loop, which displays the main menu. The one thing that is different here is that we're calling
+            <code>save_game</code> before exiting the loop.
+        </p>
+
+        <p>
+            Now let's change our main loop. It'll display the main menu, and depending on the player's choice,
+            it will either start a new game, load an existing one, or exit the program.
+        </p>
+
+        <pre>def main():
+    constants = get_constants()
+
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
+
+    con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
+
+    player = None
+    entities = []
+    game_map = None
+    message_log = None
+    game_state = None
+
+    show_main_menu = True
+    show_load_error_message = False
+
+    main_menu_background_image = libtcod.image_load('menu_background.png')
+
+    key = libtcod.Key()
+    mouse = libtcod.Mouse()
+
+    while not libtcod.console_is_window_closed():
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+
+        if show_main_menu:
+            main_menu(con, main_menu_background_image, constants['screen_width'],
+                      constants['screen_height'])
+
+            if show_load_error_message:
+                message_box(con, 'No save game to load', 50, constants['screen_width'], constants['screen_height'])
+
+            libtcod.console_flush()
+
+            action = handle_main_menu(key)
+
+            new_game = action.get('new_game')
+            load_saved_game = action.get('load_game')
+            exit_game = action.get('exit')
+
+            if show_load_error_message and (new_game or load_saved_game or exit_game):
+                show_load_error_message = False
+            elif new_game:
+                player, entities, game_map, message_log, game_state = get_game_variables(constants)
+                game_state = GameStates.PLAYERS_TURN
+
+                show_main_menu = False
+            elif load_saved_game:
+                try:
+                    player, entities, game_map, message_log, game_state = load_game()
+                    show_main_menu = False
+                except FileNotFoundError:
+                    show_load_error_message = True
+            elif exit_game:
+                break
+
+        else:
+            libtcod.console_clear(con)
+            play_game(player, entities, game_map, message_log, game_state, con, panel, constants)
+
+            show_main_menu = True</pre>
+
+        <p>
+            We're loading a background image with <code>image_load</code> to display in our main menu. The sample image
+            used for this tutorial can be
+            <a href="http://roguecentral.org/doryen/files/menu_background1.png">found here</a>. Download it and put
+            in in your project's directory.
+        </p>
+
+        <p>
+            Other than that, a lot of this should look familiar. We're displaying the main menu with three options,
+            and accepting keyboard input to determine which option to go with. If the user starts a new game, we
+            use our <code>get_game_variables</code> function from earlier, and if an old game is being loaded,
+            we use the <code>load_game</code> function. Either way, we get the same variables. Assuming one of those
+            options was chosen, we pass the variables off to the <code>play_game</code> function, and the game proceeds
+            as it has been until now.
+        </p>
+
+        <p>
+            We haven't implemented the <code>message_box</code> or <code>handle_main_menu</code> functions yet, so let's
+            do so now. We'll start with <code>message_box</code> and we'll put it in <code>menus.py</code>, at the
+            bottom of the file:
+        </p>
+
+        <pre><span style="color: green">def message_box(con, header, width, screen_width, screen_height):
+    menu(con, header, [], width, screen_width, screen_height)</span></pre>
+
+        <p>
+            Pretty straightforward. The message box is just an empty menu, basically.
+        </p>
+
+        <p>
+            Now on to <code>handle_main_menu</code>, which goes in <code>input_handlers.py</code>:
+        </p>
+
+        <pre>def handle_inventory_keys(key):
+    ...
+
+<span style="color: green">def handle_main_menu(key):
+    key_char = chr(key.c)
+
+    if key_char == 'a':
+        return {'new_game': True}
+    elif key_char == 'b':
+        return {'load_game': True}
+    elif key_char == 'c' or  key.vk == libtcod.KEY_ESCAPE:
+        return {'exit': True}
+
+    return {}</span>
+
+
+def handle_mouse(mouse):
+    ...</pre>
+
+        <p>
+            Nothing too complicated here: Our main menu will have 3 options, so just return the result of which option
+            was selected. Note that the 'Quit' option can be done through the 'c' key or 'Escape'.
+        </p>
+
+        <p>
+            Remember to import these new functions into <code>engine.py</code>:
+        </p>
+
+        <pre>import tcod as libtcod
+
+from death_functions import kill_monster, kill_player
+from entity import get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message
+from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse<span style="color: green">, handle_main_menu</span>
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span style="color: green">from loader_functions.data_loaders import load_game, save_game</span>
+<span style="color: green">from menus import main_menu, message_box</span>
+from render_functions import clear_all, render_all
+...</pre>
+
+        <p>
+            That's all for this chapter. The gameplay itself hasn't changed, but saving and loading is no small feat.
+            Be proud!
+        </p>
+
+        <p>
+            If you want to see the code so far in its entirety,
+            <a href="https://github.com/TStand90/roguelike_tutorial_revised/tree/part10">click here</a>.
+        </p>
+
+        <p>
+            <a href="/tutorials/tcod/part-11">Click here to move on to the next part of this tutorial.</a>
+        </p>
