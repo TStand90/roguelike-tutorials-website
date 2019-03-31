@@ -4,6 +4,20 @@ title = "Roguelike Tutorials"
 
 theme = "bootstrap"
 
+[languages.en]
+  languageName = "English"
+
+  copyright = "Last updated March 31st, 2019"
+
+  [[languages.en.menu.main]]
+    url = "/"
+    name = "Home"
+    weight = 1
+  [[languages.en.menu.main]]
+    url = "/tutorials/tcod/"
+    name = "TCOD Tutorial"
+    weight = 2
+
 [params]
   mainSections = ["post"]
 
