@@ -1,5 +1,14 @@
-baseURL = "http://example.org/"
+baseURL = "http://rogueliketutorials.com/"
 languageCode = "en-us"
 title = "Roguelike Tutorials"
 
 theme = "bootstrap"
+
+[params]
+  mainSections = ["post"]
+
+  [params.sidebar]
+    showRecent = false
+  
+  [params.header]
+    colorScheme = "dark"
