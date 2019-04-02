@@ -3,6 +3,8 @@ languageCode = "en-us"
 title = "Roguelike Tutorials"
 
 theme = "bootstrap"
+pygmentsCodeFences = true
+pygmentsCodeFencesGuessSyntax = true
 
 [languages.en]
   languageName = "English"
