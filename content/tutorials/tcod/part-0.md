@@ -15,7 +15,7 @@ very least before attempting to read this tutorial.
 
 ... Of course, there are those who have ignored this advice and done
 well with this tutorial anyway, so feel free to ignore that last
-paragraph if you're feeling bold!
+paragraph if you're feeling bold\!
 
 #### Installation
 
@@ -44,7 +44,7 @@ if you really wanted to. Personally, I'm a fan of
 Code](https://code.visualstudio.com/). Whatever you choose, I strongly
 recommend something that can help catch Python syntax errors at the very
 least. I've been working with Python for over five years, and I still
-make these types of mistakes all the time!
+make these types of mistakes all the time\!
 
 #### Making sure Python works
 
@@ -52,17 +52,15 @@ To verify that your installation of both Python 3 and TCOD are working,
 create a new file (in whatever directory you plan on using for the
 tutorial) called `engine.py`, and enter the following text into it:
 
-```py3
-import tcod as libtcod
-
-
-def main():
-    print('Hello World!')
-
-
-if __name__ == '__main__':
-    main()
-```
+    import tcod as libtcod
+    
+    
+    def main():
+        print('Hello World!')
+    
+    
+    if __name__ == '__main__':
+        main()
 
 Run the file in your terminal (or alternatively in your editor, if
 possible):
@@ -74,7 +72,7 @@ this:
 
 `python3 engine.py`
 
-You should see "Hello World!" printed out to the terminal. If you
+You should see "Hello World\!" printed out to the terminal. If you
 receive an error, there is probably an issue with either your Python or
 TCOD installation.
 
@@ -84,7 +82,7 @@ Be sure to check out the [Roguelike Development
 Subreddit](https://www.reddit.com/r/roguelikedev) for help. There's a
 link there to the Discord channel as well.
 
-------------------------------------------------------------------------
+-----
 
 ### Ready to go?
 

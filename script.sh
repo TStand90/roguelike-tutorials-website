@@ -5,8 +5,8 @@ do
 	name=${f%.html.bak}.md
 	head -n 5 $f > $name
 	tail -n +6 $f |
-		perl -wpe 'print "+ " if /^\s*<span style="color: green"/ .. /<\/span>/; print "- " if /^\s*<span style="color: red/ .. /<\/span>/' |
-		pandoc -f html -t markdown-smart |
+        perl -wpe 's/\h?(.*)$/+$1/ if /^\h*<span style="color: green"/ ..  /<\/span>/; s/\h?(.*)$/-$1/ if /^\h*<span style="color: red/ ..  /<\/span>/' |
+		pandoc -f html -t gfm+backtick_code_blocks |
 		grep -Ev '<div>|</div>' >> $name
 done
 

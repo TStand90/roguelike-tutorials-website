@@ -19,12 +19,14 @@ Create a new Python package (a folder with an empty \_\_init\_\_.py
 file), called `components`. In there, put a new file called
 `fighter.py`, and put the following code in it:
 
-    class Fighter:
-        def __init__(self, hp, defense, power):
-            self.max_hp = hp
-            self.hp = hp
-            self.defense = defense
-            self.power = power
+```py3
+class Fighter:
+    def __init__(self, hp, defense, power):
+        self.max_hp = hp
+        self.hp = hp
+        self.defense = defense
+        self.power = power
+```
 
 These variables should look familiar to anyone who's played an RPG
 before. HP represents the entity's health, defense blocks damage, and
@@ -40,9 +42,11 @@ won't get to.
 Create a file in `components` called `ai.py`, and put the following
 class in it:
 
-    class BasicMonster:
-        def take_turn(self):
-            print('The ' + self.owner.name + ' wonders when it will get to move.')
+```py3
+class BasicMonster:
+    def take_turn(self):
+        print('The ' + self.owner.name + ' wonders when it will get to move.')
+```
 
 We've defined a basic method called `take_turn`, which we'll call in our
 game loop in a minute. It's just a placeholder for now, but by the end
@@ -54,23 +58,25 @@ class once more. We need to pass the components through the constructor,
 like we do for everything else. Modify the `__init__` function in
 `Entity` to look like this:
 
-    class Entity:
-    -     def __init__(self, x, y, char, color, name, blocks=False):
-    +     def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):
-        self.x = x
-        self.y = y
-        self.char = char
-        self.color = color
-        self.name = name
-        self.blocks = blocks
-    +     self.fighter = fighter
-    +     self.ai = ai
-    + 
-    +     if self.fighter:
-    +         self.fighter.owner = self
-    + 
-    +     if self.ai:
-    +         self.ai.owner = self
+```diff
+class Entity:
+-   def __init__(self, x, y, char, color, name, blocks=False):
++   def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):
+    self.x = x
+    self.y = y
+    self.char = char
+    self.color = color
+    self.name = name
+    self.blocks = blocks
++   self.fighter = fighter
++   self.ai = ai
++
++   if self.fighter:
++       self.fighter.owner = self
++
++   if self.ai:
++       self.ai.owner = self
+```
 
 So the `fighter` and `ai` components are optional, so entities that
 don't need them won't need to do anything.
@@ -88,63 +94,71 @@ directly), but it does need the `Fighter` component.
 
 First, import the `Fighter` component into `engine.py`:
 
-    import tcod as libtcod
+```diff
+import tcod as libtcod
 
-    + from components.fighter import Fighter
-    from entity import Entity, get_blocking_entities_at_location
++from components.fighter import Fighter
+from entity import Entity, get_blocking_entities_at_location
 
 Then, create the component and add it to the player Entity.
 
-    +     fighter_component = Fighter(hp=30, defense=2, power=5)
-    -     player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True)
-    +     player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, fighter=fighter_component)
-        entities = [player]
-        ...
++   fighter_component = Fighter(hp=30, defense=2, power=5)
+-   player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True)
++   player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, fighter=fighter_component)
+    entities = [player]
+    ...
+```
 
 And now for our monsters. We'll need both the Fighter and BasicMonster
 components for them.
 
-                    if randint(0, 100) < 80:
-    +                     fighter_component = Fighter(hp=10, defense=0, power=3)
-    +                     ai_component = BasicMonster()
+```diff
+                if randint(0, 100) < 80:
++                   fighter_component = Fighter(hp=10, defense=0, power=3)
++                   ai_component = BasicMonster()
 
-    -                     monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True)
-    +                     monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
-    +                                      fighter=fighter_component, ai=ai_component)
-                    else:
-    +                     fighter_component = Fighter(hp=16, defense=1, power=4)
-    +                     ai_component = BasicMonster()
+-                   monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True)
++                   monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
++                                    fighter=fighter_component, ai=ai_component)
+                else:
++                   fighter_component = Fighter(hp=16, defense=1, power=4)
++                   ai_component = BasicMonster()
 
-    -                     monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True)
-    +                     monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
-    +                                      ai=ai_component)
+-                   monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True)
++                   monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
++                                    ai=ai_component)
+```
 
 Remember to import the needed classes at the top.
 
-    import tcod as libtcod
-    from random import randint
+```diff
+import tcod as libtcod
+from random import randint
 
-    + from components.ai import BasicMonster
-    + from components.fighter import Fighter
++from components.ai import BasicMonster
++from components.fighter import Fighter
 
-    from entity import Entity
+from entity import Entity
 
-    from map_objects.rectangle import Rect
-    from map_objects.tile import Tile
+from map_objects.rectangle import Rect
+from map_objects.tile import Tile
+```
 
 Now we can modify our monster's turn loop to use the `take_turn`
 function.
 
-            ...
-            if game_state == GameStates.ENEMY_TURN:
-                for entity in entities:
-    -                 if entity != player:
-    +                 if entity.ai:
-    -                     print('The ' + entity.name + ' ponders the meaning of its existence.')
-    +                     entity.ai.take_turn()
+```diff
+        ...
+        if game_state == GameStates.ENEMY_TURN:
+            for entity in entities:
+-               if entity != player:
++               if entity.ai:
+-                   print('The ' + entity.name + ' ponders the meaning of its existence.')
++                   entity.ai.take_turn()
 
-                game_state = GameStates.PLAYERS_TURN
-                ...
+            game_state = GameStates.PLAYERS_TURN
+            ...
+```
 
 Not a whole lot has changed yet (we're still printing something instead
 of the monsters taking a real turn), but we're getting there. Notice
@@ -162,67 +176,77 @@ that if you can see an enemy, it can see you too.
 Let's put a basic movement function in place. Put the following code in
 the `Entity` class.
 
-        def move(self, dx, dy):
-            ...
+```diff
+    def move(self, dx, dy):
+        ...
 
-    +     def move_towards(self, target_x, target_y, game_map, entities):
-    +         dx = target_x - self.x
-    +         dy = target_y - self.y
-    +         distance = math.sqrt(dx ** 2 + dy ** 2)
-    + 
-    +         dx = int(round(dx / distance))
-    +         dy = int(round(dy / distance))
-    + 
-    +         if not (game_map.is_blocked(self.x + dx, self.y + dy) or
-    +                     get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
-    +             self.move(dx, dy)
++   def move_towards(self, target_x, target_y, game_map, entities):
++       dx = target_x - self.x
++       dy = target_y - self.y
++       distance = math.sqrt(dx ** 2 + dy ** 2)
++
++       dx = int(round(dx / distance))
++       dy = int(round(dy / distance))
++
++       if not (game_map.is_blocked(self.x + dx, self.y + dy) or
++                   get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
++           self.move(dx, dy)
+```
 
 We'll also need a function to get the distance between the Entity and
 its target.
 
-        def move_towards(self, target_x, target_y, game_map, entities):
-            ...
+```diff
+    def move_towards(self, target_x, target_y, game_map, entities):
+        ...
 
-    +     def distance_to(self, other):
-    +         dx = other.x - self.x
-    +         dy = other.y - self.y
-    +         return math.sqrt(dx ** 2 + dy ** 2)
++   def distance_to(self, other):
++       dx = other.x - self.x
++       dy = other.y - self.y
++       return math.sqrt(dx ** 2 + dy ** 2)
+```
 
 Both of these functions use the `math` module, so we'll need to import
 that.
 
-    import math
+```py3
+import math
 
 
-    class Entity:
-        ...
+class Entity:
+    ...
+```
 
 Now let's replace our placeholder `take_turn` function with one that
 will actually move the Entity.
 
-    import tcod as libtcod
+```diff
+import tcod as libtcod
 
 
-    class BasicMonster:
-    -     def take_turn(self):
-    +     def take_turn(self, target, fov_map, game_map, entities):
-    -         print('The ' + self.owner.name + ' wonders when it will get to move.')
-    +         monster = self.owner
-    +         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-    + 
-    +             if monster.distance_to(target) >= 2:
-    +                 monster.move_towards(target.x, target.y, game_map, entities)
-    + 
-    +             elif target.fighter.hp > 0:
-    +                 print('The {0} insults you! Your ego is damaged!'.format(monster.name))
+class BasicMonster:
+-   def take_turn(self):
++   def take_turn(self, target, fov_map, game_map, entities):
+-       print('The ' + self.owner.name + ' wonders when it will get to move.')
++       monster = self.owner
++       if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
++
++           if monster.distance_to(target) >= 2:
++               monster.move_towards(target.x, target.y, game_map, entities)
++
++           elif target.fighter.hp > 0:
++               print('The {0} insults you! Your ego is damaged!'.format(monster.name))
+```
 
 We'll also need to update the call to `take_turn` in `engine.py`
 
-                        entity.ai.take_turn()
-    +                     entity.ai.take_turn(player, fov_map, game_map, entities)
+```diff
+                    entity.ai.take_turn()
++                   entity.ai.take_turn(player, fov_map, game_map, entities)
+```
 
 Now our enemies will give chase, and, if they catch up, hurl insults at
-our poor player!
+our poor player\!
 
 If you run the project, you may notice something strange about our mean
 spirited monsters: They can insult you from a diagonal position, but the
@@ -236,27 +260,29 @@ For the player, that's easy enough; we just need to update `handle_keys`
 to allow us to move diagonally. Modify the movement part of that
 function like so:
 
-    def handle_keys(key):
-    +     key_char = chr(key.c)
+```diff
+def handle_keys(key):
++   key_char = chr(key.c)
 
-        if key.vk == libtcod.KEY_UP or key_char == 'k':
-            return {'move': (0, -1)}
-        elif key.vk == libtcod.KEY_DOWN or key_char == 'j':
-            return {'move': (0, 1)}
-        elif key.vk == libtcod.KEY_LEFT or key_char == 'h':
-            return {'move': (-1, 0)}
-        elif key.vk == libtcod.KEY_RIGHT or key_char == 'l':
-            return {'move': (1, 0)}
-    +     elif key_char == 'y':
-    +         return {'move': (-1, -1)}
-    +     elif key_char == 'u':
-    +         return {'move': (1, -1)}
-    +     elif key_char == 'b':
-    +         return {'move': (-1, 1)}
-    +     elif key_char == 'n':
-    +         return {'move': (1, 1)}
+    if key.vk == libtcod.KEY_UP or key_char == 'k':
+        return {'move': (0, -1)}
+    elif key.vk == libtcod.KEY_DOWN or key_char == 'j':
+        return {'move': (0, 1)}
+    elif key.vk == libtcod.KEY_LEFT or key_char == 'h':
+        return {'move': (-1, 0)}
+    elif key.vk == libtcod.KEY_RIGHT or key_char == 'l':
+        return {'move': (1, 0)}
++   elif key_char == 'y':
++       return {'move': (-1, -1)}
++   elif key_char == 'u':
++       return {'move': (1, -1)}
++   elif key_char == 'b':
++       return {'move': (-1, 1)}
++   elif key_char == 'n':
++       return {'move': (1, 1)}
 
-        ...
+    ...
+```
 
 The first line is just getting the 'character' that we pressed on the
 keyboard. This will be handy in other spots as well, when we check for
@@ -278,56 +304,58 @@ for our purposes. I won't go into detail explaining how this works, but
 if you want to know more about the details of the algorithm, [click
 here](https://en.wikipedia.org/wiki/A*_search_algorithm).
 
-        def move_towards(self, target_x, target_y, game_map, entities):
-        ...
+```diff
+    def move_towards(self, target_x, target_y, game_map, entities):
+    ...
 
-    +     def move_astar(self, target, entities, game_map):
-    +         # Create a FOV map that has the dimensions of the map
-    +         fov = libtcod.map_new(game_map.width, game_map.height)
-    + 
-    +         # Scan the current map each turn and set all the walls as unwalkable
-    +         for y1 in range(game_map.height):
-    +             for x1 in range(game_map.width):
-    +                 libtcod.map_set_properties(fov, x1, y1, not game_map.tiles[x1][y1].block_sight,
-    +                                            not game_map.tiles[x1][y1].blocked)
-    + 
-    +         # Scan all the objects to see if there are objects that must be navigated around
-    +         # Check also that the object isn't self or the target (so that the start and the end points are free)
-    +         # The AI class handles the situation if self is next to the target so it will not use this A* function anyway
-    +         for entity in entities:
-    +             if entity.blocks and entity != self and entity != target:
-    +                 # Set the tile as a wall so it must be navigated around
-    +                 libtcod.map_set_properties(fov, entity.x, entity.y, True, False)
-    + 
-    +         # Allocate a A* path
-    +         # The 1.41 is the normal diagonal cost of moving, it can be set as 0.0 if diagonal moves are prohibited
-    +         my_path = libtcod.path_new_using_map(fov, 1.41)
-    + 
-    +         # Compute the path between self's coordinates and the target's coordinates
-    +         libtcod.path_compute(my_path, self.x, self.y, target.x, target.y)
-    + 
-    +         # Check if the path exists, and in this case, also the path is shorter than 25 tiles
-    +         # The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
-    +         # It makes sense to keep path size relatively low to keep the monsters from running around the map if there's an alternative path really far away
-    +         if not libtcod.path_is_empty(my_path) and libtcod.path_size(my_path) < 25:
-    +             # Find the next coordinates in the computed full path
-    +             x, y = libtcod.path_walk(my_path, True)
-    +             if x or y:
-    +                 # Set self's coordinates to the next path tile
-    +                 self.x = x
-    +                 self.y = y
-    +         else:
-    +             # Keep the old move function as a backup so that if there are no paths (for example another monster blocks a corridor)
-    +             # it will still try to move towards the player (closer to the corridor opening)
-    +             self.move_towards(target.x, target.y, game_map, entities)
-    + 
-    +             # Delete the path to free memory
-    +         libtcod.path_delete(my_path)
++   def move_astar(self, target, entities, game_map):
++       # Create a FOV map that has the dimensions of the map
++       fov = libtcod.map_new(game_map.width, game_map.height)
++
++       # Scan the current map each turn and set all the walls as unwalkable
++       for y1 in range(game_map.height):
++           for x1 in range(game_map.width):
++               libtcod.map_set_properties(fov, x1, y1, not game_map.tiles[x1][y1].block_sight,
++                                          not game_map.tiles[x1][y1].blocked)
++
++       # Scan all the objects to see if there are objects that must be navigated around
++       # Check also that the object isn't self or the target (so that the start and the end points are free)
++       # The AI class handles the situation if self is next to the target so it will not use this A* function anyway
++       for entity in entities:
++           if entity.blocks and entity != self and entity != target:
++               # Set the tile as a wall so it must be navigated around
++               libtcod.map_set_properties(fov, entity.x, entity.y, True, False)
++
++       # Allocate a A* path
++       # The 1.41 is the normal diagonal cost of moving, it can be set as 0.0 if diagonal moves are prohibited
++       my_path = libtcod.path_new_using_map(fov, 1.41)
++
++       # Compute the path between self's coordinates and the target's coordinates
++       libtcod.path_compute(my_path, self.x, self.y, target.x, target.y)
++
++       # Check if the path exists, and in this case, also the path is shorter than 25 tiles
++       # The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
++       # It makes sense to keep path size relatively low to keep the monsters from running around the map if there's an alternative path really far away
++       if not libtcod.path_is_empty(my_path) and libtcod.path_size(my_path) < 25:
++           # Find the next coordinates in the computed full path
++           x, y = libtcod.path_walk(my_path, True)
++           if x or y:
++               # Set self's coordinates to the next path tile
++               self.x = x
++               self.y = y
++       else:
++           # Keep the old move function as a backup so that if there are no paths (for example another monster blocks a corridor)
++           # it will still try to move towards the player (closer to the corridor opening)
++           self.move_towards(target.x, target.y, game_map, entities)
++
++           # Delete the path to free memory
++       libtcod.path_delete(my_path)
+```
 
 For this to work, we'll need to import `libtcod` into `entity.py`:
 
     import tcod as libtcod
-
+    
     import math
     ...
 
@@ -338,55 +366,65 @@ that.
 Modify the `take_turn` function in `BasicMonster` to take advantage of
 this new function.
 
-                ...
-                if monster.distance_to(target) >= 2:
-    +                 monster.move_astar(target, entities, game_map)
-    -                 monster.move_towards(target.x, target.y, game_map, entities)
-                ...
+```diff
+            ...
+            if monster.distance_to(target) >= 2:
++               monster.move_astar(target, entities, game_map)
+-               monster.move_towards(target.x, target.y, game_map, entities)
+            ...
+```
 
 Now both the player and enemies can move in diagonals. With that taken
 care of, it's time to implement an actual combat system. Let's start by
 adding a method to `Fighter` that allows the entity to take damage.
 
-    class Fighter:
-        def __init__(self, hp, defense, power):
-            ...
+```diff
+class Fighter:
+    def __init__(self, hp, defense, power):
+        ...
 
-    +     def take_damage(self, amount):
-    +         self.hp -= amount
++   def take_damage(self, amount):
++       self.hp -= amount
+```
 
 Simple enough. Now for the attack function (also in `Fighter`):
 
-        ...
+```diff
+    ...
 
-    +     def attack(self, target):
-    +         damage = self.power - target.fighter.defense
-    + 
-    +         if damage > 0:
-    +             target.fighter.take_damage(damage)
-    +             print('{0} attacks {1} for {2} hit points.'.format(self.owner.name.capitalize(), target.name, str(damage)))
-    +         else:
-    +             print('{0} attacks {1} but does no damage.'.format(self.owner.name.capitalize(), target.name))
++   def attack(self, target):
++       damage = self.power - target.fighter.defense
++
++       if damage > 0:
++           target.fighter.take_damage(damage)
++           print('{0} attacks {1} for {2} hit points.'.format(self.owner.name.capitalize(), target.name, str(damage)))
++       else:
++           print('{0} attacks {1} but does no damage.'.format(self.owner.name.capitalize(), target.name))
+```
 
 There's nothing too complex about this system. We're taking the
 attacker's power and subtracting the defender's defense, and getting our
 damage dealt. If the damage is above zero, then the target takes damage.
 
-We can finally replace our placeholders from earlier! Modify the
+We can finally replace our placeholders from earlier\! Modify the
 player's placeholder in `engine.py`:
 
-                    if target:
-    -                     print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
-    +                     player.fighter.attack(target)
+```diff
+                if target:
+-                   print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
++                   player.fighter.attack(target)
+```
 
 ... And for the enemy placeholder in `BasicMonster`
 
-                ...
-                elif target.fighter.hp > 0:
-    -                 print('The {0} insults you! Your ego is damaged!'.format(monster.name))
-    +                 monster.fighter.attack(target)
+```diff
+            ...
+            elif target.fighter.hp > 0:
+-               print('The {0} insults you! Your ego is damaged!'.format(monster.name))
++               monster.fighter.attack(target)
+```
 
-Now we can attack enemies, and they can attack us!
+Now we can attack enemies, and they can attack us\!
 
 As exciting as this all is, we have to take a step back for a moment and
 think about a design question. Right now, we're printing our messages to
@@ -406,33 +444,35 @@ results of the key press, it doesn't actually *move* the player.
 Let's modify the `take_damage` and `attack` functions to return an array
 of results, rather than print anything.
 
-        def take_damage(self, amount):
-    +         results = []
+```diff
+    def take_damage(self, amount):
++       results = []
 
-            self.hp -= amount
+        self.hp -= amount
 
-    +         if self.hp <= 0:
-    +             results.append({'dead': self.owner})
-    + 
-    +         return results
++       if self.hp <= 0:
++           results.append({'dead': self.owner})
++
++       return results
 
-        def attack(self, target):
-    +         results = []
+    def attack(self, target):
++       results = []
 
-            damage = self.power - target.fighter.defense
+        damage = self.power - target.fighter.defense
 
-            if damage > 0:
-    -             target.fighter.take_damage(damage)
-    -             print('{0} attacks {1} for {2} hit points.'.format(self.owner.name.capitalize(), target.name, str(damage)))
-    +             results.append({'message': '{0} attacks {1} for {2} hit points.'.format(
-    +                 self.owner.name.capitalize(), target.name, str(damage))})
-    +             results.extend(target.fighter.take_damage(damage))
-            else:
-    -             print('{0} attacks {1} but does no damage.'.format(self.owner.name.capitalize(), target.name))
-    +             results.append({'message': '{0} attacks {1} but does no damage.'.format(
-    +                 self.owner.name.capitalize(), target.name)})
-    + 
-    +         return results
+        if damage > 0:
+-           target.fighter.take_damage(damage)
+-           print('{0} attacks {1} for {2} hit points.'.format(self.owner.name.capitalize(), target.name, str(damage)))
++           results.append({'message': '{0} attacks {1} for {2} hit points.'.format(
++               self.owner.name.capitalize(), target.name, str(damage))})
++           results.extend(target.fighter.take_damage(damage))
+        else:
+-           print('{0} attacks {1} but does no damage.'.format(self.owner.name.capitalize(), target.name))
++           results.append({'message': '{0} attacks {1} but does no damage.'.format(
++               self.owner.name.capitalize(), target.name)})
++
++       return results
+```
 
 Let's break it down a little. In `take_damage`, we add a dictionary to
 `results` if the entity happens to die after taking damage. The results
@@ -444,92 +484,95 @@ message to it regardless of damage was taken or not. Notice that in the
 our current `results` list.
 
 The `extend` function is similar to `append`, but it keeps our list
-flat, so we don't get something like
-`[{'message': 'something'}, [{'message': 'something else'}]]`. Instead,
-we would get:
-`[{'message': 'something'}, {'message': 'something else'}]`. That will
-make looping through our results much simpler.
+flat, so we don't get something like `[{'message': 'something'},
+[{'message': 'something else'}]]`. Instead, we would get: `[{'message':
+'something'}, {'message': 'something else'}]`. That will make looping
+through our results much simpler.
 
 Let's extend this logic to the `take_turn` function in `BasicMonster`.
 
-    class BasicMonster:
-        def take_turn(self, target, fov_map, game_map, entities):
-    +         results = []
+```diff
+class BasicMonster:
+    def take_turn(self, target, fov_map, game_map, entities):
++       results = []
 
-            monster = self.owner
-            if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+        monster = self.owner
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
 
-                if monster.distance_to(target) >= 2:
-                    monster.move_astar(target, entities, game_map)
+            if monster.distance_to(target) >= 2:
+                monster.move_astar(target, entities, game_map)
 
-                elif target.fighter.hp > 0:
-    -                 monster.fighter.attack(target)
-    +                 attack_results = monster.fighter.attack(target)
-    +                 results.extend(attack_results)
-    + 
-    +         return results
+            elif target.fighter.hp > 0:
+-               monster.fighter.attack(target)
++               attack_results = monster.fighter.attack(target)
++               results.extend(attack_results)
++
++       return results
+```
 
 So what do we actually *do* with this `results` list? Lets modify
 `engine.py` to react to the results of our attacks.
 
-            ...
-            fullscreen = action.get('fullscreen')
+```diff
+        ...
+        fullscreen = action.get('fullscreen')
 
-    +         player_turn_results = []
++       player_turn_results = []
 
-            if move and game_state == GameStates.PLAYERS_TURN:
-                dx, dy = move
-                destination_x = player.x + dx
-                destination_y = player.y + dy
+        if move and game_state == GameStates.PLAYERS_TURN:
+            dx, dy = move
+            destination_x = player.x + dx
+            destination_y = player.y + dy
 
-                if not game_map.is_blocked(destination_x, destination_y):
-                    target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+            if not game_map.is_blocked(destination_x, destination_y):
+                target = get_blocking_entities_at_location(entities, destination_x, destination_y)
 
-                    if target:
-    -                     player.fighter.attack(target)
-    +                     attack_results = player.fighter.attack(target)
-    +                     player_turn_results.extend(attack_results)
-                    else:
-                        player.move(dx, dy)
+                if target:
+-                   player.fighter.attack(target)
++                   attack_results = player.fighter.attack(target)
++                   player_turn_results.extend(attack_results)
+                else:
+                    player.move(dx, dy)
 
-                        fov_recompute = True
+                    fov_recompute = True
 
-                    game_state = GameStates.ENEMY_TURN
+                game_state = GameStates.ENEMY_TURN
 
-            if exit:
-                return True
+        if exit:
+            return True
 
-            if fullscreen:
-                libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+        if fullscreen:
+            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
 
-    +         for player_turn_result in player_turn_results:
-    +             message = player_turn_result.get('message')
-    +             dead_entity = player_turn_result.get('dead')
-    + 
-    +             if message:
-    +                 print(message)
-    + 
-    +             if dead_entity:
-    +                 pass # We'll do something here momentarily
++       for player_turn_result in player_turn_results:
++           message = player_turn_result.get('message')
++           dead_entity = player_turn_result.get('dead')
++
++           if message:
++               print(message)
++
++           if dead_entity:
++               pass # We'll do something here momentarily
 
-            if game_state == GameStates.ENEMY_TURN:
-                for entity in entities:
-                    if entity.ai:
-    -                     entity.ai.take_turn(player, fov_map, game_map, entities)
-    +                     enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
-    + 
-    +                     for enemy_turn_result in enemy_turn_results:
-    +                         message = enemy_turn_result.get('message')
-    +                         dead_entity = enemy_turn_result.get('dead')
-    + 
-    +                         if message:
-    +                             print(message)
-    + 
-    +                         if dead_entity:
-    +                             pass
-    + 
-    +             else:
-                    game_state = GameStates.PLAYERS_TURN
+        if game_state == GameStates.ENEMY_TURN:
+            for entity in entities:
+                if entity.ai:
+-                   entity.ai.take_turn(player, fov_map, game_map, entities)
++                   enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
++
++                   for enemy_turn_result in enemy_turn_results:
++                       message = enemy_turn_result.get('message')
++                       dead_entity = enemy_turn_result.get('dead')
++
++                       if message:
++                           print(message)
++
++                       if dead_entity:
++                           pass
++
++           else:
+                game_state = GameStates.PLAYERS_TURN
+```
 
 *\* Note: There's that for-else statement again. There's no `break`
 statement yet, so the 'else' will always happen, but we'll add it in
@@ -540,76 +583,80 @@ the death of the player and the other entities. Let's implement that
 now. Create a new python file called `death_functions.py` and put the
 following two functions in it:
 
-    import tcod as libtcod
+```py3
+import tcod as libtcod
 
-    from game_states import GameStates
-
-
-    def kill_player(player):
-        player.char = '%'
-        player.color = libtcod.dark_red
-
-        return 'You died!', GameStates.PLAYER_DEAD
+from game_states import GameStates
 
 
-    def kill_monster(monster):
-        death_message = '{0} is dead!'.format(monster.name.capitalize())
+def kill_player(player):
+    player.char = '%'
+    player.color = libtcod.dark_red
 
-        monster.char = '%'
-        monster.color = libtcod.dark_red
-        monster.blocks = False
-        monster.fighter = None
-        monster.ai = None
-        monster.name = 'remains of ' + monster.name
+    return 'You died!', GameStates.PLAYER_DEAD
 
-        return death_message
+
+def kill_monster(monster):
+    death_message = '{0} is dead!'.format(monster.name.capitalize())
+
+    monster.char = '%'
+    monster.color = libtcod.dark_red
+    monster.blocks = False
+    monster.fighter = None
+    monster.ai = None
+    monster.name = 'remains of ' + monster.name
+
+    return death_message
+```
 
 These two functions will handle the death of the player and monsters.
 They're different because obviously the death of a monster isn't *that*
 big a deal (we'll be killing quite a few of them), but the death of the
-player is a *very* big deal (this is a roguelike after all!).
+player is a *very* big deal (this is a roguelike after all\!).
 
 Modify `engine.py` to use these two functions. Replace the `pass`
 section like this:
 
-                ...
-                if dead_entity:
-    -                 pass
-    +                 if dead_entity == player:
-    +                     message, game_state = kill_player(dead_entity)
-    +                 else:
-    +                     message = kill_monster(dead_entity)
-    + 
-    +                 print(message)
+```diff
+            ...
+            if dead_entity:
+-               pass
++               if dead_entity == player:
++                   message, game_state = kill_player(dead_entity)
++               else:
++                   message = kill_monster(dead_entity)
++
++               print(message)
 
-            if game_state == GameStates.ENEMY_TURN:
-                for entity in entities:
-                    if entity.ai:
-                        enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
+        if game_state == GameStates.ENEMY_TURN:
+            for entity in entities:
+                if entity.ai:
+                    enemy_turn_results = entity.ai.take_turn(player, fov_map, game_map, entities)
 
-                        for enemy_turn_result in enemy_turn_results:
-                            message = enemy_turn_result.get('message')
-                            dead_entity = enemy_turn_result.get('dead')
+                    for enemy_turn_result in enemy_turn_results:
+                        message = enemy_turn_result.get('message')
+                        dead_entity = enemy_turn_result.get('dead')
 
-                            if message:
-                                print(message)
+                        if message:
+                            print(message)
 
-                            if dead_entity:
-    -                             pass
-    +                             if dead_entity == player:
-    +                                 message, game_state = kill_player(dead_entity)
-    +                             else:
-    +                                 message = kill_monster(dead_entity)
-    + 
-    +                             print(message)
-    + 
-    +                             if game_state == GameStates.PLAYER_DEAD:
-    +                                 break
-    + 
-    +                     if game_state == GameStates.PLAYER_DEAD:
-    +                         break
-                else:
-                    game_state = GameStates.PLAYERS_TURN
+                        if dead_entity:
+-                           pass
++                           if dead_entity == player:
++                               message, game_state = kill_player(dead_entity)
++                           else:
++                               message = kill_monster(dead_entity)
++
++                           print(message)
++
++                           if game_state == GameStates.PLAYER_DEAD:
++                               break
++
++                   if game_state == GameStates.PLAYER_DEAD:
++                       break
+            else:
+                game_state = GameStates.PLAYERS_TURN
+```
 
 *\*Note: There's the break statements that will skip over the 'else' in
 our 'for-else'. Why do this? Because if the player is dead, we don't
@@ -619,47 +666,57 @@ the loop; the game is over.*
 
 Remember to import the killing functions at the top of `engine.py`:
 
-    ...
-    from components.fighter import Fighter
-    + from death_functions import kill_monster, kill_player
-    from entity import Entity, get_blocking_entities_at_location
-    ...
+```diff
+...
+from components.fighter import Fighter
++from death_functions import kill_monster, kill_player
+from entity import Entity, get_blocking_entities_at_location
+...
+```
 
 Also, we need to add the `PLAYER_DEAD` value to `GameStates`:
 
-    class GameStates(Enum):
-        PLAYERS_TURN = 1
-        ENEMY_TURN = 2
-    +     PLAYER_DEAD = 3
+```diff
+class GameStates(Enum):
+    PLAYERS_TURN = 1
+    ENEMY_TURN = 2
++   PLAYER_DEAD = 3
+```
 
 Run the project now. Entities will now drop dead when hitting 0 HP,
-including the player! When the player dies, you won't be able to move,
+including the player\! When the player dies, you won't be able to move,
 but you can still exit the game. At long last, we have a real combat
-system in place!
+system in place\!
 
 It's been a long chapter already, but let's clean things up just a
 little bit. Right now, we're clueless as to how much HP the player has
 remaining before death. Rather than having the user keep track of the
 math in their head, we can add a little health bar by putting the
 following code at the end of `render_all`, right before the blit
-statement (note that the player needs to be passed to `render_all` now).
+statement (note that the player needs to be passed to `render_all`
+    now).
 
-    def render_all(con, entities, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
-    + def render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
-        ...
-        for entity in entities:
-            draw_entity(con, entity, fov_map)
+```diff
+def render_all(con, entities, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
++def render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
+    ...
+    for entity in entities:
+        draw_entity(con, entity, fov_map)
 
-    +     libtcod.console_set_default_foreground(con, libtcod.white)
-    +     libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
-    +                          'HP: {0:02}/{1:02}'.format(player.fighter.hp, player.fighter.max_hp))
++   libtcod.console_set_default_foreground(con, libtcod.white)
++   libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
++                        'HP: {0:02}/{1:02}'.format(player.fighter.hp, player.fighter.max_hp))
 
-        libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+```
 
-Update the call to `render_all` in `engine.py`:
+Update the call to `render_all` in
+    `engine.py`:
 
-    render_all(con, entities, game_map, fov_map, fov_recompute, screen_width, screen_height, colors)
-    + render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors)
+```diff
+render_all(con, entities, game_map, fov_map, fov_recompute, screen_width, screen_height, colors)
++render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors)
+```
 
 One thing you probably noticed by now is that the enemy corpses will
 "cover up" the player if we move onto them. This obviously isn't
@@ -671,109 +728,128 @@ above the Entities.
 
 Add the following to `render_functions.py`:
 
-    import tcod as libtcod
+```diff
+import tcod as libtcod
 
-    + from enum import Enum
-    + 
-    + 
-    + class RenderOrder(Enum):
-    +     CORPSE = 1
-    +     ITEM = 2
-    +     ACTOR = 3
++from enum import Enum
++
++
++class RenderOrder(Enum):
++   CORPSE = 1
++   ITEM = 2
++   ACTOR = 3
 
 
-    def render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
-        ...
+def render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
+    ...
+```
 
 Now modify the `__init__` function in `Entity` to take this into
 account.
 
-    import tcod as libtcod
-    import math
+```diff
+import tcod as libtcod
+import math
 
-    + from render_functions import RenderOrder
++from render_functions import RenderOrder
 
 
-    class Entity:
-        """
-        A generic object to represent players, enemies, items, etc.
-        """
-        def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None):
-            self.x = x
-            self.y = y
-            self.char = char
-            self.color = color
-            self.name = name
-            self.blocks = blocks
-    +         self.render_order = render_order
-            self.fighter = fighter
-            ...
+class Entity:
+    """
+    A generic object to represent players, enemies, items, etc.
+    """
+    def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None):
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
++       self.render_order = render_order
+        self.fighter = fighter
+        ...
+```
 
-Now modify our Entity initializations, starting with `engine.py`:
+Now modify our Entity initializations, starting with
+    `engine.py`:
 
-    player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component)
+```py3
+player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component)
+```
 
 ... And don't leave out the import:
 
-    from render_functions import clear_all, render_all, RenderOrder
+```py3
+from render_functions import clear_all, render_all, RenderOrder
+```
 
 Now for the monsters, in `game_map.py`:
 
-                    if randint(0, 100) < 80:
-                        fighter_component = Fighter(hp=10, defense=0, power=3)
-                        ai_component = BasicMonster()
+```diff
+                if randint(0, 100) < 80:
+                    fighter_component = Fighter(hp=10, defense=0, power=3)
+                    ai_component = BasicMonster()
 
-    -                     monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
-    -                                      fighter=fighter_component, ai=ai_component)
-    +                     monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
-    +                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
-                    else:
-                        fighter_component = Fighter(hp=16, defense=1, power=4)
-                        ai_component = BasicMonster()
+-                   monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
+-                                    fighter=fighter_component, ai=ai_component)
++                   monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True,
++                                    render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
+                else:
+                    fighter_component = Fighter(hp=16, defense=1, power=4)
+                    ai_component = BasicMonster()
 
-    -                     monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
-    -                                      ai=ai_component)
-    +                     monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
-    +                                      render_order=RenderOrder.ACTOR, ai=ai_component)
+-                   monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
+-                                    ai=ai_component)
++                   monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
++                                    render_order=RenderOrder.ACTOR, ai=ai_component)
+```
 
 ... And the import:
 
-    from render_functions import RenderOrder
+```py3
+from render_functions import RenderOrder
+```
 
 We'll also need to change the Entity's `render_order` when they die.
 
-        monster.ai = None
-        monster.name = 'remains of ' + monster.name
-    +     monster.render_order = RenderOrder.CORPSE
+```diff
+    monster.ai = None
+    monster.name = 'remains of ' + monster.name
++   monster.render_order = RenderOrder.CORPSE
+```
 
 And, you guessed it, make sure you import:
 
-    from render_functions import RenderOrder
+```py3
+from render_functions import RenderOrder
+```
 
 *\* Note: We're not changing the `render_order` on the player when it
 dies; we actually **want** that corpse on top so we'll see it. It's more
-dramatic that way!*
+dramatic that way\!*
 
 Now let's implement the part in `render_all` that will actually take
 this new variable into account.
 
-        if fov_recompute:
-            ...
-
-    +     entities_in_render_order = sorted(entities, key=lambda x: x.render_order.value)
-
-    -     for entity in entities:
-    +     for entity in entities_in_render_order:
-            draw_entity(con, entity, fov_map)
+```diff
+    if fov_recompute:
         ...
+
++   entities_in_render_order = sorted(entities, key=lambda x: x.render_order.value)
+
+-   for entity in entities:
++   for entity in entities_in_render_order:
+        draw_entity(con, entity, fov_map)
+    ...
+```
 
 Now the corpses will be drawn first, then the items (when we put them
 in), then the entities. This ensures we will see what's most important
 first.
 
-And we're done! That was quite the chapter, but you survived! Run the
+And we're done\! That was quite the chapter, but you survived\! Run the
 project and see how long you can last in the now-deadly Dungeons of
-Doom! With an actual combat system, we've taken a pretty massive step
+Doom\! With an actual combat system, we've taken a pretty massive step
 towards having a real roguelike game on our hands.
 
 If you want to see the code so far in its entirety, [click

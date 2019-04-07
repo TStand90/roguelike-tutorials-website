@@ -4,8 +4,8 @@ date: 2019-03-30T08:39:15-07:00
 draft: false
 ---
 
-Welcome to part 1 of the **Roguelike Tutorial Revised**! This series
-will help you create your very first roguelike game, written in Python!
+Welcome to part 1 of the **Roguelike Tutorial Revised**\! This series
+will help you create your very first roguelike game, written in Python\!
 
 This tutorial is largely based off the [one found on
 Roguebasin](http://www.roguebasin.com/index.php?title=Complete_Roguelike_Tutorial,_using_python%2Blibtcod).
@@ -52,9 +52,9 @@ if __name__ == '__main__':
 ```
 
 So what does that do? Basically, we're saying that we're only going to
-run the "main" function when we explicitly run the script, using
-`python engine.py`. It's not super important that you understand this
-now, but if you want a more detailed explanation, [this answer on Stack
+run the "main" function when we explicitly run the script, using `python
+engine.py`. It's not super important that you understand this now, but
+if you want a more detailed explanation, [this answer on Stack
 Overflow](https://stackoverflow.com/a/419185) gives a pretty good
 overview.
 
@@ -107,7 +107,8 @@ There's a lot going on here, so let's break it down line by line.
 This is simple enough. We're defining some variables for the screen
 size. Eventually, we'll load these values from a JSON file rather than
 hard coding them in the source, but we won't worry about that until we
-have some more variables like this.
+have some more variables like
+this.
 
 ```py3
     libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
@@ -116,7 +117,8 @@ have some more variables like this.
 Here, we're telling libtcod which font to use. The `'arial10x10.png'`
 bit is the actual file we're reading from (this should exist in your
 project folder). The other two parts are telling libtcod which type of
-file we're reading.
+file we're
+reading.
 
 ```py3
     libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'libtcod tutorial revised', False)
@@ -175,7 +177,7 @@ to the program, which we store in the `key` variable. From there, we
 check if the key pressed was the `Esc` key or not. If it was, then we
 exit the loop, thus ending the program.
 
-So we've got our '@' symbol drawn, now let's get it moving around!
+So we've got our '@' symbol drawn, now let's get it moving around\!
 
 We need to keep track of the player's position at all times, so let's
 create two variables, `player_x` and `player_y` to keep track of this.
@@ -183,10 +185,10 @@ create two variables, `player_x` and `player_y` to keep track of this.
 ```diff
     ....
     screen_height = 50
-+     
-+     player_x = int(screen_width / 2)
-+     player_y = int(screen_height / 2)
-+     
++   
++   player_x = int(screen_width / 2)
++   player_y = int(screen_height / 2)
++   
     libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
     ...
 ```
@@ -207,8 +209,8 @@ new coordinates.
 ```diff
         ...
         libtcod.console_set_default_foreground(0, libtcod.white)
--         libtcod.console_put_char(0, 1, 1, '@', libtcod.BKGND_NONE)
-+         libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)
+-       libtcod.console_put_char(0, 1, 1, '@', libtcod.BKGND_NONE)
++       libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)
         libtcod.console_flush()
         ...
 ```
@@ -224,8 +226,8 @@ Put the following two lines right above the main game loop.
     ...
     libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)
 
-+     key = libtcod.Key()
-+     mouse = libtcod.Mouse()
++   key = libtcod.Key()
++   mouse = libtcod.Mouse()
 
     while not libtcod.console_is_window_closed():
     ...
@@ -238,7 +240,7 @@ about to add take it into account, so we might as well add it.
 ```diff
     ...
     while not libtcod.console_is_window_closed():
-+         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
++       libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
 
         libtcod.console_set_default_foreground(0, libtcod.white)
     ...
@@ -356,30 +358,30 @@ function.
         ...
         libtcod.console_flush()
 
--         key = libtcod.console_check_for_keypress()
-+         action = handle_keys(key)
-+ 
-+         move = action.get('move')
-+         exit = action.get('exit')
-+         fullscreen = action.get('fullscreen')
+-       key = libtcod.console_check_for_keypress()
++       action = handle_keys(key)
++
++       move = action.get('move')
++       exit = action.get('exit')
++       fullscreen = action.get('fullscreen')
 
-+         if move:
-+             dx, dy = move
-+             player_x += dx
-+             player_y += dy
++       if move:
++           dx, dy = move
++           player_x += dx
++           player_y += dy
 
--         if key.vk == libtcod.KEY_ESCAPE:
-+         if exit:
-+             return True
-+ 
-+         if fullscreen:
-+             libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+-       if key.vk == libtcod.KEY_ESCAPE:
++       if exit:
++           return True
++
++       if fullscreen:
++           libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
         ...
 ```
 
 Note: I'll denote lines to delete in red. So in this case, remove the
-`key = libtcod.console_check_for_keypress()` and
-`if key.vk == libtcod.KEY_ESCAPE` lines.
+`key = libtcod.console_check_for_keypress()` and `if key.vk ==
+libtcod.KEY_ESCAPE` lines.
 
 Also be sure to import the `handle_keys` function at the top of
 `engine.py`.
@@ -387,7 +389,7 @@ Also be sure to import the `handle_keys` function at the top of
 ```diff
 import tcod as libtcod
 
-+ from input_handlers import handle_keys
++from input_handlers import handle_keys
 ```
 
 Hopefully now the dictionary madness in `handle_keys` makes a little
@@ -398,7 +400,7 @@ called 'move', then we know to look for the (x, y) coordinates. If it
 contains 'exit', then we know we need to exit the game.
 
 Try running the engine.py file now. You should be able to move around.
-Exciting!
+Exciting\!
 
 One last thing before we move on. Take a look at our drawing functions.
 Notice how the first argument is '0'? In truth, that represents the
@@ -414,26 +416,26 @@ Modify the `engine.py` file like this:
     ...
     libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)
 
-+     con = libtcod.console_new(screen_width, screen_height)
++   con = libtcod.console_new(screen_width, screen_height)
 
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
     while not libtcod.console_is_window_closed():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
-+         
-+         libtcod.console_set_default_foreground(con, libtcod.white)
-+         libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)
-+         libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
--         libtcod.console_set_default_foreground(0, libtcod.white)
--         libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)
++       
++       libtcod.console_set_default_foreground(con, libtcod.white)
++       libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)
++       libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+-       libtcod.console_set_default_foreground(0, libtcod.white)
+-       libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)
         libtcod.console_flush()
-+         
-+         libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)
--         libtcod.console_put_char(0, player_x, player_y, ' ', libtcod.BKGND_NONE)
++       
++       libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)
+-       libtcod.console_put_char(0, player_x, player_y, ' ', libtcod.BKGND_NONE)
 ```
 
-That wraps up part one of this tutorial! If you're using git or some
+That wraps up part one of this tutorial\! If you're using git or some
 other form of version control (and I recommend you do), commit your
 changes now.
 
