@@ -11,23 +11,43 @@ game: Creating a procedurally generated dungeon\!
 Remember that little wall we created for demonstration purposes in the
 last tutorial? We don't need it anymore, so let's take it out.
 
-```diff
-        tiles[30][22].blocked = True
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+-       tiles[30][22].blocked = True
 -       tiles[30][22].block_sight = True
 -       tiles[31][22].blocked = True
 -       tiles[31][22].block_sight = True
 -       tiles[32][22].blocked = True
 -       tiles[32][22].block_sight = True
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        <span class="crossed-out-text">tiles[30][22].blocked = True</span>
+        <span class="crossed-out-text">tiles[30][22].block_sight = True</span>
+        <span class="crossed-out-text">tiles[31][22].blocked = True</span>
+        <span class="crossed-out-text">tiles[31][22].block_sight = True</span>
+        <span class="crossed-out-text">tiles[32][22].blocked = True</span>
+        <span class="crossed-out-text">tiles[32][22].block_sight = True</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 We also need to make a slight change to the list comprehension that
 created our
 Tiles.
 
-```diff
-        tiles = [[Tile(False) for y in range(self.height)] for x in range(self.width)]
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+-       tiles = [[Tile(False) for y in range(self.height)] for x in range(self.width)]
 +       tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        <span class="crossed-out-text">tiles = [[Tile(False) for y in range(self.height)] for x in range(self.width)]</span>
+        <span class="new-text">tiles = [[Tile(True) for y in range(self.height)] for x in range(self.width)]</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Why are we changing the `False` to `True`? Before, we were setting every
 Tile to be walk-able by default, so that we could move around easily.
@@ -46,14 +66,14 @@ that holds some information about dimensions, which we'll call `Rect`
 (short for rectangle). Create a new file in the `map_objects` folder,
 and name it `rectangle.py`. Enter the following code into it:
 
-```py3
+{{< highlight py3 >}}
 class Rect:
     def __init__(self, x, y, w, h):
         self.x1 = x
         self.y1 = y
         self.x2 = x + w
         self.y2 = y + h
-```
+{{</ highlight >}}
 
 The `__init__` function takes the x and y coordinates of the top left
 corner, and computes the bottom right corner based on the w and h
@@ -70,7 +90,7 @@ since it will be manipulating the map's list of tiles.
 
 What we end up with is this function:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     def initialize_tiles(self):
         ...
 
@@ -83,7 +103,23 @@ What we end up with is this function:
 
     def is_blocked(self, x, y):
         ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    def initialize_tiles(self):
+        ...
+
+    <span class="new-text">def create_room(self, room):
+        # go through the tiles in the rectangle and make them passable
+        for x in range(room.x1 + 1, room.x2):
+            for y in range(room.y1 + 1, room.y2):
+                self.tiles[x][y].blocked = False
+                self.tiles[x][y].block_sight = False</span>
+
+    def is_blocked(self, x, y):
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 *\* Note: `initialize_tiles` and `is_blocked` shortened for the sake of
 brevity.*
@@ -152,7 +188,7 @@ range. For example, range(0, 10) would give us \[0, 1, 2, 3, 4, 5, 6, 7,
 Let's make some rooms\! We'll need a function in `GameMap` to generate
 our map, so let's add one:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     def initialize_tiles(self):
         ...
 
@@ -166,21 +202,52 @@ our map, so let's add one:
 
     def create_room(self, room):
         ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    def initialize_tiles(self):
+        ...
+
+    <span class="new-text">def make_map(self):
+        # Create two rooms for demonstration purposes
+        room1 = Rect(20, 15, 10, 15)
+        room2 = Rect(35, 15, 10, 15)
+
+        self.create_room(room1)
+        self.create_room(room2)</span>
+
+    def create_room(self, room):
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 We need to import the `Rect` class into the `game_map` file in order for
 this to work. At the top of the file, modify your import section:
 
-    from map_objects.rectangle import Rect
-    from map_objects.tile import Tile
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
++from map_objects.rectangle import Rect
+from map_objects.tile import Tile
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+        <pre><span class="new-text">from map_objects.rectangle import Rect</span>
+from map_objects.tile import Tile</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Finally, modify `engine.py` to actually call the new `make_map`
 function.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     game_map = GameMap(map_width, map_height)
 +   game_map.make_map()
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+    <pre>    game_map = GameMap(map_width, map_height)
+    <span class="new-text">game_map.make_map()</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Now is a good time to run your code and make sure everything works as
 expected. The changes we've made puts two sample rooms on the map, with
@@ -191,7 +258,7 @@ the use of creating a dungeon if we're stuck in one room? Not to worry,
 let's write some code to generate tunnels from one room to another. Add
 the following methods to `GameMap`:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     def create_room(self, room):
         ...
 
@@ -208,16 +275,44 @@ the following methods to `GameMap`:
     def is_blocked(self, x, y):
         ...
         
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    def create_room(self, room):
+        ...
+
+    <span class="new-text">def create_h_tunnel(self, x1, x2, y):
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            self.tiles[x][y].blocked = False
+            self.tiles[x][y].block_sight = False
+
+    def create_v_tunnel(self, y1, y2, x):
+        for y in range(min(y1, y2), max(y1, y2) + 1):
+            self.tiles[x][y].blocked = False
+            self.tiles[x][y].block_sight = False</span>
+
+    def is_blocked(self, x, y):
+        ...
+        </pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Let's put this code to use by drawing a tunnel between our two rooms.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
         ...
         self.create_room(room2)
 
 +       self.create_h_tunnel(25, 40, 23)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        ...
+        self.create_room(room2)
+
+        <span class="new-text">self.create_h_tunnel(25, 40, 23)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Now that we've demonstrated to ourselves that our room and tunnel
 functions work as intended, it's time to move on to an actual dungeon
@@ -229,7 +324,7 @@ We'll need two additional functions in the `Rect` class to ensure that
 two rectangles (rooms) don't overlap. Enter the following methods into
 the `Rect` class:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 class Rect:
     def __init__(self, x, y, w, h):
         self.x1 = x
@@ -246,7 +341,27 @@ class Rect:
 +       # returns true if this rectangle intersects with another one
 +       return (self.x1 <= other.x2 and self.x2 >= other.x1 and
 +               self.y1 <= other.y2 and self.y2 >= other.y1)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class Rect:
+    def __init__(self, x, y, w, h):
+        self.x1 = x
+        self.y1 = y
+        self.x2 = x + w
+        self.y2 = y + h
+
+    <span class="new-text">def center(self):
+        center_x = int((self.x1 + self.x2) / 2)
+        center_y = int((self.y1 + self.y2) / 2)
+        return (center_x, center_y)
+
+    def intersect(self, other):
+        # returns true if this rectangle intersects with another one
+        return (self.x1 <= other.x2 and self.x2 >= other.x1 and
+                self.y1 <= other.y2 and self.y2 >= other.y1)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Don't worry too much about the specifics here. Just know that the
 'center' method gives us the center point of a rectangle, and that
@@ -256,7 +371,7 @@ We're going to need a few variables to set the maximum and minimum size
 of the rooms, along with the maximum number of rooms one floor can have.
 Add the following to `engine.py`
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
     map_height = 45
 
@@ -266,14 +381,27 @@ Add the following to `engine.py`
 
     colors = {
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    map_height = 45
+
+    <span class="new-text">room_max_size = 10
+    room_min_size = 6
+    max_rooms = 30</span>
+
+    colors = {
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 At long last, it's time to modify `make_map` to generate our dungeon\!
 You can completely remove our old implementation and replace it with the
 following:
 
-```diff
-    def make_map(self):
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+-   def make_map(self):
 +   def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):
 -       room1 = Rect(20, 15, 10, 15)
 -       room2 = Rect(35, 15, 10, 15)
@@ -293,7 +421,31 @@ following:
 +           # random position without going out of the boundaries of the map
 +           x = randint(0, map_width - w - 1)
 +           y = randint(0, map_height - h - 1)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    <span class="crossed-out-text">def make_map(self):</span>
+    <span class="new-text">def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):</span>
+        <span class="crossed-out-text">room1 = Rect(20, 15, 10, 15)</span>
+        <span class="crossed-out-text">room2 = Rect(35, 15, 10, 15)</span>
+
+        <span class="crossed-out-text">self.create_room(room1)</span>
+        <span class="crossed-out-text">self.create_room(room2)</span>
+
+        <span class="crossed-out-text">self.create_h_tunnel(25, 40, 23)</span>
+
+        <span class="new-text">rooms = []
+        num_rooms = 0
+
+        for r in range(max_rooms):
+            # random width and height
+            w = randint(room_min_size, room_max_size)
+            h = randint(room_min_size, room_max_size)
+            # random position without going out of the boundaries of the map
+            x = randint(0, map_width - w - 1)
+            y = randint(0, map_height - h - 1)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 The variables we're creating here will be what we use to create our
 rooms momentarily. `randint` gives us a random integer between the
@@ -305,30 +457,38 @@ We also need to import `randint` from `random` at the top of the file.
 Your import section for `game_map.py` should now look something like
 this:
 
-```py3
+{{< highlight py3 >}}
 from random import randint
 
 from map_objects.rectangle import Rect
 from map_objects.tile import Tile
-```
+{{</ highlight >}}
 
 Last thing before we proceed: We need to update the call to `make_map`
 in `engine.py`, because now we're asking for a bunch of variables that
 we weren't before. Modify it to look like this:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
     game_map = GameMap(map_width, map_height)
 -   game_map.make_map()
 +   game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    game_map = GameMap(map_width, map_height)
+    <span class="crossed-out-text">game_map.make_map()</span>
+    <span class="new-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Now we'll put our `Rect` class to use, by passing it the variables we
 just created. Then, we can check if it intersects with any other rooms.
 If it does, we don't want to add it to our rooms, and we simply toss it
 out.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
             ...
             y = randint(0, map_height - h - 1)
 
@@ -339,7 +499,21 @@ out.
 +           for other_room in rooms:
 +               if new_room.intersect(other_room):
 +                   break
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>            ...
+            y = randint(0, map_height - h - 1)
+
+            <span class="new-text"># "Rect" class makes rectangles easier to work with
+            new_room = Rect(x, y, w, h)
+
+            # run through the other rooms and see if they intersect with this one
+            for other_room in rooms:
+                if new_room.intersect(other_room):
+                    break</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 If the room does *not* intersect any others, then we'll need to create
 it. Rather than introducing a boolean (True/False value) to keep track
@@ -349,7 +523,7 @@ basically says "if the for loop did not 'break', then do this". We'll
 put our room placement code in this 'else' statement right after the
 for-loop.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
             ...
             for other_room in rooms:
                 if new_room.intersect(other_room):
@@ -367,14 +541,35 @@ for-loop.
 +                   # this is the first room, where the player starts at
 +                   player.x = new_x
 +                   player.y = new_y
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>            ...
+            for other_room in rooms:
+                if new_room.intersect(other_room):
+                    break
+            <span class="new-text">else:
+                # this means there are no intersections, so this room is valid
+
+                # "paint" it to the map's tiles
+                self.create_room(new_room)
+
+                # center coordinates of new room, will be useful later
+                (new_x, new_y) = new_room.center()
+
+                if num_rooms == 0:
+                    # this is the first room, where the player starts at
+                    player.x = new_x
+                    player.y = new_y</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 We're creating our room, and saving the coordinates of its "center". If
 it's the first room we've created, then we place the player right in the
 middle of it. We'll also put these center coordinates to use in just a
 moment to create our tunnels.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
                 ...
                 if num_rooms == 0:
                     # this is the first room, where the player starts at
@@ -400,7 +595,36 @@ moment to create our tunnels.
 +               # finally, append the new room to the list
 +               rooms.append(new_room)
 +               num_rooms += 1
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>                ...
+                if num_rooms == 0:
+                    # this is the first room, where the player starts at
+                    player.x = new_x
+                    player.y = new_y
+                <span class="new-text">else:
+                    # all rooms after the first:
+                    # connect it to the previous room with a tunnel
+
+                    # center coordinates of previous room
+                    (prev_x, prev_y) = rooms[num_rooms - 1].center()
+
+                    # flip a coin (random number that is either 0 or 1)
+                    if randint(0, 1) == 1:
+                        # first move horizontally, then vertically
+                        self.create_h_tunnel(prev_x, new_x, prev_y)
+                        self.create_v_tunnel(prev_y, new_y, new_x)
+                    else:
+                        # first move vertically, then horizontally
+                        self.create_v_tunnel(prev_y, new_y, prev_x)
+                        self.create_h_tunnel(prev_x, new_x, new_y)
+
+                # finally, append the new room to the list
+                rooms.append(new_room)
+                num_rooms += 1</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 This 'else' statement covers all cases where we've already placed at
 least one room. In order for our dungeon to be navigable, we need to
@@ -422,3 +646,4 @@ here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part3).
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/part-4)
 
+<script src="/js/codetabs.js"></script>
