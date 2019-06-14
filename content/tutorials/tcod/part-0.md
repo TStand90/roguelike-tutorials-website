@@ -76,6 +76,16 @@ You should see "Hello World\!" printed out to the terminal. If you
 receive an error, there is probably an issue with either your Python or
 TCOD installation.
 
+### Downloading the Image File
+
+For this tutorial, we'll need an image file. The default one is provided below.
+
+![Font File](/images/arial10x10.png "Arial 10x10")
+
+Right click the image and save it to the same directory that you're planning on
+placing your code in. If the above image is not displaying for some reason,
+it is also [available for download here.](https://raw.githubusercontent.com/TStand90/roguelike_tutorial_revised/master/arial10x10.png)
+
 ### Getting help
 
 Be sure to check out the [Roguelike Development
