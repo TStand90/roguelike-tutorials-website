@@ -105,6 +105,22 @@ if __name__ == '__main__':
         error, there is probably an issue with either your Python or TCOD installation.
     </p>
 
+    <h3>Downloading the Image File</h3>
+
+    <p>
+        For this tutorial, we'll need an image file. The default one is provided below.
+    </p>
+
+    <img src="/images/arial10x10.png">
+
+    <p>
+        Right click the image and save it to the same directory that you're planning on
+        placing your code in. If the above image is not displaying for some reason,
+        it is also  
+        <a href="https://raw.githubusercontent.com/TStand90/roguelike_tutorial_revised/master/arial10x10.png">
+        available for download here.</a>
+    </p>
+
     <h3>Getting help</h3>
 
     <p>
