@@ -19,6 +19,10 @@ pygmentsCodeFencesGuessSyntax = true
     url = "/tutorials/tcod/"
     name = "TCOD Tutorial"
     weight = 2
+  [[languages.en.menu.main]]
+    url = "/about/"
+    name = "About"
+    weight = 3
 
 [params]
   mainSections = ["post"]
