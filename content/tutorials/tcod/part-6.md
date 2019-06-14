@@ -62,40 +62,40 @@ like we do for everything else. Modify the `__init__` function in
 class Entity:
 -   def __init__(self, x, y, char, color, name, blocks=False):
 +   def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):
-    self.x = x
-    self.y = y
-    self.char = char
-    self.color = color
-    self.name = name
-    self.blocks = blocks
-+   self.fighter = fighter
-+   self.ai = ai
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
++       self.fighter = fighter
++       self.ai = ai
 +
-+   if self.fighter:
-+       self.fighter.owner = self
++       if self.fighter:
++           self.fighter.owner = self
 +
-+   if self.ai:
-+       self.ai.owner = self
++       if self.ai:
++           self.ai.owner = self
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>class Entity:
     <span class="crossed-out-text">def __init__(self, x, y, char, color, name, blocks=False):</span>
     <span class="new-text">def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):</span>
-    self.x = x
-    self.y = y
-    self.char = char
-    self.color = color
-    self.name = name
-    self.blocks = blocks
-    <span class="new-text">self.fighter = fighter
-    self.ai = ai
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
+        <span class="new-text">self.fighter = fighter
+        self.ai = ai
 
-    if self.fighter:
-        self.fighter.owner = self
+        if self.fighter:
+            self.fighter.owner = self
 
-    if self.ai:
-        self.ai.owner = self</span></pre>
+        if self.ai:
+            self.ai.owner = self</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
