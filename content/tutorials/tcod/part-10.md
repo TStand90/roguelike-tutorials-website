@@ -26,7 +26,7 @@ folder called `loader_functions`, and put a new file in it called
 Our first function in this new file will return the variables that are
 currently at the top of the `main` function. It looks like this:
 
-```py3
+{{< highlight py3 >}}
 import tcod as libtcod
 
 
@@ -89,7 +89,7 @@ def get_constants():
     }
 
     return constants
-```
+{{</ highlight >}}
 
 *\*Note: `window_title` is new. Before, we were just passing the title
 of the window as a string, but we might as well define it as part of
@@ -106,18 +106,27 @@ effect.
 Let's put this function to work in our `engine.py` file. Import the
 function first:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 ...
 from input_handlers import handle_keys, handle_mouse
 +from loader_functions.initialize_new_game import get_constants
 from map_objects.game_map import GameMap
 ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+from input_handlers import handle_keys, handle_mouse
+<span class="new-text">from loader_functions.initialize_new_game import get_constants</span>
+from map_objects.game_map import GameMap
+...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Then, call it in the first line of `main`. Let's also remove those same
 variables :
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 def main():
 +   constants = get_constants()
 
@@ -152,7 +161,45 @@ def main():
 -       'light_wall': (130, 110, 50),
 -       'light_ground': (200, 180, 50)
 -   }
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>def main():
+    <span class="new-text">constants = get_constants()</span>
+
+    <span class="crossed-out-text">screen_width = 80</span>
+    <span class="crossed-out-text">screen_height = 50</span>
+
+    <span class="crossed-out-text">bar_width = 20</span>
+    <span class="crossed-out-text">panel_height = 7</span>
+    <span class="crossed-out-text">panel_y = screen_height - panel_height</span>
+
+    <span class="crossed-out-text">message_x = bar_width + 2</span>
+    <span class="crossed-out-text">message_width = screen_width - bar_width - 2</span>
+    <span class="crossed-out-text">message_height = panel_height - 1</span>
+
+    <span class="crossed-out-text">map_width = 80</span>
+    <span class="crossed-out-text">map_height = 43</span>
+
+    <span class="crossed-out-text">room_max_size = 10</span>
+    <span class="crossed-out-text">room_min_size = 6</span>
+    <span class="crossed-out-text">max_rooms = 30</span>
+
+    <span class="crossed-out-text">fov_algorithm = 0</span>
+    <span class="crossed-out-text">fov_light_walls = True</span>
+    <span class="crossed-out-text">fov_radius = 10</span>
+
+    <span class="crossed-out-text">max_monsters_per_room = 3</span>
+    <span class="crossed-out-text">max_items_per_room = 2</span>
+
+    <span class="crossed-out-text">colors = {</span>
+        <span class="crossed-out-text">'dark_wall': (0, 0, 100),</span>
+        <span class="crossed-out-text">'dark_ground': (50, 50, 150),</span>
+        <span class="crossed-out-text">'light_wall': (130, 110, 50),</span>
+        <span class="crossed-out-text">'light_ground': (200, 180, 50)</span>
+    <span class="crossed-out-text">}</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Okay, so if you're using an IDE (like PyCharm), then it's probably going
 crazy right now. Obviously we can't just remove that many variables and
@@ -160,7 +207,7 @@ expect everything to be just fine. We have to modify all the times we
 used those "constant" variables directly, and replace then with a lookup
 to the `constants` dictionary.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
     libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 
@@ -188,9 +235,40 @@ to the `constants` dictionary.
 +   message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
 
     key = libtcod.Key()
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 
-```diff
+    <span class="crossed-out-text">libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)</span>
+    <span class="new-text">libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)</span>
+
+    <span class="crossed-out-text">con = libtcod.console_new(screen_width, screen_height)</span>
+    <span class="crossed-out-text">panel = libtcod.console_new(screen_width, panel_height)</span>
+    <span class="new-text">con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])</span>
+
+    <span class="crossed-out-text">game_map = GameMap(map_width, map_height)</span>
+    <span class="crossed-out-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,</span>
+                      <span class="crossed-out-text">max_monsters_per_room, max_items_per_room)</span>
+    <span class="new-text">game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])</span>
+
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    <span class="crossed-out-text">message_log = MessageLog(message_x, message_width, message_height)</span>
+    <span class="new-text">message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])</span>
+
+    key = libtcod.Key()</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
         ...
         if fov_recompute:
 -           recompute_fov(fov_map, player.x, player.y, fov_radius, fov_light_walls, fov_algorithm)
@@ -202,7 +280,22 @@ to the `constants` dictionary.
 +       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
 +                  constants['screen_width'], constants['screen_height'], constants['bar_width'],
 +                  constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        ...
+        if fov_recompute:
+            <span class="crossed-out-text">recompute_fov(fov_map, player.x, player.y, fov_radius, fov_light_walls, fov_algorithm)</span>
+            <span class="new-text">recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
+                          constants['fov_algorithm'])</span>
+
+        <span class="crossed-out-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,</span>
+                   <span class="crossed-out-text">screen_height, bar_width, panel_height, panel_y, mouse, colors, game_state)</span>
+        <span class="new-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                   constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                   constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 *\*Note: Why are we using the square bracket notation instead of the
 `get()` method? In most other spots, we've used the 'get' notation, but
@@ -224,7 +317,7 @@ What's next? Another thing we could do is move the initialization of the
 player, entities list, and game's map to a separate function. Put the
 following function in `initialize_new_game.py`:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 def get_constants():
     ...
 
@@ -245,12 +338,36 @@ def get_constants():
 +   game_state = GameStates.PLAYERS_TURN
 +
 +   return player, entities, game_map, message_log, game_state
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>def get_constants():
+    ...
+
+<span class="new-text">def get_game_variables(constants):
+    fighter_component = Fighter(hp=30, defense=2, power=5)
+    inventory_component = Inventory(26)
+    player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
+                    fighter=fighter_component, inventory=inventory_component)
+    entities = [player]
+
+    game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])
+
+    message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
+
+    game_state = GameStates.PLAYERS_TURN
+
+    return player, entities, game_map, message_log, game_state</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 We'll need to include a few imports in `initialize_new_game.py` for
 this:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 import tcod as libtcod
 
 +from components.fighter import Fighter
@@ -269,24 +386,56 @@ import tcod as libtcod
 
 def get_constants():
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>import tcod as libtcod
+
+<span class="new-text">from components.fighter import Fighter
+from components.inventory import Inventory
+
+from entity import Entity
+
+from game_messages import MessageLog
+
+from game_states import GameStates
+
+from map_objects.game_map import GameMap
+
+from render_functions import RenderOrder</span>
+
+
+def get_constants():
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Nothing has changed about the way we're initializing these variables.
 All we're doing is putting it in one function, which we'll call once in
 our main game loop. Let's do that now. Start by importing the
 `get_game_variables` function:
 
-```py3
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 ...
 from input_handlers import handle_keys, handle_mouse
-from loader_functions.initialize_new_game import get_constants, get_game_variables
+-from loader_functions.initialize_new_game import get_constants
++from loader_functions.initialize_new_game import get_constants, get_game_variables
 from map_objects.game_map import GameMap
 ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, <span class="new-text">get_game_variables</span>
+from map_objects.game_map import GameMap
+...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Then modify the `main` function like this:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
 -   fighter_component = Fighter(hp=30, defense=2, power=5)
 -   inventory_component = Inventory(26)
@@ -322,27 +471,86 @@ Then modify the `main` function like this:
 
     targeting_item = None
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    <span class="crossed-out-text">fighter_component = Fighter(hp=30, defense=2, power=5)</span>
+    <span class="crossed-out-text">inventory_component = Inventory(26)</span>
+    <span class="crossed-out-text">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,</span>
+                    <span class="crossed-out-text">fighter=fighter_component, inventory=inventory_component)</span>
+    <span class="crossed-out-text">entities = [player]</span>
+
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
+
+    con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
+
+    <span class="crossed-out-text">game_map = GameMap(constants['map_width'], constants['map_height'])</span>
+    <span class="crossed-out-text">game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],</span>
+                      <span class="crossed-out-text">constants['map_width'], constants['map_height'], player, entities,</span>
+                      <span class="crossed-out-text">constants['max_monsters_per_room'], constants['max_items_per_room'])</span>
+
+    <span class="new-text">player, entities, game_map, message_log, game_state = get_game_variables(constants)</span>
+
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    <span class="crossed-out-text">message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])</span>
+
+    key = libtcod.Key()
+    mouse = libtcod.Mouse()
+
+    <span class="crossed-out-text">game_state = GameStates.PLAYERS_TURN</span>
+    previous_game_state = game_state
+
+    targeting_item = None
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 One interesting effect of removing these lines is that we don't need all
 the imports we did before. Modify your import section at the top of
 `engine.py` to look like this:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 import tcod as libtcod
 
 -from components.fighter import Fighter
 -from components.inventory import Inventory
 from death_functions import kill_monster, kill_player
-from entity import Entity, get_blocking_entities_at_location
+-from entity import Entity, get_blocking_entities_at_location
++from entity get_blocking_entities_at_location
 from fov_functions import initialize_fov, recompute_fov
-from game_messages import Message, MessageLog
+-from game_messages import Message, MessageLog
++from game_messages import Message
 from game_states import GameStates
 from input_handlers import handle_keys, handle_mouse
 from loader_functions.initialize_new_game import get_constants, get_game_variables
 -from map_objects.game_map import GameMap
-from render_functions import clear_all, render_all, RenderOrder
-```
+-from render_functions import clear_all, render_all, RenderOrder
++from render_functions import clear_all, render_all
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>import tcod as libtcod
+
+<span class="crossed-out-text">from components.fighter import Fighter</span>
+<span class="crossed-out-text">from components.inventory import Inventory</span>
+from death_functions import kill_monster, kill_player
+from entity import <span class="crossed-out-text">Entity</span>, get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message, <span class="crossed-out-text">MessageLog</span>
+from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span class="crossed-out-text">from map_objects.game_map import GameMap</span>
+from render_functions import clear_all, render_all<span class="crossed-out-text">, RenderOrder</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 It's time to think about how we're going to save and load our game. In
 order for this to happen, we'll need to save some (not necessarily all)
@@ -371,7 +579,7 @@ Install `shelve` in your Python installation (pip is the best way).
 Then, create a new file in `loader_functions`, called `data_loaders.py`.
 We'll start by writing our save function.
 
-```py3
+{{< highlight py3 >}}
 import shelve
 
 
@@ -382,7 +590,7 @@ def save_game(player, entities, game_map, message_log, game_state):
         data_file['game_map'] = game_map
         data_file['message_log'] = message_log
         data_file['game_state'] = game_state
-```
+{{</ highlight >}}
 
 Using `shelve`, we're encoding the data into a dictionary which we'll
 save to the file later. Note that we're not actually saving the
@@ -396,8 +604,8 @@ Luckily, it also makes loading our game easy too; let's implement that
 now. In the same file (`data_loaders.py`), create a new function called
 `load_game`. You'll need to import `GameMap` in order for this to work.
 
-```diff
-import os
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
++import os
 
 import shelve
 
@@ -419,7 +627,33 @@ def save_game(player, entities, game_map, message_log, game_state):
 +   player = entities[player_index]
 +
 +   return player, entities, game_map, message_log, game_state
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre><span class="new-text">import os</span>
+
+import shelve
+
+
+def save_game(player, entities, game_map, message_log, game_state):
+    ...
+
+<span class="new-text">def load_game():
+    if not os.path.isfile('savegame.dat'):
+        raise FileNotFoundError
+
+    with shelve.open('savegame.dat', 'r') as data_file:
+        player_index = data_file['player_index']
+        entities = data_file['entities']
+        game_map = data_file['game_map']
+        message_log = data_file['message_log']
+        game_state = data_file['game_state']
+
+    player = entities[player_index]
+
+    return player, entities, game_map, message_log, game_state</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 This is just the reverse of the save function. We pull the data out of
 the data file, and return all the variables needed to the engine.
@@ -438,7 +672,7 @@ We'll need a new menu function to display our main menu. Open up
 `menus.py` and add the following function to
     it:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
     ...
 
@@ -453,7 +687,25 @@ def inventory_menu(con, header, inventory, inventory_width, screen_width, screen
 +                            'By (Your name here)')
 +
 +   menu(con, '', ['Play a new game', 'Continue last game', 'Quit'], 24, screen_width, screen_height)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
+    ...
+
+
+<span class="new-text">def main_menu(con, background_image, screen_width, screen_height):
+    libtcod.image_blit_2x(background_image, 0, 0, 0)
+
+    libtcod.console_set_default_foreground(0, libtcod.light_yellow)
+    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
+                             'TOMBS OF THE ANCIENT KINGS')
+    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
+                             'By (Your name here)')
+
+    menu(con, '', ['Play a new game', 'Continue last game', 'Quit'], 24, screen_width, screen_height)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Our "main" function right now operates off the assumption that we're
 going straight into the game. A better method of handling this would be
@@ -468,7 +720,7 @@ elsewhere right now).
 much to
     cover.*
 
-```py3
+{{< highlight py3 >}}
 def play_game(player, entities, game_map, message_log, game_state, con, panel, constants):
     fov_recompute = True
 
@@ -656,7 +908,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                         break
             else:
                 game_state = GameStates.PLAYERS_TURN
-```
+{{</ highlight >}}
 
 This is the same as our game code from before, just put into a function.
 We'll pass all the needed variables in our `main` function. If the
@@ -668,7 +920,7 @@ Now let's change our main loop. It'll display the main menu, and
 depending on the player's choice, it will either start a new game, load
 an existing one, or exit the program.
 
-```py3
+{{< highlight py3 >}}
 def main():
     constants = get_constants()
 
@@ -732,7 +984,7 @@ def main():
             play_game(player, entities, game_map, message_log, game_state, con, panel, constants)
 
             show_main_menu = True
-```
+{{</ highlight >}}
 
 We're loading a background image with `image_load` to display in our
 main menu. The sample image used for this tutorial can be [found
@@ -752,17 +1004,23 @@ We haven't implemented the `message_box` or `handle_main_menu` functions
 yet, so let's do so now. We'll start with `message_box` and we'll put it
 in `menus.py`, at the bottom of the file:
 
-```py3
-def message_box(con, header, width, screen_width, screen_height):
-    menu(con, header, [], width, screen_width, screen_height)
-```
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
++def message_box(con, header, width, screen_width, screen_height):
++   menu(con, header, [], width, screen_width, screen_height)
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre><span class="new-text">def message_box(con, header, width, screen_width, screen_height):
+    menu(con, header, [], width, screen_width, screen_height)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Pretty straightforward. The message box is just an empty menu,
 basically.
 
 Now on to `handle_main_menu`, which goes in `input_handlers.py`:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 def handle_inventory_keys(key):
     ...
 
@@ -781,7 +1039,29 @@ def handle_inventory_keys(key):
 
 def handle_mouse(mouse):
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>def handle_inventory_keys(key):
+    ...
+
+<span class="new-text">def handle_main_menu(key):
+    key_char = chr(key.c)
+
+    if key_char == 'a':
+        return {'new_game': True}
+    elif key_char == 'b':
+        return {'load_game': True}
+    elif key_char == 'c' or  key.vk == libtcod.KEY_ESCAPE:
+        return {'exit': True}
+
+    return {}</span>
+
+
+def handle_mouse(mouse):
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Nothing too complicated here: Our main menu will have 3 options, so just
 return the result of which option was selected. Note that the 'Quit'
@@ -789,7 +1069,7 @@ option can be done through the 'c' key or 'Escape'.
 
 Remember to import these new functions into `engine.py`:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 import tcod as libtcod
 
 from death_functions import kill_monster, kill_player
@@ -797,13 +1077,31 @@ from entity import get_blocking_entities_at_location
 from fov_functions import initialize_fov, recompute_fov
 from game_messages import Message
 from game_states import GameStates
-from input_handlers import handle_keys, handle_mouse, handle_main_menu
+-from input_handlers import handle_keys, handle_mouse
++from input_handlers import handle_keys, handle_mouse, handle_main_menu
 from loader_functions.initialize_new_game import get_constants, get_game_variables
 +from loader_functions.data_loaders import load_game, save_game
 +from menus import main_menu, message_box
 from render_functions import clear_all, render_all
 ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>import tcod as libtcod
+
+from death_functions import kill_monster, kill_player
+from entity import get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message
+from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse<span class="new-text">, handle_main_menu</span>
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span class="new-text">from loader_functions.data_loaders import load_game, save_game</span>
+<span class="new-text">from menus import main_menu, message_box</span>
+from render_functions import clear_all, render_all
+...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 That's all for this chapter. The gameplay itself hasn't changed, but
 saving and loading is no small feat. Be proud\!
@@ -813,3 +1111,5 @@ here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part10).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/part-11)
+
+<script src="/js/codetabs.js"></script>
