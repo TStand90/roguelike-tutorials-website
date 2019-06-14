@@ -52,15 +52,17 @@ To verify that your installation of both Python 3 and TCOD are working,
 create a new file (in whatever directory you plan on using for the
 tutorial) called `engine.py`, and enter the following text into it:
 
-    import tcod as libtcod
-    
-    
-    def main():
-        print('Hello World!')
-    
-    
-    if __name__ == '__main__':
-        main()
+```py3
+import tcod as libtcod
+
+
+def main():
+    print('Hello World!')
+
+
+if __name__ == '__main__':
+    main()
+```
 
 Run the file in your terminal (or alternatively in your editor, if
 possible):
@@ -86,6 +88,110 @@ Right click the image and save it to the same directory that you're planning on
 placing your code in. If the above image is not displaying for some reason,
 it is also [available for download here.](https://raw.githubusercontent.com/TStand90/roguelike_tutorial_revised/master/arial10x10.png)
 
+
+### About this site
+
+Code snippets in this website are presented in a way that tries to convey
+exactly what the user should be adding to a file at what time. When a user
+is expected to create a file from scratch and enter code into it, it will
+be represented with standard Python code highlighting, like so:
+
+{{< highlight py3 >}}
+class Fighter:
+    def __init__(self, hp, defense, power):
+        self.max_hp = hp
+        self.hp = hp
+        self.defense = defense
+        self.power = power
+{{</ highlight >}}
+
+**Taken from part 6*.
+
+Most of the time, you'll be editing a file and code that already exists.
+In such cases, the code will be displayed like this:
+
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+class Entity:
+-   def __init__(self, x, y, char, color, name, blocks=False):
++   def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
++       self.fighter = fighter
++       self.ai = ai
++
++       if self.fighter:
++           self.fighter.owner = self
++
++       if self.ai:
++           self.ai.owner = self
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class Entity:
+    <span class="crossed-out-text">def __init__(self, x, y, char, color, name, blocks=False):</span>
+    <span class="new-text">def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):</span>
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
+        <span class="new-text">self.fighter = fighter
+        self.ai = ai
+
+        if self.fighter:
+            self.fighter.owner = self
+
+        if self.ai:
+            self.ai.owner = self</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+**Also taken from part 6.*
+
+Clicking a button above the code section changes the "style" for not just that code block,
+but the entire website. You can switch between these styles at any time.
+
+In the case of the example above, you would remove the old `__init__` definition, replacing
+it with the new one. Then, you'd add the necessary lines at the bottom. Both styles convey
+the same idea.
+
+But what's the difference? The "Diff" style shows the code as you might find it when doing
+a Git diff comparison (hence the name). It shows plusses and minuses on the side to denote
+whether you should be adding or subtracting a line from a file. The "Original" style shows
+the same thing, but it crosses out the lines to remove and does not have plusses nor minuses.
+
+The benefit of the "Diff" style is that it doesn't rely on color to denote what to add, making
+it more accessible all around. The drawback is that it's impossible to accurately display the
+proper indentation in some instances. The plusses and minuses take up one space, so in a code
+section like this one, be sure not to leave the space for the plus in your code (there should
+be no spaces before "from"):
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+import tcod as libtcod
+
++from input_handlers import handle_keys
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+    <pre>import tcod as libtcod
+
+<span class="new-text">from input_handlers import handle_keys</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+The "Original" style omits the + and - symbols and doesn't have the indentation issue,
+making it a bit easier to copy and paste code sections.
+
+Which style you use is a matter of personal preference. The actual code of the tutorial
+remains the same.
+
 ### Getting help
 
 Be sure to check out the [Roguelike Development
@@ -99,3 +205,4 @@ link there to the Discord channel as well.
 Once you're set up and ready to go, you can proceed to [Part
 1](/tutorials/tcod/part-1).
 
+<script src="/js/codetabs.js"></script>
