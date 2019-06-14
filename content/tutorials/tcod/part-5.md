@@ -10,7 +10,7 @@ attacked (the actual attacking part we'll save for next time). To start,
 we'll need a function to place the enemies in the dungeon; let's call it
 `place_entities` and put it in the `GameMap` class.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     def create_v_tunnel(self, y1, y2, x):
         ...
 
@@ -33,7 +33,33 @@ we'll need a function to place the enemies in the dungeon; let's call it
 
     def is_blocked(self, x, y):
         ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    def create_v_tunnel(self, y1, y2, x):
+        ...
+
+    <span class="new-text">def place_entities(self, room, entities, max_monsters_per_room):
+        # Get a random number of monsters
+        number_of_monsters = randint(0, max_monsters_per_room)
+
+        for i in range(number_of_monsters):
+            # Choose a random location in the room
+            x = randint(room.x1 + 1, room.x2 - 1)
+            y = randint(room.y1 + 1, room.y2 - 1)
+
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                if randint(0, 100) < 80:
+                    monster = Entity(x, y, 'o', libtcod.desaturated_green)
+                else:
+                    monster = Entity(x, y, 'T', libtcod.darker_green)
+
+                entities.append(monster)</span>
+
+    def is_blocked(self, x, y):
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 In this function, we're choosing a random amount of enemies to place,
 between 0 and the maximum we specify. Then, we take a random x and y,
@@ -43,19 +69,29 @@ chance of it being a Troll.
 
 We'll need to import both `libtcod` and the `Entity` class.
 
-```diff
-import tcod as libtcod
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
++import tcod as libtcod
 from random import randint
 
 +from entity import Entity
 from map_objects.rectangle import Rect
 from map_objects.tile import Tile
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+    <pre><span class="new-text">import tcod as libtcod</span>
+from random import randint
+
+<span class="new-text">from entity import Entity</span>
+from map_objects.rectangle import Rect
+from map_objects.tile import Tile</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Now let's modify our `make_map` function to include the `place_entities`
 function.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
                         ...
                         self.create_h_tunnel(prev_x, new_x, new_y)
 
@@ -63,18 +99,36 @@ function.
 
                 rooms.append(new_room)
                 ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>                        ...
+                        self.create_h_tunnel(prev_x, new_x, new_y)
+
+                <span class="new-text">self.place_entities(new_room, entities, max_monsters_per_room)</span>
+
+                rooms.append(new_room)
+                ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Because we now need the `entities` and `max_monsters_per_room`
 variables, we should modify our `make_map` function definition to
 include
 them.
 
-```diff
-    def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+-   def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):
 +   def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
 +                max_monsters_per_room):
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    <span class="crossed-out-text">def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):</span>
+    <span class="new-text">def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+                 max_monsters_per_room):</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 We're all set up here; now we have to modify `engine.py` to match this
 new `make_map` function. Also, we'll need to create the
@@ -82,7 +136,7 @@ new `make_map` function. Also, we'll need to create the
 we'll change our `entities` list to include only the player at first,
 and we'll completely remove our dummy NPC from before.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
     fov_radius = 10
 
@@ -113,7 +167,41 @@ and we'll completely remove our dummy NPC from before.
 
     fov_recompute = True
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    fov_radius = 10
+
+    <span class="new-text">max_monsters_per_room = 3</span>
+
+    colors = {
+        'dark_wall': libtcod.Color(0, 0, 100),
+        'dark_ground': libtcod.Color(50, 50, 150),
+        'light_wall': libtcod.Color(130, 110, 50),
+        'light_ground': libtcod.Color(200, 180, 50)
+    }
+
+    <span class="crossed-out-text">player = Entity(int(screen_width / 2), int(screen_height / 2), '@', libtcod.white)</span>
+    <span class="crossed-out-text">npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), '@', libtcod.yellow)</span>
+    <span class="crossed-out-text">entities = [npc, player]</span>
+    <span class="new-text">player = Entity(0, 0, '@', libtcod.white)</span>
+    <span class="new-text">entities = [player]</span>
+
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)
+
+    con = libtcod.console_new(screen_width, screen_height)
+
+    game_map = GameMap(map_width, map_height)
+    <span class="crossed-out-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player)</span>
+    <span class="new-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities, max_monsters_per_room)</span>
+
+    fov_recompute = True
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Run the project now, and you should see some orcs and trolls beginning
 to populate our dungeon\!
@@ -136,7 +224,7 @@ Let's modify the `Entity` class to include the "blocks" variable. While
 we're modifying this class, we should also pass in a "name" for the
 Entity, which will be useful a little later.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 class Entity:
 -   def __init__(self, x, y, char, color):
 +   def __init__(self, x, y, char, color, name, blocks=False):
@@ -149,7 +237,23 @@ class Entity:
 
     def move(self, dx, dy):
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class Entity:
+    <span class="crossed-out-text">def __init__(self, x, y, char, color):</span>
+    <span class="new-text">def __init__(self, x, y, char, color, name, blocks=False):</span>
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        <span class="new-text">self.name = name
+        self.blocks = blocks</span>
+
+    def move(self, dx, dy):
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Notice that "blocks" is optional; if we don't pass it on initialization,
 it will be False by default.
@@ -157,21 +261,37 @@ it will be False by default.
 Go back to `game_map.py` and modify the `place_entities` method, where
 we declare our monsters.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
             if randint(0, 100) < 80:
 -               monster = Entity(x, y, 'o', libtcod.desaturated_green)
 +               monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True)
             else:
 -               monster = Entity(x, y, 'T', libtcod.darker_green)
 +               monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>            if randint(0, 100) < 80:
+                <span class="crossed-out-text">monster = Entity(x, y, 'o', libtcod.desaturated_green)</span>
+                <span class="new-text">monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True)</span>
+            else:
+                <span class="crossed-out-text">monster = Entity(x, y, 'T', libtcod.darker_green)</span>
+                <span class="new-text">monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 We also need to update the initialization of the player in `engine.py`:
 
-```diff
-    player = Entity(0, 0, '@', libtcod.white)
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+-   player = Entity(0, 0, '@', libtcod.white)
 +   player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True)
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    <span class="crossed-out-text">player = Entity(0, 0, '@', libtcod.white)</span>
+    <span class="new-text">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 With our new attribute in place, we need to make a check if a blocking
 entity is in the way when we try to move into a tile. One thing that
@@ -184,7 +304,7 @@ class.
 
 Add the function to `entity.py` like this:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 class Entity:
     ...
 
@@ -195,7 +315,21 @@ class Entity:
 +           return entity
 +
 +   return None
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class Entity:
+    ...
+
+
+<span class="new-text">def get_blocking_entities_at_location(entities, destination_x, destination_y):
+    for entity in entities:
+        if entity.blocks and entity.x == destination_x and entity.y == destination_y:
+            return entity
+
+    return None</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 The function loops through the entities, and if one of them is
 "blocking" and is at the x and y location we specified, we return it. If
@@ -207,9 +341,14 @@ move into the same tile.
 With that in place, let's return to our movement function. Modify the
 code that moves the player in `engine.py` like this:
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
         if move:
             dx, dy = move
+
+-           player.move(dx, dy)
+-
+-           fov_recompute = True
+
 +           destination_x = player.x + dx
 +           destination_y = player.y + dy
 
@@ -220,15 +359,42 @@ code that moves the player in `engine.py` like this:
 +               if target:
 +                   print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
 +               else:
-                    player.move(dx, dy)
++                   player.move(dx, dy)
++
++                   fov_recompute = True
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        if move:
+            dx, dy = move
+            <span class="new-text">destination_x = player.x + dx
+            destination_y = player.y + dy</span>
 
-                    fov_recompute = True
-```
+            <span class="crossed-out-text">if not game_map.is_blocked(player.x + dx, player.y + dy):</span>
+            <span class="new-text">if not game_map.is_blocked(destination_x, destination_y):</span>
+                <span class="new-text">target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                if target:
+                    print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
+                else:</span>
+                    <span style="color: blue">player.move(dx, dy)
+
+                    fov_recompute = True</span>
+</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Also be sure to import the function `get_blocking_entities_at_location`
 at the top of `engine.py`.
-
-    from entity import Entity, get_blocking_entities_at_location
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+-   from entity import Entity
++   from entity import Entity, get_blocking_entities_at_location
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from entity import Entity<span class="new-text">, get_blocking_entities_at_location</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Now the player gets blocked when trying to move through another entity.
 We're putting that humorous (hey, I think it's funny\!) print statement
@@ -248,14 +414,14 @@ values that won't change, so it's perfect for things like game states.
 Create a new file called `game_states.py` and put the following class in
 it:
 
-```py3
+{{< highlight py3 >}}
 from enum import Enum
 
 
 class GameStates(Enum):
     PLAYERS_TURN = 1
     ENEMY_TURN = 2
-```
+{{</ highlight >}}
 
 This will make our game state switching much easier to manage,
 especially in the future when we have more than two.
@@ -268,18 +434,27 @@ able to.*
 Let's put this new `GameStates` enum into action. Start by importing it
 at the top.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 ...
 from fov_functions import initialize_fov, recompute_fov
 +from game_states import GameStates
 from input_handlers import handle_keys
 ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+    <pre>...
+from fov_functions import initialize_fov, recompute_fov
+<span class="new-text">from game_states import GameStates</span>
+from input_handlers import handle_keys
+...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Then, create a variable called `game_state`, which we'll set initially
 to the player's turn.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
     mouse = libtcod.Mouse()
 
@@ -287,15 +462,26 @@ to the player's turn.
 
     while not libtcod.console_is_window_closed():
     ...
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    mouse = libtcod.Mouse()
+
+    <span class="new-text">game_state = GameStates.PLAYERS_TURN</span>
+
+    while not libtcod.console_is_window_closed():
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Depending on whether or not its the players turn, we want to control the
 player's movement. The player can only move on the players turn, so
 let's modify our `if move:` section to handle this. After the player
 successfully moves, we'll set the state to `ENEMY_TURN`.
 
-```diff
-        if move:
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+-       if move:
 +       if move and game_state == GameStates.PLAYERS_TURN:
             dx, dy = move
             destination_x = player.x + dx
@@ -312,7 +498,28 @@ successfully moves, we'll set the state to `ENEMY_TURN`.
                     fov_recompute = True
 
 +               game_state = GameStates.ENEMY_TURN
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        <span class="crossed-out-text">if move:</span>
+        <span class="new-text">if move and game_state == GameStates.PLAYERS_TURN:</span>
+            dx, dy = move
+            destination_x = player.x + dx
+            destination_y = player.y + dy
+
+            if not game_map.is_blocked(destination_x, destination_y):
+                target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                if target:
+                    print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
+                else:
+                    player.move(dx, dy)
+
+                    fov_recompute = True
+
+                <span class="new-text">game_state = GameStates.ENEMY_TURN</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 If you run the project now, the player will be able to move once... and
 then get stuck forever. That's because we need to implement the enemy's
@@ -321,7 +528,7 @@ Note that you *can* exit the game and make it full screen, because we're
 not stopping the player from doing those things when it isn't the
 player's turn.
 
-```diff
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
         ...
         if fullscreen:
             libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
@@ -332,7 +539,21 @@ player's turn.
 +                   print('The ' + entity.name + ' ponders the meaning of its existence.')
 +
 +           game_state = GameStates.PLAYERS_TURN
-```
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        ...
+        if fullscreen:
+            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+
+        <span class="new-text">if game_state == GameStates.ENEMY_TURN:
+            for entity in entities:
+                if entity != player:
+                    print('The ' + entity.name + ' ponders the meaning of its existence.')
+
+            game_state = GameStates.PLAYERS_TURN</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 This is simple enough. Assuming it's the enemy turn, we're looping
 through each of the entities (excluding the player) and allowing them to
@@ -347,3 +568,4 @@ here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part5).
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/part-6)
 
+<script src="/js/codetabs.js"></script>
