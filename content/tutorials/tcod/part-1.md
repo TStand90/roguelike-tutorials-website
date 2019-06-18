@@ -9,7 +9,7 @@ will help you create your very first roguelike game, written in Python\!
 
 This tutorial is largely based off the [one found on
 Roguebasin](http://www.roguebasin.com/index.php?title=Complete_Roguelike_Tutorial,_using_python%2Blibtcod).
-Many of the design decisions were many to keep this tutorial in lockstep
+Many of the design decisions were mainly to keep this tutorial in lockstep
 with that one (at least in terms of chapter composition and general
 direction). This tutorial would not have been possible without the
 guidance of those who wrote that tutorial, along with all the wonderful
@@ -312,7 +312,7 @@ original one, but here's a critical turning point. We're about to define
 a function, called `handle_keys` to take care of keyboard input. We
 *could* put this in our `engine.py` file... but should it be there? I
 would argue no. The engine (game loop) captures input and should do
-something with it, but translating from one to the other is not
+something with it; but, translating from one to the other is not
 something it needs to know about.
 
 So rather than putting the `handle_keys` function in `engine.py`, let's
