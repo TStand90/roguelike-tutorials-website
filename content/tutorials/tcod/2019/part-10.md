@@ -576,8 +576,7 @@ library; specifically: `shelve`. This library allows you to save and
 load complex Python objects, without needing to write custom
 serializers.
 
-Install `shelve` in your Python installation (pip is the best way).
-Then, create a new file in `loader_functions`, called `data_loaders.py`.
+Create a new file in `loader_functions`, called `data_loaders.py`.
 We'll start by writing our save function.
 
 {{< highlight py3 >}}
