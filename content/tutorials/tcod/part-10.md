@@ -605,7 +605,7 @@ now. In the same file (`data_loaders.py`), create a new function called
 `load_game`. You'll need to import `GameMap` in order for this to work.
 
 {{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
-+import os
++from pathlib import Path
 
 import shelve
 
@@ -614,7 +614,7 @@ def save_game(player, entities, game_map, message_log, game_state):
     ...
 
 +def load_game():
-+   if not os.path.isfile('savegame.dat'):
++   if not Path('savegame.dat').is_file():
 +       raise FileNotFoundError
 +
 +   with shelve.open('savegame.dat', 'r') as data_file:
@@ -639,7 +639,7 @@ def save_game(player, entities, game_map, message_log, game_state):
     ...
 
 <span class="new-text">def load_game():
-    if not os.path.isfile('savegame.dat'):
+    if not Path('savegame.dat').is_file():
         raise FileNotFoundError
 
     with shelve.open('savegame.dat', 'r') as data_file:
