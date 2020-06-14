@@ -1,3 +1,6 @@
 [submodule "themes/bootstrap"]
 	path = themes/bootstrap
 	url = https://github.com/Xzya/hugo-bootstrap.git
+[submodule "themes/hugo-coder"]
+	path = themes/hugo-coder
+	url = https://github.com/luizdepra/hugo-coder.git
