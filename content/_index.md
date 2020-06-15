@@ -4,7 +4,9 @@ date: 2019-03-30T08:39:22-07:00
 draft: false
 ---
 
-To get started with the TCOD tutorial, [click here](/tutorials/tcod/).
+To get started with the old version of the TCOD tutorial, [click here](/tutorials/tcod/).
+
+To try out the new version, [click here](/tutorials/tcod/v2/). The new version will be updated weekly to coincide with the 2020 [RoguelikeDev Does The Complete Roguelike Tutorial](https://www.reddit.com/r/roguelikedev/comments/grccvt/roguelikedev_does_the_complete_roguelike_tutorial/) event.
 
 Need help? Be sure to check out the
 [Roguelike Development Subreddit](https://www.reddit.com/r/roguelikedev)
