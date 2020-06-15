@@ -1,7 +1,7 @@
 ---
 title: "Yet Another Roguelike Tutorial - Written in Python 3 and TCOD"
 date: 2020-06-14T11:35:22-07:00
-draft: true
+draft: false
 ---
   - [Part 0 - Setting Up](/tutorials/tcod/v2/part-0)
   - [Part 1 - Drawing the ‘@’ symbol and moving it

@@ -1,7 +1,7 @@
 ---
 title: "Part 1 - Drawing the '@' symbol and moving it around"
 date: 2020-06-14T11:35:26-07:00
-draft: true
+draft: false
 ---
 
 

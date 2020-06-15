@@ -1,7 +1,7 @@
 ---
 title: "Part 0 - Setting Up"
 date: 2020-06-14T11:25:36-07:00
-draft: true
+draft: false
 ---
 <script src="{{ .Site.BaseURL }}/js/codetabs.js"></script>
 
