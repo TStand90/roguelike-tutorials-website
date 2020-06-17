@@ -37,6 +37,21 @@ it, I'd highly recommend using a virtual environment. [Documentation on
 how to do that can be found
 here.](https://docs.python.org/3/library/venv.html)
 
+Additionally, if you are going to use a virtual environment, you may want to take the time to set up a `requirements.txt` file. This will allow you to track your project dependencies if you add any in the future, and more easily install them if you need to (for example, if you pull from a remote git repository).
+
+You can set up your `requirements.txt` file in the same directory that you plan on working in for the project. Create the file `requirements.txt` and put the following in it:
+
+{{< highlight text >}}
+tcod>=11.13
+numpy>=1.18
+{{</ highlight >}}
+
+Once that's done, with your virtual environment activated, type the following command:
+
+`pip install -r requirements.txt`
+
+This should install the TCOD library, along with its dependency, numpy.
+
 Depending on your computer, you might also need to install SDL2.
 Check the instructions for installing it based on your operating system.
 For example, Ubuntu can install it with the following command:
