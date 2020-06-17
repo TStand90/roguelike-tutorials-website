@@ -104,11 +104,11 @@ TCOD installation.
 
 For this tutorial, we'll need an image file. The default one is provided below.
 
-![Font File](/images/arial10x10.png)
+![Font File](/images/dejavu10x10_gs_tc.png)
 
 Right click the image and save it to the same directory that you're planning on
 placing your code in. If the above image is not displaying for some reason,
-it is also [available for download here.](https://raw.githubusercontent.com/TStand90/roguelike_tutorial_revised/master/arial10x10.png)
+it is also [available for download here.](https://raw.githubusercontent.com/TStand90/tcod_tutorial_v2/master/dejavu10x10_gs_tc.png)
 
 
 ### About this site
