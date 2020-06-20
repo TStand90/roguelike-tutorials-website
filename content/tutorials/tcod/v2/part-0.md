@@ -75,6 +75,7 @@ create a new file (in whatever directory you plan on using for the
 tutorial) called `main.py`, and enter the following text into it:
 
 ```py3
+#!/usr/bin/env python3
 import tcod
 
 
