@@ -400,7 +400,7 @@ from __future__ import annotations
 
 +from random import randint
 -from typing import Tuple
-+from typing import Tuple, TYPE_CHECKING
++from typing import List, Tuple, TYPE_CHECKING
 
 import numpy as np  # type: ignore
 from tcod.console import Console
@@ -425,7 +425,7 @@ class Rect:
 
 -       self.create_horizontal_tunnel(25, 40, 23)
 
-+       rooms = []
++       rooms: List[Rect] = []
 +       number_of_rooms = 0
 +
 +       for r in range(max_rooms):
@@ -442,7 +442,7 @@ class Rect:
 
 <span class="new-text">from random import randint</span>
 <span class="crossed-out-text">from typing import Tuple</span>
-<span class="new-text">from typing import Tuple, TYPE_CHECKING</span>
+<span class="new-text">from typing import List, Tuple, TYPE_CHECKING</span>
 
 import numpy as np  # type: ignore
 from tcod.console import Console
@@ -467,7 +467,7 @@ class Rect:
 
         <span class="crossed-out-text">self.create_horizontal_tunnel(25, 40, 23)</span>
         
-        <span class="new-text">rooms = []
+        <span class="new-text">rooms: List[Rect] = []
         number_of_rooms = 0
  
         for r in range(max_rooms):
