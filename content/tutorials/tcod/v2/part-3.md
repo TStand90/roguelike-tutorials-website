@@ -395,4 +395,288 @@ At long last, it's time to modify `make_map` to generate our dungeon\!
 You can completely remove our old implementation and replace it with the
 following:
 
-// TODO: Finish this part of the tutorial!
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+from __future__ import annotations
+
++from random import randint
+-from typing import Tuple
++from typing import Tuple, TYPE_CHECKING
+
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
++if TYPE_CHECKING:
++   from entity import Entity
+
+
+class Rect:
+    ...
+
+-   def make_map(self):
++   def make_map(self, max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
++                player: Entity) -> None:
+-       room_1 = Rect(x=20, y=15, width=10, height=15)
+-       room_2 = Rect(x=35, y=15, width=10, height=15)
+
+-       self.create_room(room_1)
+-       self.create_room(room_2)
+
+-       self.create_horizontal_tunnel(25, 40, 23)
+
++       rooms = []
++       number_of_rooms = 0
++
++       for r in range(max_rooms):
++           # random width and height
++           w = randint(room_min_size, room_max_size)
++           h = randint(room_min_size, room_max_size)
++           # random position without going out of the boundaries of the map
++           x = randint(0, map_width - w - 1)
++           y = randint(0, map_height - h - 1)
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from __future__ import annotations
+
+<span class="new-text">from random import randint</span>
+<span class="crossed-out-text">from typing import Tuple</span>
+<span class="new-text">from typing import Tuple, TYPE_CHECKING</span>
+
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
+<span class="new-text">if TYPE_CHECKING:
+    from entity import Entity</span>
+
+
+class Rect:
+    ...
+
+    <span class="crossed-out-text">def make_map(self):</span>
+    <span class="new-text">def make_map(self, max_rooms: int, room_min_size: int, room_max_size: int, map_width: int, map_height: int,
+                 player: Entity) -> None:</span>
+        <span class="crossed-out-text">room_1 = Rect(x=20, y=15, width=10, height=15)</span>
+        <span class="crossed-out-text">room_2 = Rect(x=35, y=15, width=10, height=15)</span>
+
+        <span class="crossed-out-text">self.create_room(room_1)</span>
+        <span class="crossed-out-text">self.create_room(room_2)</span>
+
+        <span class="crossed-out-text">self.create_horizontal_tunnel(25, 40, 23)</span>
+        
+        <span class="new-text">rooms = []
+        number_of_rooms = 0
+ 
+        for r in range(max_rooms):
+            # random width and height
+            w = randint(room_min_size, room_max_size)
+            h = randint(room_min_size, room_max_size)
+            # random position without going out of the boundaries of the map
+            x = randint(0, map_width - w - 1)
+            y = randint(0, map_height - h - 1)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+The variables we're creating here will be what we use to create our
+rooms momentarily. `randint` gives us a random integer between the
+values we specify. In this case, we want our width and height to be
+between our given minimums and maximums, and our x and y should be
+within the boundaries of the map.
+
+Last thing before we proceed: We need to update the call to `make_map`
+in `main.py`, because now we're asking for a bunch of variables that
+we weren't before. Modify it to look like this:
+
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+    ...
+    game_map = GameMap(map_width, map_height)
+-   game_map.make_map()
++   game_map.make_map(
++       max_rooms=max_rooms,
++       room_min_size=room_min_size,
++       room_max_size=room_max_size,
++       map_width=map_width,
++       map_height=map_height,
++       player=player
++   )
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    game_map = GameMap(map_width, map_height)
+    <span class="crossed-out-text">game_map.make_map()</span>
+    <span class="new-text">game_map.make_map(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        player=player
+    )</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Now we'll put our `Rect` class to use, by passing it the variables we
+just created. Then, we can check if it intersects with any other rooms.
+If it does, we don't want to add it to our rooms, and we simply toss it
+out.
+
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+            ...
+            y = randint(0, map_height - h - 1)
+
++           # "Rect" class makes rectangles easier to work with
++           new_room = Rect(x, y, w, h)
++
++           # run through the other rooms and see if they intersect with this one
++           for other_room in rooms:
++               if new_room.intersects(other_room):
++                   break
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>            ...
+            y = randint(0, map_height - h - 1)
+
+            <span class="new-text"># "Rect" class makes rectangles easier to work with
+            new_room = Rect(x, y, w, h)
+
+            # run through the other rooms and see if they intersect with this one
+            for other_room in rooms:
+                if new_room.intersects(other_room):
+                    break</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+If the room does *not* intersect any others, then we'll need to create
+it. Rather than introducing a boolean (True/False value) to keep track
+of whether or not we intersected, we can simply use a for-else
+statement\! This is a unique, lesser known Python technique, which
+basically says "if the for loop did not 'break', then do this". We'll
+put our room placement code in this 'else' statement right after the
+for-loop.
+
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+            ...
+            for other_room in rooms:
+                if new_room.intersect(other_room):
+                    break
++           else:
++               # this means there are no intersections, so this room is valid
++
++               # "paint" it to the map's tiles
++               self.create_room(new_room)
++
++               # center coordinates of new room, will be useful later
++               (new_x, new_y) = new_room.center
++
++               if number_of_rooms == 0:
++                   # this is the first room, where the player starts at
++                   player.x = new_x
++                   player.y = new_y
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>            ...
+            for other_room in rooms:
+                if new_room.intersect(other_room):
+                    break
+            <span class="new-text">else:
+                # this means there are no intersections, so this room is valid
+
+                # "paint" it to the map's tiles
+                self.create_room(new_room)
+
+                # center coordinates of new room, will be useful later
+                (new_x, new_y) = new_room.center
+
+                if number_of_rooms == 0:
+                    # this is the first room, where the player starts at
+                    player.x = new_x
+                    player.y = new_y</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+We're creating our room, and saving the coordinates of its "center". If
+it's the first room we've created, then we place the player right in the
+middle of it. We'll also put these center coordinates to use in just a
+moment to create our tunnels.
+
+{{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
+                ...
+                if number_of_rooms == 0:
+                    # this is the first room, where the player starts at
+                    player.x = new_x
+                    player.y = new_y
++               else:
++                   # all rooms after the first:
++                   # connect it to the previous room with a tunnel
++
++                   # center coordinates of previous room
++                   (prev_x, prev_y) = rooms[number_of_rooms - 1].center
++
++                   # flip a coin (random number that is either 0 or 1)
++                   if randint(0, 1) == 1:
++                       # first move horizontally, then vertically
++                       self.create_horizontal_tunnel(prev_x, new_x, prev_y)
++                       self.create_vertical_tunnel(prev_y, new_y, new_x)
++                   else:
++                       # first move vertically, then horizontally
++                       self.create_vertical_tunnel(prev_y, new_y, prev_x)
++                       self.create_horizontal_tunnel(prev_x, new_x, new_y)
++
++               # finally, append the new room to the list
++               rooms.append(new_room)
++               number_of_rooms += 1
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>                ...
+                if number_of_rooms == 0:
+                    # this is the first room, where the player starts at
+                    player.x = new_x
+                    player.y = new_y
+                <span class="new-text">else:
+                    # all rooms after the first:
+                    # connect it to the previous room with a tunnel
+
+                    # center coordinates of previous room
+                    (prev_x, prev_y) = rooms[number_of_rooms - 1].center
+
+                    # flip a coin (random number that is either 0 or 1)
+                    if randint(0, 1) == 1:
+                        # first move horizontally, then vertically
+                        self.create_horizontal_tunnel(prev_x, new_x, prev_y)
+                        self.create_vertical_tunnel(prev_y, new_y, new_x)
+                    else:
+                        # first move vertically, then horizontally
+                        self.create_vertical_tunnel(prev_y, new_y, prev_x)
+                        self.create_horizontal_tunnel(prev_x, new_x, new_y)
+
+                # finally, append the new room to the list
+                rooms.append(new_room)
+                number_of_rooms += 1</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+This 'else' statement covers all cases where we've already placed at
+least one room. In order for our dungeon to be navigable, we need to
+ensure connectivity by creating tunnels. We get the center of the
+previous room, and then, based on a random choice (between one or zero,
+or a coin toss if you prefer to think of it that way), we carve our
+tunnels, either vertically then horizontally or vice versa. After all
+that, we append the room to our 'rooms' list, and increment the number
+of rooms.
+
+And that's it\! There's our functioning, albeit basic, dungeon
+generation algorithm. Run the project now and you should be placed in a
+procedurally generated dungeon\! Note that our NPC isn't being placed
+intelligently here, so it may or may not be stuck in a wall.
+
+If you want to see the code so far in its entirety, [click
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-3).
+
+The next part of this tutorial will be available on June 30th. Check back soon!
