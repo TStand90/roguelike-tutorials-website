@@ -292,6 +292,8 @@ Enter the following methods into the `Rect` class:
 
 
 {{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
++from __future__ import annotations
+
 +from typing import Tuple
 
 import numpy as np  # type: ignore
@@ -314,7 +316,7 @@ class Rect:
 
 +       return center_x, center_y
 
-+   def intersects(self, other: "Rect") -> bool:
++   def intersects(self, other: Rect) -> bool:
 +       return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
 
@@ -323,7 +325,9 @@ class GameMap:
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre><span class="new-text">from typing import Tuple</span>
+<pre><span class="new-text">from __future__ import annotations
+
+from typing import Tuple</span>
 
 import numpy as np  # type: ignore
 from tcod.console import Console
@@ -345,7 +349,7 @@ class Rect:
 
         return center_x, center_y
 
-    def intersects(self, other: "Rect") -> bool:
+    def intersects(self, other: Rect) -> bool:
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1</span>
 
 
