@@ -542,6 +542,6 @@ other form of version control (and I recommend you do), commit your
 changes now.
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorail_v2/tree/part-1).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-1).
 
 The next part of this tutorial will be available on June 23rd. Check back soon!
