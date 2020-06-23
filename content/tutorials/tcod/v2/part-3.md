@@ -1,5 +1,5 @@
 ---
-title: "Part 3"
+title: "Part 3 - Generating a dungeon"
 date: 2020-06-15T10:20:18-07:00
 draft: true
 ---
@@ -31,48 +31,29 @@ class GameMap:
 {{</ original-tab >}}
 {{</ codetab >}}
 
-One more thing we’ll want to do before getting to our dungeon algorithm is defining a helper class for our “rooms”. This will be a basic class that holds some information about dimensions, which we’ll call `Rect` (short for rectangle). Add the following to `game_map.py`:
+Now, on to our dungeon generator.
 
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-...
-import tile_types
+The original version of this tutorial put all of the dungeon generation in the `GameMap` class. In fact, this was my plan for this tutorial as well. But, as HexDecimal (author of the TCOD library) pointed out in a pull request, that's not very extensible. It puts a lot of code in `GameMap` where it doesn't necessarily belong, and the class will grow to huge proportions if you ever decide to add an alternate dungeon generator.
 
+The better approach is to put our new code in a separate file, and utilize `GameMap` there. Let's create a new file, called `procgen.py`, which will house our procedural generator.
 
-+class Rect:
-+   def __init__(self, x: int, y: int, width: int, height: int):
-+       self.x1 = x
-+       self.y1 = y
-+       self.x2 = x + width
-+       self.y2 = y + height
+Let's start by creating a class which we'll use to create our rooms. We can call it `RectangularRoom`:
 
-
-class GameMap:
-    ...
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>...
-import tile_types
-
-
-<span class="new-text">class Rect:
+```py3
+class RectangularRoom:
     def __init__(self, x: int, y: int, width: int, height: int):
         self.x1 = x
         self.y1 = y
         self.x2 = x + width
-        self.y2 = y + height</span>
+        self.y2 = y + height
+```
 
-
-class GameMap:
-    ...</pre>
-{{</ original-tab >}}
-{{</ codetab >}}
 
 The `__init__` function takes the x and y coordinates of the top left corner, and computes the bottom right corner based on the w and h parameters (width and height). We'll be adding more to this class shortly, but to get us started, that's all we need.
 
-Now, if we're going to be "carving out" a bunch of rooms to create our dungeon, we'll want a function to create a room. This function should take an argument, which we'll call `room`, and that argument should be of the `Rect` class we just created. From x1 to x2, and y1 to y2, we'll want to set each tile in the `Rect` to be not blocked, so the player can move around in it. We can put this function in the `GameMap` class, since it will be manipulating the map's list of tiles.
+// TODO: Review everything below.
+
+Now, if we're going to be "carving out" a bunch of rooms to create our dungeon, we'll want a function to create a room. This function should take an argument, which we'll call `room`, and that argument should be of the `RectangularRoom` class we just created. From x1 to x2, and y1 to y2, we'll want to set each tile in the `RectangularRoom` to be not blocked, so the player can move around in it. We can put this function in the `GameMap` class, since it will be manipulating the map's list of tiles.
 
 What we end up with is this function:
 
