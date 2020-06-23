@@ -4,6 +4,8 @@ date: 2020-06-15T10:20:18-07:00
 draft: true
 ---
 
+*Note: This part of the tutorial relies on TCOD version 11.14 or higher. You might need to upgrade the library (and your requirements.txt file, if you're using one).*
+
 Remember how we created a wall in the last part? We won't need that anymore. Additionally, our dungeon generator will start by filling the entire map with "wall" tiles and "carving" out rooms, so we can modify our `GameMap` class to fill in walls instead of floors.
 
 {{< codetab >}}
@@ -51,6 +53,13 @@ class RectangularRoom:
         self.y2 = y + height
     
     @property
+    def center(self) -> Tuple[int, int]:
+        center_x = int((self.x1 + self.x2) / 2)
+        center_y = int((self.y1 + self.y2) / 2)
+
+        return center_x, center_y
+    
+    @property
     def inner(self) -> Tuple[slice, slice]:
         """Return the inner area of this room as a 2D array index."""
         return slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2)
@@ -58,6 +67,8 @@ class RectangularRoom:
 
 
 The `__init__` function takes the x and y coordinates of the top left corner, and computes the bottom right corner based on the w and h parameters (width and height).
+
+`center` is a "property", which essentially acts like a read-only variable for our `RectangularRoom` class. It describes the "x" and "y" coordinates of the center of a room. It will be useful later on.
 
 The `inner` property returns two "slices", which represent the inner portion of our room. This is the part that we'll be "digging out" for our room in our dungeon generator. It gives us an easy way to get the area to carve out, which we'll demonstrate soon.
 
@@ -229,27 +240,44 @@ Now is a good time to run your code and make sure everything works as expected. 
 
 ![Part 3 - Two Rooms](/images/part-3-two-rooms.png)
 
-I'm sure you've noticed already, but the rooms are not connected. What's the use of creating a dungeon if we're stuck in one room? Not to worry, let's write some code to generate tunnels from one room to another. Add the following methods to `procgen.py`:
+I'm sure you've noticed already, but the rooms are not connected. What's the use of creating a dungeon if we're stuck in one room? Not to worry, let's write some code to generate tunnels from one room to another. Add the following function to `procgen.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
++import random
+-from typing import Tuple
++from typing import Iterator, Tuple
+
++import tcod
+
+from game_map import GameMap
+import tile_types
+
+...
+
         ...
         return slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2)
 
 
-+def create_horizontal_tunnel(gamemap: GameMap, x1: int, x2: int, y: int) -> None:
-+   min_x = min(x1, x2)
-+   max_x = max(x1, x2) + 1
++def tunnel_between(
++   start: Tuple[int, int], end: Tuple[int, int]
++) -> Iterator[Tuple[int, int]]:
++   """Return an L-shaped tunnel between these two points."""
++   x1, y1 = start
++   x2, y2 = end
++   if random.random() < 0.5:  # 50% chance.
++       # Move horizontally, then vertically.
++       corner_x, corner_y = x2, y1
++   else:
++       # Move vertically, then horizontally.
++       corner_x, corner_y = x1, y2
 
-+   gamemap.tiles[min_x:max_x, y] = tile_types.floor
-
-
-+def create_vertical_tunnel(gamemap: GameMap, y1: int, y2: int, x: int) -> None:
-+   min_y = min(y1, y2)
-+   max_y = max(y1, y2) + 1
-
-+   gamemap.tiles[x, min_y:max_y] = tile_types.floor
++   # Generate the coordinates for this tunnel.
++   for x, y in tcod.los.bresenham((x1, y1), (corner_x, corner_y)).tolist():
++       yield x, y
++   for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
++       yield x, y
 
 
 def generate_dungeon(map_width, map_height) -> GameMap:
@@ -257,22 +285,39 @@ def generate_dungeon(map_width, map_height) -> GameMap:
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>        ...
+<pre><span class="new-text">import random</span>
+<span class="crossed-out-text">from typing import Tuple</span>
+<span class="new-text">from typing import Iterator, Tuple</span>
+
+<span class="new-text">import tcod</span>
+
+from game_map import GameMap
+import tile_types
+
+...
+
+        ...
         return slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2)
 
 
-<span class="new-text">def create_horizontal_tunnel(gamemap: GameMap, x1: int, x2: int, y: int) -> None:
-    min_x = min(x1, x2)
-    max_x = max(x1, x2) + 1
+<span class="new-text">def tunnel_between(
+    start: Tuple[int, int], end: Tuple[int, int]
+) -> Iterator[Tuple[int, int]]:
+    """Return an L-shaped tunnel between these two points."""
+    x1, y1 = start
+    x2, y2 = end
+    if random.random() < 0.5:  # 50% chance.
+        # Move horizontally, then vertically.
+        corner_x, corner_y = x2, y1
+    else:
+        # Move vertically, then horizontally.
+        corner_x, corner_y = x1, y2
 
-    gamemap.tiles[min_x:max_x, y] = tile_types.floor</span>
-
-
-<span class="new-text">def create_vertical_tunnel(gamemap: GameMap, y1: int, y2: int, x: int) -> None:
-    min_y = min(y1, y2)
-    max_y = max(y1, y2) + 1
-
-    gamemap.tiles[x, min_y:max_y] = tile_types.floor</span>
+    # Generate the coordinates for this tunnel.
+    for x, y in tcod.los.bresenham((x1, y1), (corner_x, corner_y)).tolist():
+        yield x, y
+    for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
+        yield x, y</span>
 
 
 def generate_dungeon(map_width, map_height) -> GameMap:
@@ -280,22 +325,69 @@ def generate_dungeon(map_width, map_height) -> GameMap:
 {{</ original-tab >}}
 {{</ codetab >}}
 
+Let's dive into this method.
+
+```py3
+def tunnel_between(
+    start: Tuple[int, int], end: Tuple[int, int]
+) -> Iterator[Tuple[int, int]]:
+```
+
+The function takes two arguments, both Tuples consisting of two integers. It should return an Iterator of a Tuple of two ints. All the Tuples will be "x" and "y" coordinates on the map.
+
+```py3
+    """Return an L-shaped tunnel between these two points."""
+    x1, y1 = start
+    x2, y2 = end
+```
+
+We grab the coordinates out of the Tuples. Simple enough.
+
+```py3
+    if random.random() < 0.5:  # 50% chance.
+        # Move horizontally, then vertically.
+        corner_x, corner_y = x2, y1
+    else:
+        # Move vertically, then horizontally.
+        corner_x, corner_y = x1, y2
+```
+
+We're randomly picking between two options: Moving horizontally, then vertically, or the opposite. Based on what's chosen, we'll set the `corner_x` and `corner_y` values to different points.
+
+```py3
+    # Generate the coordinates for this tunnel.
+    for x, y in tcod.los.bresenham((x1, y1), (corner_x, corner_y)).tolist():
+        yield x, y
+    for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
+        yield x, y
+```
+
+This part is where the "magic" happens.
+
+tcod includes a function in its line-of-sight module to draw [Bresenham lines](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm). While we're not working with line-of-sight in this case, the function still proves useful to get a line from one point to another. In this case, we get one line, then another, to create an "L" shaped tunnel. `.tolist()` converts the points in the line into, as you might have already guessed, a list.
+
+What's with the `yield` lines though? [Yield expressions](https://docs.python.org/3.5/reference/expressions.html#yield-expressions) are an interesting part of Python, which allows you to return a "generator". Essentially, rather than returning the values and exiting the function altogether, we return the values, but keep the local state. This allows the function to pick up where it left off when called again, instead of starting from the beginning, as most functions do.
+
+Why is this helpful? In the next section, we're going to iterate the `x` and `y` values that we receive from the `tunnel_between` function to dig out our tunnel. 
+
 Let's put this code to use by drawing a tunnel between our two rooms.
 
 {{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
     ...
     dungeon.tiles[room_2.inner] = tile_types.floor
 
-+   create_horizontal_tunnel(dungeon, 25, 40, 23)
++   for x, y in tunnel_between(room_2.center, room_1.center):
++       dungeon.tiles[x, y] = tile_types.floor
 
     return dungeon
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>        ...
+<pre>    ...
     dungeon.tiles[room_2.inner] = tile_types.floor
 
-    <span class="new-text">create_horizontal_tunnel(dungeon, 25, 40, 23)</span>
+    <span class="new-text">for x, y in tunnel_between(room_2.center, room_1.center):
+        dungeon.tiles[x, y] = tile_types.floor</span>
 
     return dungeon</pre>
 {{</ original-tab >}}
@@ -307,14 +399,15 @@ Run the project, and you'll see a horizontal tunnel that connects the two rooms.
 
 Now that we've demonstrated to ourselves that our room and tunnel functions work as intended, it's time to move on to an actual dungeon generation algorithm. Our will be fairly simple; we'll place rooms one at a time, making sure they don't overlap, and connect them with tunnels.
 
-We'll need two additional things in the `RectangularRoom` class to ensure that two rooms don't overlap. First, we'll need to know where the "center" of each room is. Secondly, we'll want a method that tells us if our room is intersecting with another room.
-
-Enter the following methods into the `RectangularRoom` class:
+We'll want a method that tells us if our room is intersecting with another room. Enter the following into the `RectangularRoom` class:
 
 {{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 +from __future__ import annotations
 
-from typing import Tuple
+import random
+from typing import Iterator, Tuple
+
+import tcod
 
 from game_map import GameMap
 import tile_types
@@ -327,12 +420,12 @@ class RectangularRoom:
         self.x2 = x + width
         self.y2 = y + height
 
-+   @property
-+   def center(self) -> Tuple[int, int]:
-+       center_x = int((self.x1 + self.x2) / 2)
-+       center_y = int((self.y1 + self.y2) / 2)
+    @property
+    def center(self) -> Tuple[int, int]:
+        center_x = int((self.x1 + self.x2) / 2)
+        center_y = int((self.y1 + self.y2) / 2)
 
-+       return center_x, center_y
+        return center_x, center_y
 
     @property
     def inner(self) -> Tuple[slice, slice]:
@@ -342,21 +435,24 @@ class RectangularRoom:
 +   def intersects(self, other: RectangularRoom) -> bool:
 +       """Return True if this room overlaps with another RectangularRoom."""
 +       return (
-+               self.x1 <= other.x2
-+               and self.x2 >= other.x1
-+               and self.y1 <= other.y2
-+               and self.y2 >= other.y1
++           self.x1 <= other.x2
++           and self.x2 >= other.x1
++           and self.y1 <= other.y2
++           and self.y2 >= other.y1
 +       )
 
 
-class GameMap:
+def tunnel_between(
     ...
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre><span class="new-text">from __future__ import annotations</span>
 
-from typing import Tuple
+import random
+from typing import Iterator, Tuple
+
+import tcod
 
 from game_map import GameMap
 import tile_types
@@ -369,12 +465,12 @@ class RectangularRoom:
         self.x2 = x + width
         self.y2 = y + height
 
-    <span class="new-text">@property
+    @property
     def center(self) -> Tuple[int, int]:
         center_x = int((self.x1 + self.x2) / 2)
         center_y = int((self.y1 + self.y2) / 2)
 
-        return center_x, center_y</span>
+        return center_x, center_y
 
     @property
     def inner(self) -> Tuple[slice, slice]:
@@ -384,19 +480,17 @@ class RectangularRoom:
     <span class="new-text">def intersects(self, other: RectangularRoom) -> bool:
         """Return True if this room overlaps with another RectangularRoom."""
         return (
-                self.x1 <= other.x2
-                and self.x2 >= other.x1
-                and self.y1 <= other.y2
-                and self.y2 >= other.y1
+            self.x1 <= other.x2
+            and self.x2 >= other.x1
+            and self.y1 <= other.y2
+            and self.y2 >= other.y1
         )</span>
 
 
-class GameMap:
+def tunnel_between(
     ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
-
-`center` is a "property", which essentially acts like a read-only variable for our `RectangularRoom` class. It describes the "x" and "y" coordinates of the center of a room. It will be useful later on.
 
 `interects` checks if the room and another room (`other` in the arguments) intersect or not. It returns `True` if the do, `False` if they don't. We'll use this to determine if two rooms are overlapping or not.
 
@@ -432,9 +526,9 @@ At long last, it's time to modify `generate_dungeon` to, well, generate our dung
 {{< codetab >}} {{< diff-tab >}} {{< highlight diff >}}
 from __future__ import annotations
 
-+from random import randint
--from typing import Tuple
-+from typing import List, Tuple, TYPE_CHECKING
+import random
+-from typing import Iterator, Tuple
++from typing import Iterator, List, Tuple, TYPE_CHECKING
 
 from game_map import GameMap
 import tile_types
@@ -473,48 +567,32 @@ import tile_types
 +   rooms: List[RectangularRoom] = []
 
 +   for r in range(max_rooms):
-+       room_width = randint(room_min_size, room_max_size)
-+       room_height = randint(room_min_size, room_max_size)
++       room_width = random.randint(room_min_size, room_max_size)
++       room_height = random.randint(room_min_size, room_max_size)
 
-+       x = randint(0, dungeon.width - room_width - 1)
-+       y = randint(0, dungeon.height - room_height - 1)
++       x = random.randint(0, dungeon.width - room_width - 1)
++       y = random.randint(0, dungeon.height - room_height - 1)
 
 +       # "RectangularRoom" class makes rectangles easier to work with
 +       new_room = RectangularRoom(x, y, room_width, room_height)
 
-+       # run through the other rooms and see if they intersect with this one
++       # Run through the other rooms and see if they intersect with this one.
 +       if any(new_room.intersects(other_room) for other_room in rooms):
-+           continue  # this room intersects, so go to the next attempt
-+       # if there are no intersections then the room is valid
++           continue  # This room intersects, so go to the next attempt.
++       # If there are no intersections then the room is valid.
 
-+       # dig out the rooms inner area
++       # Dig out this rooms inner area.
 +       dungeon.tiles[new_room.inner] = tile_types.floor
 
-+       # center coordinates of new room, will be useful later
-+       (new_x, new_y) = new_room.center
-
 +       if len(rooms) == 0:
-+           # this is the first room, where the player starts at
-+           player.x = new_x
-+           player.y = new_y
-+       else:
-+           # all rooms after the first:
-+           # connect it to the previous room with a tunnel
++           # The first room, where the player starts.
++           player.x, player.y = new_room.center
++       else:  # All rooms after the first.
++           # Dig out a tunnel between this room and the previous one.
++           for x, y in tunnel_between(rooms[-1].center, new_room.center):
++               dungeon.tiles[x, y] = tile_types.floor
 
-+           # center coordinates of previous room
-+           (prev_x, prev_y) = rooms[-1].center
-
-+           # flip a coin (random number that is either 0 or 1)
-+           if randint(0, 1) == 1:
-+               # first move horizontally, then vertically
-+               create_horizontal_tunnel(dungeon, prev_x, new_x, prev_y)
-+               create_vertical_tunnel(dungeon, prev_y, new_y, new_x)
-+           else:
-+               # first move vertically, then horizontally
-+               create_vertical_tunnel(dungeon, prev_y, new_y, prev_x)
-+               create_horizontal_tunnel(dungeon, prev_x, new_x, new_y)
-
-+       # finally, append the new room to the list
++       # Finally, append the new room to the list.
 +       rooms.append(new_room)
 
 +   return dungeon
@@ -523,9 +601,9 @@ import tile_types
 {{< original-tab >}}
 <pre>from __future__ import annotations
 
-<span class="new-text">from random import randint</span>
-<span class="crossed-out-text">from typing import Tuple</span>
-<span class="new-text">from typing import List, Tuple, TYPE_CHECKING</span>
+import random
+<span class="crossed-out-text">from typing import Iterator, Tuple</span>
+<span class="new-text">from typing import Iterator, List, Tuple, TYPE_CHECKING</span>
 
 from game_map import GameMap
 import tile_types
@@ -564,48 +642,32 @@ import tile_types
     rooms: List[RectangularRoom] = []
 
     for r in range(max_rooms):
-        room_width = randint(room_min_size, room_max_size)
-        room_height = randint(room_min_size, room_max_size)
+        room_width = random.randint(room_min_size, room_max_size)
+        room_height = random.randint(room_min_size, room_max_size)
 
-        x = randint(0, dungeon.width - room_width - 1)
-        y = randint(0, dungeon.height - room_height - 1)
+        x = random.randint(0, dungeon.width - room_width - 1)
+        y = random.randint(0, dungeon.height - room_height - 1)
 
         # "RectangularRoom" class makes rectangles easier to work with
         new_room = RectangularRoom(x, y, room_width, room_height)
 
-        # run through the other rooms and see if they intersect with this one
+        # Run through the other rooms and see if they intersect with this one.
         if any(new_room.intersects(other_room) for other_room in rooms):
-            continue  # this room intersects, so go to the next attempt
-        # if there are no intersections then the room is valid
+            continue  # This room intersects, so go to the next attempt.
+        # If there are no intersections then the room is valid.
 
-        # dig out the rooms inner area
+        # Dig out this rooms inner area.
         dungeon.tiles[new_room.inner] = tile_types.floor
 
-        # center coordinates of new room, will be useful later
-        (new_x, new_y) = new_room.center
-
         if len(rooms) == 0:
-            # this is the first room, where the player starts at
-            player.x = new_x
-            player.y = new_y
-        else:
-            # all rooms after the first:
-            # connect it to the previous room with a tunnel
+            # The first room, where the player starts.
+            player.x, player.y = new_room.center
+        else:  # All rooms after the first.
+            # Dig out a tunnel between this room and the previous one.
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                dungeon.tiles[x, y] = tile_types.floor
 
-            # center coordinates of previous room
-            (prev_x, prev_y) = rooms[-1].center
-
-            # flip a coin (random number that is either 0 or 1)
-            if randint(0, 1) == 1:
-                # first move horizontally, then vertically
-                create_horizontal_tunnel(dungeon, prev_x, new_x, prev_y)
-                create_vertical_tunnel(dungeon, prev_y, new_y, new_x)
-            else:
-                # first move vertically, then horizontally
-                create_vertical_tunnel(dungeon, prev_y, new_y, prev_x)
-                create_horizontal_tunnel(dungeon, prev_x, new_x, new_y)
-
-        # finally, append the new room to the list
+        # Finally, append the new room to the list.
         rooms.append(new_room)
 
     return dungeon</span></pre>
@@ -653,11 +715,11 @@ We'll keep a running list of all the rooms.
 We iterate from 0 to `max_rooms` - 1. Our algorithm may or may not place a room depending on if it intersects with another, so we won't know how many rooms we're going to end up with. But at least we'll know that number can't exceed a certain amount.
 
 ```py3
-        room_width = randint(room_min_size, room_max_size)
-        room_height = randint(room_min_size, room_max_size)
+        room_width = random.randint(room_min_size, room_max_size)
+        room_height = random.randint(room_min_size, room_max_size)
 
-        x = randint(0, dungeon.width - room_width - 1)
-        y = randint(0, dungeon.height - room_height - 1)
+        x = random.randint(0, dungeon.width - room_width - 1)
+        y = random.randint(0, dungeon.height - room_height - 1)
 
         # "RectangularRoom" class makes rectangles easier to work with
         new_room = RectangularRoom(x, y, room_width, room_height)
@@ -668,59 +730,41 @@ Here, we use the given minimum and maximum room sizes to set the room's width an
 We use these variables to then create an instance of our `RectangularRoom`.
 
 ```py3
-        # run through the other rooms and see if they intersect with this one
+        # Run through the other rooms and see if they intersect with this one.
         if any(new_room.intersects(other_room) for other_room in rooms):
-            continue  # this room intersects, so go to the next attempt
+            continue  # This room intersects, so go to the next attempt.
 ```
 
 So what happens if a room *does* intersect with another? In that case, we can just toss it out, by using `continue` to skip the rest of the loop. Obviously there are more elegant ways of dealing with a collision, but for our simplistic algorithm, we'll just pretend like it didn't happen and try the next one.
 
 ```py3
-        # if there are no intersections then the room is valid
+        # If there are no intersections then the room is valid.
 
-        # dig out the rooms inner area
+        # Dig out this rooms inner area.
         dungeon.tiles[new_room.inner] = tile_types.floor
-
-        # center coordinates of new room, will be useful later
-        (new_x, new_y) = new_room.center
 ```
 
-Here, we "dig" the room out. This is similar to what we were doing before to dig out the two connected rooms. We're also grabbing the center `x` and `y` from the room, which we can use to draw our tunnels in a moment.
+Here, we "dig" the room out. This is similar to what we were doing before to dig out the two connected rooms.
 
 ```py3
         if len(rooms) == 0:
-            # this is the first room, where the player starts at
-            player.x = new_x
-            player.y = new_y
+            # The first room, where the player starts.
+            player.x, player.y = new_room.center
 ```
 
 We put our player down in the center of the first room we created. If this room isn't the first, we move on to the `else` statement:
 
 ```py3
-        else:
-            # all rooms after the first:
-            # connect it to the previous room with a tunnel
-
-            # center coordinates of previous room
-            (prev_x, prev_y) = rooms[-1].center
-
-            # flip a coin (random number that is either 0 or 1)
-            if randint(0, 1) == 1:
-                # first move horizontally, then vertically
-                create_horizontal_tunnel(dungeon, prev_x, new_x, prev_y)
-                create_vertical_tunnel(dungeon, prev_y, new_y, new_x)
-            else:
-                # first move vertically, then horizontally
-                create_vertical_tunnel(dungeon, prev_y, new_y, prev_x)
-                create_horizontal_tunnel(dungeon, prev_x, new_x, new_y)
+        else:  # All rooms after the first.
+            # Dig out a tunnel between this room and the previous one.
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                dungeon.tiles[x, y] = tile_types.floor
 ```
 
-If it's not the first room, we need to connect the room to the previous one. We grab the center `x` and `y` from the room by grabbing the room at the -1 index in the list, which points to the last item.
-
-From there, we make a random, binary choice (like flipping a coin) by getting either integer 0 or 1. The only difference is whether we drap the vertical or horizontal path first. Either way, we tunnel one way, then the other, to create a tunnel that connects both rooms. So long as we always connect to the previous room we created, our dungeon should always stay connected between rooms.
+This is similar to how we dug the tunnel before, except this time, we're using a negative index with `rooms` to grab the previous room, and connecting the new room to it.
 
 ```py3
-        # finally, append the new room to the list
+        # Finally, append the new room to the list.
         rooms.append(new_room)
 ```
 
