@@ -1,7 +1,7 @@
 ---
 title: "Part 2 - The generic Entity, the render functions, and the map"
-date: 2020-06-15T10:20:13-07:00
-draft: true
+date: 2020-06-23
+draft: false
 ---
 
 Now that we can move our little '@' symbol around, we need to give it

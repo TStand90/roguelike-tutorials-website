@@ -1,7 +1,7 @@
 ---
 title: "Part 3 - Generating a dungeon"
-date: 2020-06-15T10:20:18-07:00
-draft: true
+date: 2020-06-23
+draft: false
 ---
 
 *Note: This part of the tutorial relies on TCOD version 11.14 or higher. You might need to upgrade the library (and your requirements.txt file, if you're using one).*

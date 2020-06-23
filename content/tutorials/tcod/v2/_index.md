@@ -6,8 +6,8 @@ draft: false
   - [Part 0 - Setting Up](/tutorials/tcod/v2/part-0)
   - [Part 1 - Drawing the ‘@’ symbol and moving it
     around](/tutorials/tcod/v2/part-1)
-  - Part 2 - The generic Entity, the render functions, and the map - Coming June 23rd
-  - Part 3 - Generating a dungeon - Coming June 23rd
+  - [Part 2 - The generic Entity, the render functions, and the map](/tutorials/tcod/v2/part-2)
+  - [Part 3 - Generating a dungeon](/tutorials/tcod/v2/part-3)
   - Part 4 - Field of view - Coming June 30th
   - Part 5 - Placing enemies and kicking them (harmlessly) - Coming June 30th
   - Part 6 - Doing (and taking) some damage - Coming July 7th

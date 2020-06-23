@@ -544,4 +544,5 @@ changes now.
 If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-1).
 
-The next part of this tutorial will be available on June 23rd. Check back soon!
+[Click here to move on to the next part of this
+tutorial.](/tutorials/tcod/v2/part-2)
