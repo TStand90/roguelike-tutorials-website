@@ -261,7 +261,7 @@ from actions import Action, EscapeAction, MovementAction
 
 
 class EventHandler(tcod.event.EventDispatch[Action]):
-    def ev_quit(self, event: tcod.event.Quit):
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
         raise SystemExit()
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
@@ -311,7 +311,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 We're creating a class called `EventHandler`, which is a subclass of tcod's `EventDispatch` class. `EventDispatch` is a class that allows us to send an event to its proper method based on what type of event it is. Let's take a look at the methods we're creating for `EventHandler` to see a few examples of this.
 
 {{< highlight py3 >}}
-    def ev_quit(self, event: tcod.event.Quit):
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
         raise SystemExit()
 {{</ highlight >}}
 
