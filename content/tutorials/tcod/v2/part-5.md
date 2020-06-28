@@ -216,3 +216,70 @@ def generate_dungeon(
 {{</ codetab >}}
 
 If you run the project now, things should look the same as before, minus the NPC that we had earlier for testing.
+
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
++class ActionWithDirection(Action):
++   def __init__(self, dx: int, dy: int):
++       super().__init__()
+
++       self.dx = dx
++       self.dy = dy
+    
++   def perform(self, engine: Engine, entity: Entity) -> None:
++       raise NotImplementedError()
+
+
++class MeleeAction(ActionWithDirection):
++   def __init__(self, dx: int, dy: int, target: Entity):
++       super().__init__(dx, dy)
+
++       self.target = target
+
++   def perform(self, engine: Engine, entity: Entity) -> None:
++       print(f"You kick the {self.target.name}, much to its annoyance!")
+
+
+-class MovementAction(Action)
++class MovementAction(ActionWithDirection)
+-   def __init__(self, dx: int, dy: int):
+-       super().__init__()
+
+-       self.dx = dx
+-       self.dy = dy
+
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+
+        entity.move(self.dx, self.dy)
+
+
++class BumpAction(ActionWithDirection):
++   def perform(self, engine: Engine, entity: Entity) -> None:
++       dest_x = entity.x + self.dx
++       dest_y = entity.y + self.dy
+
++       target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+
++       if target:
++           return MeleeAction(self.dx, self.dy, target).perform(engine, entity)
+
++       else:
++           return MovementAction(self.dx, self.dy).perform(engine, entity)
+
+
+
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
