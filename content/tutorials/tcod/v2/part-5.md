@@ -10,7 +10,56 @@ attacked (the actual attacking part we'll save for next time).
 
 When we're building our dungeon, we'll need to place the enemies in the rooms. In order to do that, we will need to make a change to the way `entities` are stored in our game. Currently, they're saved in the `Engine` class. However, for the sake of placing enemies in the dungeon, and when we get to the part where we move between dungeon floors, it will be better to store them in the `GameMap` class. That way, the map has access to the entities directly, and we can preserve which entities are on which floors fairly easily.
 
-Start by modifying `Engine`:
+Start by modifying `GameMap`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
++from __future__ import annotations
+
++from typing import Iterable, TYPE_CHECKING
+
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
++if TYPE_CHECKING:
++   from entity import Entity
+
+
+class GameMap:
+-   def __init__(self, width: int, height: int):
++   def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()):
+        self.width, self.height = width, height
++       self.entities = set(entities)
+        self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre><span class="new-text">from __future__ import annotations
+
+from typing import Iterable, TYPE_CHECKING</span>
+
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
+<span class="new-text">if TYPE_CHECKING:
+    from entity import Entity</span>
+
+
+class GameMap:
+    <span class="crossed-out-text">def __init__(self, width: int, height: int):</span>
+    <span class="new-text">def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()):</span>
+        self.width, self.height = width, height
+        <span class="new-text">self.entities = set(entities)</span>
+        self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Then, let's modify `Engine` to remove the `entities` from it:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -37,7 +86,7 @@ class Engine:
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Because we've modified the definition of `GameMap.__init__`, we need to modify `main.py` where we create our `game_map` variable. We might as well remove that `npc` as well, since we won't be needing it anymore.
+Because we've modified the definition of `Engine.__init__`, we need to modify `main.py` where we create our `game_map` variable. We might as well remove that `npc` as well, since we won't be needing it anymore.
 
 {{< codetab >}}
 {{< diff-tab >}}
