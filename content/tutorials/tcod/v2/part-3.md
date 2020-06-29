@@ -820,4 +820,5 @@ And that's it\! There's our functioning, albeit basic, dungeon generation algori
 If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-3).
 
-The next part of this tutorial will be available on June 30th. Check back soon!
+[Click here to move on to the next part of this
+tutorial.](/tutorials/tcod/v2/part-4)

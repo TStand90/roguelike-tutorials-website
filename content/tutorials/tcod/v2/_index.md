@@ -8,8 +8,8 @@ draft: false
     around](/tutorials/tcod/v2/part-1)
   - [Part 2 - The generic Entity, the render functions, and the map](/tutorials/tcod/v2/part-2)
   - [Part 3 - Generating a dungeon](/tutorials/tcod/v2/part-3)
-  - Part 4 - Field of view - Coming June 30th
-  - Part 5 - Placing enemies and kicking them (harmlessly) - Coming June 30th
+  - [Part 4 - Field of view](/tutorials/tcod/v2/part-4)
+  - [Part 5 - Placing enemies and kicking them (harmlessly)](/tutorials/tcod/v2/part-5)
   - Part 6 - Doing (and taking) some damage - Coming July 7th
   - Part 7 - Creating the Interface - Coming July 7th
   - Part 8 - Items and Inventory - Coming July 14th
