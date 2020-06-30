@@ -589,8 +589,6 @@ This is where we're defining our entities. `player` should look familiar, and `o
 
 These are the instances we'll be cloning to create our new entities. Using these, we can at last fill in our `place_entities` function back in `procgen.py`.
 
-TODO: Possibly rename "entity_factories"
-
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
@@ -812,6 +810,8 @@ class EscapeAction(Action):
             return  # Destination is out of bounds.
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             return  # Destination is blocked by a tile.
++       if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
++           return  # Destination is blocked by an entity.
 
         entity.move(self.dx, self.dy)
 {{</ highlight >}}
@@ -850,10 +850,14 @@ class EscapeAction(Action):
             return  # Destination is out of bounds.
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             return  # Destination is blocked by a tile.
+        <span class="new-text">if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.</span>
 
         entity.move(self.dx, self.dy)</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
+
+Notice that we've added an extra check in `MovementAction` to ensure we're not moving into a space with a blocking entity. Theoretically, this bit of code won't ever trigger, but it's nice to have it there as a safeguard.
 
 But wait, `MovementAction` still doesn't do anything differently. So what's the point? Well, now we can use the new `ActionWithDirection` class to define two more subclasses, which will do what we want.
 
@@ -874,13 +878,14 @@ class ActionWithDirection(Action):
 
 
 +class MeleeAction(ActionWithDirection):
-+   def __init__(self, dx: int, dy: int, target: Entity):
-+       super().__init__(dx, dy)
-
-+       self.target = target
-
 +   def perform(self, engine: Engine, entity: Entity) -> None:
-+       print(f"You kick the {self.target.name}, much to its annoyance!")
++       dest_x = entity.x + self.dx
++       dest_y = entity.y + self.dy
++       target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
++       if not target:
++           return  # No entity to attack.
+
++       print(f"You kick the {target.name}, much to its annoyance!")
 
 
 class MovementAction(ActionWithDirection):
@@ -892,6 +897,8 @@ class MovementAction(ActionWithDirection):
             return  # Destination is out of bounds.
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+            return  # Destination is blocked by an entity.
 
         entity.move(self.dx, self.dy)
 {{</ highlight >}}
@@ -909,13 +916,14 @@ class MovementAction(ActionWithDirection):
 
 
 <span class="new-text">class MeleeAction(ActionWithDirection):
-    def __init__(self, dx: int, dy: int, target: Entity):
-        super().__init__(dx, dy)
-
-        self.target = target
-
     def perform(self, engine: Engine, entity: Entity) -> None:
-        print(f"You kick the {self.target.name}, much to its annoyance!")</span>
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+        target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+        if not target:
+            return  # No entity to attack.
+
+        print(f"You kick the {target.name}, much to its annoyance!")</span>
 
 
 class MovementAction(ActionWithDirection):
@@ -927,12 +935,14 @@ class MovementAction(ActionWithDirection):
             return  # Destination is out of bounds.
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+            return  # Destination is blocked by an entity.
 
         entity.move(self.dx, self.dy)</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Just like `MovementAction`, `MeleeAction` inheirits from `ActionWithDirection`, but also adds its own `target` parameter. The `perform` method it implements is what we'll use to attack... eventually. Right now, we're just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).
+Just like `MovementAction`, `MeleeAction` inheirits from `ActionWithDirection`. The `perform` method it implements is what we'll use to attack... eventually. Right now, we're just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).
 
 Still, we're not actually *using* `MeleeAction` anywhere, yet. Let's add one more class, which is what will make the determination on whether our player is moving or attacking:
 
@@ -948,6 +958,8 @@ class MovementAction(ActionWithDirection):
             return  # Destination is out of bounds.
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.
 
         entity.move(self.dx, self.dy)
 
@@ -957,10 +969,8 @@ class MovementAction(ActionWithDirection):
 +       dest_x = entity.x + self.dx
 +       dest_y = entity.y + self.dy
 
-+       target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
-
-+       if target:
-+           return MeleeAction(self.dx, self.dy, target).perform(engine, entity)
++       if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
++           return MeleeAction(self.dx, self.dy).perform(engine, entity)
 
 +       else:
 +           return MovementAction(self.dx, self.dy).perform(engine, entity)
@@ -976,6 +986,8 @@ class MovementAction(ActionWithDirection):
             return  # Destination is out of bounds.
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.
 
         entity.move(self.dx, self.dy)
 
@@ -985,17 +997,15 @@ class MovementAction(ActionWithDirection):
         dest_x = entity.x + self.dx
         dest_y = entity.y + self.dy
 
-        target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
-
-        if target:
-            return MeleeAction(self.dx, self.dy, target).perform(engine, entity)
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return MeleeAction(self.dx, self.dy).perform(engine, entity)
 
         else:
             return MovementAction(self.dx, self.dy).perform(engine, entity)</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
-This class also inheirits from `ActionWithDirection`, but its `perform` method doesn't actually perform anything, except deciding which class, between `MeleeAction` and `MovementAction` to return. Those classes are what are actually doing the work. `BumpAction` just determines which one is appropriate to call, based on whether there is a `target` at the given destination or not. Notice we're using the function we defined earlier in our map to decide if there's a valid target or not.
+This class also inheirits from `ActionWithDirection`, but its `perform` method doesn't actually perform anything, except deciding which class, between `MeleeAction` and `MovementAction` to return. Those classes are what are actually doing the work. `BumpAction` just determines which one is appropriate to call, based on whether there is a blocking entity at the given destination or not. Notice we're using the function we defined earlier in our map to decide if there's a valid target or not.
 
 Now that our new actions are in place, we need to modify our `input_handlers.py` file to use `BumpAction` instead of `MovementAction`. It's a pretty simple change:
 
