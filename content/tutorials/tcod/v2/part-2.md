@@ -172,7 +172,7 @@ Soon, we're going to need to add a map as well. It's starting to become a bit mu
 
 One thing we can do is pass of some of these responsibilities to another class, which will be responsible for "running" our game. The `main.py` file can still set things up and tell that new class what to do, but this design should help keep the `main.py` file from getting too large over time.
 
-Let's create an `Engine` class, which will take the responsibilities of drawing the map and entities, as well as handling the player's input. Create a new file, and call it engine.py. In that file, put the following class:
+Let's create an `Engine` class, which will take the responsibilities of drawing the map and entities, as well as handling the player's input. Create a new file, and call it `engine.py`. In that file, put the following contents:
 
 
 ```py3
