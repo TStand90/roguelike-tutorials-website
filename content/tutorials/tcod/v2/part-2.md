@@ -927,7 +927,7 @@ Much simpler! Run the project again, and it should function the same as before.
 With that, Part 2 is now complete! We've managed to lay the groundwork for generating dungeons and moving through them, which, as it happens, is what the next part is all about.
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-1).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-2).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/v2/part-3)
