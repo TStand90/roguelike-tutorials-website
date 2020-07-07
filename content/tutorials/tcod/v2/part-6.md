@@ -21,7 +21,10 @@ Someday, when the event is over, the previous parts will be rewritten, and all w
 
 I won't explain all of the changes (again, time is a limiting factor), but here's the basic ideas:
 
-TODO: Explain the code changes as best as possible.
+* Event handlers will have the `handle_events` method instead of `Engine`.
+* The game map will have a reference to `Engine`, and entities will have a reference to the map.
+* Actions will be initialized with the entity doing the action
+* Because of the above points, Actions will have a reference to the `Engine`, through `Entity`->`GameMap`->`Engine`
 
 Make the changes to each file, and when you're finished, verify the project works as it did before.
 
@@ -1057,7 +1060,15 @@ class BaseAI(Action, BaseComponent):
         return [(index[0], index[1]) for index in path]
 ```
 
-TODO: Explain BaseAI
+`BaseAI` doesn't implement a `perform` method, since the entities which will be using AI to act will have to have an AI class that inheirits from this one.
+
+`get_path_to` uses the "walkable" tiles in our map, along with some TCOD pathfinding tools to get the path from the `BaseAI`'s parent entity to whatever their target might be. In the case of this tutorial, the target will always be the player, though you could theoretically write a monster that cares more about food or treasure than attacking the player.
+
+The pathfinder first builds an array of `cost`, which is how "costly" (time consuming) it will take to get to the target. If a piece of terrain takes longer to traverse, its cost will be higher. In the case of our simple game, all parts of the map have the same cost, but what this cost array allows us to do is take other entities into account.
+
+How? Well, if an entity exists at a spot on the map, we increase the cost of moving there to "10". What this does is encourages the entity to move around the entity that's blocking them from their target. Higher values will cause the entity to take a longer path around; shorter values will cause groups to gather into crowds, since they don't want to move around.
+
+More information about TCOD's pathfinding can be [found here](https://python-tcod.readthedocs.io/en/latest/tcod/path.html).
 
 To make use of our new `Fighter` and `AI` components, we could attach them directly onto the `Entity` class. However, it might be useful to differentiate between entities that can act, and those that can't. Right now, our game only consists of acting entities, but soon enough, we'll be adding things like consumable items and, eventually, equipment, which won't be able to take turns or take damage.
 
@@ -1274,7 +1285,11 @@ class BaseAI(Action, BaseComponent):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain the HostileEnemy class
+`HostileEnemy` is the AI class we'll use for our enemies. It defines the `perform` method, which does the following:
+
+* If the entity is not in the player's vision, simply wait.
+* If the player is right next to the entity (`distance <= 1`), attack the player.
+* If the player can see the entity, but the entity is too far away to attack, then move towards the player.
 
 The last line actually calls an action that we haven't defined yet: `WaitAction`. This action will be used when the player or an enemy decides to wait where they are rather than taking a turn.
 
@@ -1818,7 +1833,11 @@ class BumpAction(ActionWithDirection):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain the code above
+We're replacing the type hint for `entity` in `Action` and `ActionWithDirection` with `Actor` instead of `Entity`, since only `Actor`s should be taking actions.
+
+We've also added the `target_actor` property to `ActionWithDirection`, which will give us the `Actor` at the destination we're moving to, if there is one. We utilize that property instead of `blocking_entity` in both `BumpAction` and `MeleeAction`.
+
+Lastly, we modify `MeleeAction` to actually do an attack, instead of just printing a message. We calculate the damage (attacker's power minus defender's defense), and assign a description to the attack, based on whether any damage was done or not. If the damage is greater than 0, we subtract it from the defender's HP.
 
 If you run the project now, you'll see the print statements indicating that the player and the enemies are doing damage to each other. But since neither side can actually die, combat doesn't feel all that high stakes just yet.
 
