@@ -1,7 +1,7 @@
 ---
 title: "Part 6 - Doing (and taking) some damage"
-date: 2020-06-15T10:20:23-07:00
-draft: true
+date: 2020-07-14
+draft: false
 ---
 
 ## Check your TCOD installation

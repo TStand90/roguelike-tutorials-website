@@ -1,7 +1,7 @@
 ---
 title: "Part 7 - Creating the Interface"
-date: 2020-06-15T10:20:25-07:00
-draft: true
+date: 2020-07-14
+draft: false
 ---
 
 Our game is looking more and more playable by the chapter, but before we move forward with the gameplay, we ought to take a moment to focus on how the project *looks*. Despite what some roguelike traditionalists may tell you, a good UI goes a long way.
