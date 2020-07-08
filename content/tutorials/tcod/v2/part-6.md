@@ -1450,7 +1450,7 @@ class GameMap:
     def __init__(
         ...
     
-+  @property
++   @property
 +   def actors(self) -> Iterator[Actor]:
 +       """Iterate over this maps living actors."""
 +       yield from (
@@ -1490,7 +1490,7 @@ class GameMap:
     def __init__(
         ...
     
-   <span class="new-text">@property
+    <span class="new-text">@property
     def actors(self) -> Iterator[Actor]:
         """Iterate over this maps living actors."""
         yield from (
@@ -1848,12 +1848,8 @@ Remember when we created a setter for `hp`? It will come in handy right now, as 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-+from typing import TYPE_CHECKING
-
 from components.base_component import BaseComponent
-
-+if TYPE_CHECKING:
-+   from entity import Actor
++from entity import Actor
 
 
 class Fighter(BaseComponent):
@@ -1889,12 +1885,8 @@ class Fighter(BaseComponent):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre><span class="new-text">from typing import TYPE_CHECKING</span>
-
-from components.base_component import BaseComponent
-
-<span class="new-text">if TYPE_CHECKING:
-    from entity import Actor</span>
+<pre>from components.base_component import BaseComponent
+<span class="new-text">from entity import Actor</span>
 
 
 class Fighter(BaseComponent):
@@ -2147,6 +2139,7 @@ In order to actually take advantage of the rendering order, we'll need to modify
 +           self.entities, key=lambda x: x.render_order.value
 +       )
 
+-       for entity in self.entities:
 +       for entity in entities_sorted_for_rendering:
             if self.visible[entity.x, entity.y]:
 -               console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)
@@ -2176,6 +2169,7 @@ In order to actually take advantage of the rendering order, we'll need to modify
             self.entities, key=lambda x: x.render_order.value
         )</span>
 
+        <span class="crossed-out-text">for entity in self.entities:</span>
         <span class="new-text">for entity in entities_sorted_for_rendering:</span>
             if self.visible[entity.x, entity.y]:
                 <span class="crossed-out-text">console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)</span>
@@ -2264,7 +2258,20 @@ class Engine:
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>    def render(self, console: Console, context: Context) -> None:
+<pre>if TYPE_CHECKING:
+    <span class="crossed-out-text">from entity import Entity</span>
+    <span class="new-text">from entity import Actor</span>
+    from game_map import GameMap
+
+
+class Engine:
+    game_map: GameMap
+
+    <span class="crossed-out-text">def __init__(self, player: Entity):</span>
+    <span class="new-text">def __init__(self, player: Actor):</span>
+        ...
+    
+    def render(self, console: Console, context: Context) -> None:
         self.game_map.render(console)
  
         <span class="new-text">console.print(
