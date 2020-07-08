@@ -10,8 +10,8 @@ draft: false
   - [Part 3 - Generating a dungeon](/tutorials/tcod/v2/part-3)
   - [Part 4 - Field of view](/tutorials/tcod/v2/part-4)
   - [Part 5 - Placing enemies and kicking them (harmlessly)](/tutorials/tcod/v2/part-5)
-  - Part 6 - Doing (and taking) some damage - Coming July 7th
-  - Part 7 - Creating the Interface - Coming July 7th
+  - [Part 6 - Doing (and taking) some damage](/tutorials/tcod/v2/part-6)
+  - [Part 7 - Creating the Interface](/tutorials/tcod/v2/part-7)
   - Part 8 - Items and Inventory - Coming July 14th
   - Part 9 - Ranged Scrolls and Targeting - Coming July 14th
   - Part 10 - Saving and loading - Coming July 21st

@@ -1,0 +1,10 @@
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
