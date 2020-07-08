@@ -1154,4 +1154,5 @@ That's all for this chapter. Next time, we'll look at moving the enemies around 
 If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-5).
 
-The next part of this tutorial will be available on July 7th. Check back soon!
+[Click here to move on to the next part of this
+tutorial.](/tutorials/tcod/v2/part-6)
