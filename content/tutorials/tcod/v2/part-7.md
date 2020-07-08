@@ -73,7 +73,6 @@ In order to utilize this new function, make the following changes to `engine.py`
 {{< diff-tab >}}
 {{< highlight diff >}}
 ...
-from entity import Actor
 from input_handlers import MainGameEventHandler
 +from render_functions import render_bar
 
@@ -103,7 +102,6 @@ if TYPE_CHECKING:
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>...
-from entity import Actor
 from input_handlers import MainGameEventHandler
 <span class="new-text">from render_functions import render_bar</span>
 
@@ -312,6 +310,7 @@ from input_handlers import MainGameEventHandler
 from render_functions import render_bar
 
 if TYPE_CHECKING:
+    from entity import Actor
     from game_map import GameMap
     from input_handlers import EventHandler
 
@@ -340,6 +339,7 @@ from input_handlers import MainGameEventHandler
 from render_functions import render_bar
 
 if TYPE_CHECKING:
+    from entity import Actor
     from game_map import GameMap
     from input_handlers import EventHandler
 
@@ -513,6 +513,10 @@ Now we just need to update our death messages. Open up `fighter.py` and modify i
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 +import color
 from components.base_component import BaseComponent
 ...
@@ -539,7 +543,11 @@ from components.base_component import BaseComponent
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre><span class="new-text">import color</span>
+<pre>from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+<span class="new-text">import color</span>
 from components.base_component import BaseComponent
 ...
 
