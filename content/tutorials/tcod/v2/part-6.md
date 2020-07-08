@@ -1208,7 +1208,10 @@ from components.base_component import BaseComponent
 
 
 class BaseAI(Action, BaseComponent):
-    ...
++   entity: Actor
+
+    def perform(self) -> None:
+        ...
 
 
 +class HostileEnemy(BaseAI):
@@ -1255,7 +1258,10 @@ from components.base_component import BaseComponent
 
 
 class BaseAI(Action, BaseComponent):
-    ...
+    <span class="new-text">entity: Actor</span>
+
+    def perform(self) -> None:
+        ...
 
 
 <span class="new-text">class HostileEnemy(BaseAI):
@@ -1401,7 +1407,7 @@ troll = Actor(
 
 We've changed each entity to make use of the `Actor` class, and used the `HostileEnemy` AI class for the Orc and the Troll types, while using the `BaseAI` for our player. Also, we defined the `Fighter` component for each, giving a few different values to make the Trolls stronger than the Orcs. Feel free to modify these values to your liking.
 
-How do enemies actually take their turns, though? It's actually pretty simple: rather than printing the message we were before, we just check if the entity has an AI, and if it does, we call the `perform` method from that AI component:
+How do enemies actually take their turns, though? It's actually pretty simple: rather than printing the message we were before, we just check if the entity has an AI, and if it does, we call the `perform` method from that AI component. Modify `engine.py` to do this:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -1848,11 +1854,19 @@ Remember when we created a setter for `hp`? It will come in handy right now, as 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
++from __future__ import annotations
+
++from typing import TYPE_CHECKING
+
 from components.base_component import BaseComponent
-+from entity import Actor
+
++if TYPE_CHECKING:
++   from entity import Actor
 
 
 class Fighter(BaseComponent):
++   entity: Actor
+
     def __init__(self, hp: int, defense: int, power: int):
         self.max_hp = hp
         self._hp = hp
@@ -1866,7 +1880,7 @@ class Fighter(BaseComponent):
     @hp.setter
     def hp(self, value: int) -> None:
         self._hp = max(0, min(value, self.max_hp))
-+       if self._hp == 0 and isinstance(self.entity, Actor) and self.entity.ai:
++       if self._hp == 0 and self.entity.ai:
 +           self.die()
 
 +   def die(self) -> None:
@@ -1885,11 +1899,19 @@ class Fighter(BaseComponent):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>from components.base_component import BaseComponent
-<span class="new-text">from entity import Actor</span>
+<pre><span class="new-text">from __future__ import annotations
+
+from typing import TYPE_CHECKING</span>
+
+from components.base_component import BaseComponent
+
+<span class="new-text">if TYPE_CHECKING:
+    from entity import Actor</span>
 
 
 class Fighter(BaseComponent):
+    <span class="new-text">entity: Actor</span>
+
     def __init__(self, hp: int, defense: int, power: int):
         self.max_hp = hp
         self._hp = hp
@@ -1903,7 +1925,7 @@ class Fighter(BaseComponent):
     @hp.setter
     def hp(self, value: int) -> None:
         self._hp = max(0, min(value, self.max_hp))
-        <span class="new-text">if self._hp == 0 and isinstance(self.entity, Actor) and self.entity.ai:
+        <span class="new-text">if self._hp == 0 and self.entity.ai:
             self.die()
 
     def die(self) -> None:
@@ -2181,15 +2203,21 @@ In order to actually take advantage of the rendering order, we'll need to modify
 
 The `sorted` function takes two arguments: The collection to sort, and the function used to sort it. By using `key` in `sorted`, we're defining a custom way to sort the `self.entities`, which in this case, we're using a `lambda` function (basically, a function that's limited to one line that we don't need to write a formal definition for). The lambda function itself tells `sorted` to sort by the value of `render_order`. Since the `RenderOrder` enum defines its order from 1 (Corpse, lowest) to 3 (Actor, highest), corpses should be sent to the front of the sorted list. That way, when rendering, they'll get drawn first, so if there's something else on top of them, they'll get overwritten, and we'll just see the `Actor` instead of the corpse.
 
-Last thing we need to do is rewrite the `render_order` of an entity when it dies. Go back to the `Figther` class and add the following:
+Last thing we need to do is rewrite the `render_order` of an entity when it dies. Go back to the `Fighter` class and add the following:
 
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from components.base_component import BaseComponent
-from entity import Actor
 +from render_order import RenderOrder
+
+if TYPE_CHECKING:
+    from entity import Actor
 
 
 class Fighter(BaseComponent):
@@ -2203,9 +2231,15 @@ class Fighter(BaseComponent):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>from components.base_component import BaseComponent
-from entity import Actor
+<pre>from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from components.base_component import BaseComponent
 <span class="new-text">from render_order import RenderOrder</span>
+
+if TYPE_CHECKING:
+    from entity import Actor
 
 
 class Fighter(BaseComponent):
@@ -2502,10 +2536,16 @@ Lastly, we can use the `GameOverEventHandler` in `fighter.py` to ensure the play
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from components.base_component import BaseComponent
-from entity import Actor
 +from input_handlers import GameOverEventHandler
 from render_order import RenderOrder
+
+if TYPE_CHECKING:
+    from entity import Actor
 
 
 class Fighter(BaseComponent):
@@ -2520,10 +2560,16 @@ class Fighter(BaseComponent):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>from components.base_component import BaseComponent
-from entity import Actor
+<pre>from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from components.base_component import BaseComponent
 <span class="new-text">from input_handlers import GameOverEventHandler</span>
 from render_order import RenderOrder
+
+if TYPE_CHECKING:
+    from entity import Actor
 
 
 class Fighter(BaseComponent):
