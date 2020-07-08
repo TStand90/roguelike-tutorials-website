@@ -1,6 +1,6 @@
 ---
 title: "Part 6 - Doing (and taking) some damage"
-date: 2020-07-14
+date: 2020-07-07
 draft: false
 ---
 
