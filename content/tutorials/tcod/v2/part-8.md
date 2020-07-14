@@ -9,6 +9,54 @@ draft: true
 Once again, apologies to everyone reading this right now. After publishing the last two parts, there were once again a few refactors on code written in those parts, like at the beginning of part 6. Luckily, the changes are much less extensive this time.
 
 
+`ai.py`
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+...
+import numpy as np  # type: ignore
+import tcod
+
+from actions import Action, MeleeAction, MovementAction, WaitAction
+-from components.base_component import BaseComponent
+
+if TYPE_CHECKING:
+    from entity import Actor
+
+
+-class BaseAI(Action, BaseComponent):
++class BaseAI(Action):
+    entity: Actor
+
+    def perform(self) -> None:
+        raise NotImplementedError()
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+import numpy as np  # type: ignore
+import tcod
+
+from actions import Action, MeleeAction, MovementAction, WaitAction
+<span class="crossed-out-text">from components.base_component import BaseComponent</span>
+
+if TYPE_CHECKING:
+    from entity import Actor
+
+
+<span class="crossed-out-text">class BaseAI(Action, BaseComponent):</span>
+<span class="new-text">class BaseAI(Action):</span>
+    <span class="crossed-out-text">entity: Actor</span>
+
+    def perform(self) -> None:
+        raise NotImplementedError()
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+
 `message_log.py`
 
 {{< codetab >}}
@@ -1918,22 +1966,16 @@ class AskUserEventHandler(EventHandler):
 +       if height <= 3:
 +           height = 3
 
-+       # TODO: Fix these values, not quite right
-+       if self.engine.player.x <= 20:
-+           x = 20
++       if self.engine.player.x <= 30:
++           x = 40
 +       else:
 +           x = 0
-
-+       if self.engine.player.y <= 20:
-+           y = 20
-+       else:
-+           y = 0
 
 +       width = len(self.TITLE) + 4
 
 +       console.draw_frame(
 +           x=x,
-+           y=y,
++           y=0,
 +           width=width,
 +           height=height,
 +           title=self.TITLE,
@@ -2000,22 +2042,16 @@ class AskUserEventHandler(EventHandler):
         if height <= 3:
             height = 3
 
-        # TODO: Fix these values, not quite right
-        if self.engine.player.x <= 20:
-            x = 20
+        if self.engine.player.x <= 30:
+            x = 40
         else:
             x = 0
-
-        if self.engine.player.y <= 20:
-            y = 20
-        else:
-            y = 0
 
         width = len(self.TITLE) + 4
 
         console.draw_frame(
             x=x,
-            y=y,
+            y=0,
             width=width,
             height=height,
             title=self.TITLE,
@@ -2235,6 +2271,92 @@ class InventoryDropHandler(InventoryEventHandler):
 
 TODO: Explain InventoryActivate/DropHandler
 
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+        ...
+        elif key == tcod.event.K_g:
+            action = PickupAction(player)
+ 
++       elif key == tcod.event.K_i:
++           self.engine.event_handler = InventoryActivateHandler(self.engine)
++       elif key == tcod.event.K_d:
++           self.engine.event_handler = InventoryDropHandler(self.engine)
 
+        # No valid key was pressed
+        return action
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        ...
+        elif key == tcod.event.K_g:
+            action = PickupAction(player)
+ 
+        <span class="new-text">elif key == tcod.event.K_i:
+            self.engine.event_handler = InventoryActivateHandler(self.engine)
+        elif key == tcod.event.K_d:
+            self.engine.event_handler = InventoryDropHandler(self.engine)</span>
 
-TODO: Finish the tutorial.
+        # No valid key was pressed
+        return action</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Now, when you run the project, you can, at long last, use and drop the health potions!
+
+![Part 8 - Using items](/images/part-8-using-items.png)
+
+There's one last bit of housekeeping we need to do before moving on to the next part. The `parent` class attribute in the `Entity` class has a bit of a problem: it's designated as a `GameMap` type right now, but when an item moves from the map to the inventory, that isn't really true any more. Let's fix that now:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+from __future__ import annotations
+
+import copy
+-from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING
++from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
+
+from render_order import RenderOrder
+
+...
+class Entity:
+    """
+    A generic object to represent players, enemies, items, etc.
+    """
+
+-   parent: GameMap
++   parent: Union[GameMap, Inventory]
+
+    def __init__(
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from __future__ import annotations
+
+import copy
+<span class="crossed-out-text">from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING</span>
+<span class="new-text">from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union</span>
+
+from render_order import RenderOrder
+
+...
+class Entity:
+    """
+    A generic object to represent players, enemies, items, etc.
+    """
+
+    <span class="crossed-out-text">parent: GameMap</span>
+    <span class="new-text">parent: Union[GameMap, Inventory]</span>
+
+    def __init__(
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+This was another long chapter, but this is an important step towards a functioning game. Next chapter, we'll add a few more item types to use.
+
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-8).
+
+[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-9)
