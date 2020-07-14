@@ -1234,10 +1234,10 @@ troll = Actor(
 )
 
 <span class="new-text">health_potion = Item(
-   char="!",
-   color=(127, 0, 255),
-   name="Health Potion",
-   consumable=HealingConsumable(amount=4),
+    char="!",
+    color=(127, 0, 255),
+    name="Health Potion",
+    consumable=HealingConsumable(amount=4),
 )</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
