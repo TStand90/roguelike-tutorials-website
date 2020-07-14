@@ -9,6 +9,129 @@ draft: true
 Once again, apologies to everyone reading this right now. After publishing the last two parts, there were once again a few refactors on code written in those parts, like at the beginning of part 6. Luckily, the changes are much less extensive this time.
 
 
+`message_log.py`
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
++from typing import Iterable, List, Reversible, Tuple
+-from typing import List, Reversible, Tuple
+import textwrap
+
+import tcod
+
+import color
+...
+
+
+class MessageLog:
+    ...
+
+    def render(
+        self, console: tcod.Console, x: int, y: int, width: int, height: int,
+    ) -> None:
+        """Render this log over the given area.
+
+        `x`, `y`, `width`, `height` is the rectangular region to render onto
+        the `console`.
+        """
+        self.render_messages(console, x, y, width, height, self.messages)
+
++   @staticmethod
++   def wrap(string: str, width: int) -> Iterable[str]:
++       """Return a wrapped text message."""
++       for line in string.splitlines():  # Handle newlines in messages.
++           yield from textwrap.wrap(
++               line, width, expand_tabs=True,
++           )
+
+-   @staticmethod
++   @classmethod
+    def render_messages(
++       cls,
+        console: tcod.Console,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        messages: Reversible[Message],
+    ) -> None:
+        """Render the messages provided.
+
+        The `messages` are rendered starting at the last message and working
+        backwards.
+        """
+        y_offset = height - 1
+
+        for message in reversed(messages):
+-           for line in reversed(textwrap.wrap(message.full_text, width)):
++           for line in reversed(list(cls.wrap(message.full_text, width))):
+                console.print(x=x, y=y + y_offset, string=line, fg=message.fg)
+                y_offset -= 1
+                if y_offset < 0:
+                    return  # No more space to print messages.
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre><span class="new-text">from typing import Iterable, List, Reversible, Tuple</span>
+<span class="crossed-out-text">from typing import List, Reversible, Tuple</span>
+import textwrap
+
+import tcod
+
+import color
+...
+
+
+class MessageLog:
+    ...
+
+    def render(
+        self, console: tcod.Console, x: int, y: int, width: int, height: int,
+    ) -> None:
+        """Render this log over the given area.
+
+        `x`, `y`, `width`, `height` is the rectangular region to render onto
+        the `console`.
+        """
+        self.render_messages(console, x, y, width, height, self.messages)
+
+    <span class="new-text">@staticmethod
+    def wrap(string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():  # Handle newlines in messages.
+            yield from textwrap.wrap(
+                line, width, expand_tabs=True,
+            )</span>
+
+    <span class="crossed-out-text">@staticmethod</span>
+    <span class="new-text">@classmethod</span>
+    def render_messages(
+        <span class="new-text">cls,</span>
+        console: tcod.Console,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        messages: Reversible[Message],
+    ) -> None:
+        """Render the messages provided.
+
+        The `messages` are rendered starting at the last message and working
+        backwards.
+        """
+        y_offset = height - 1
+
+        for message in reversed(messages):
+            <span class="crossed-out-text">for line in reversed(textwrap.wrap(message.full_text, width)):</span>
+            <span class="new-text">for line in reversed(list(cls.wrap(message.full_text, width))):</span>
+                console.print(x=x, y=y + y_offset, string=line, fg=message.fg)
+                y_offset -= 1
+                if y_offset < 0:
+                    return  # No more space to print messages.</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
 `game_map.py`
 
 {{< codetab >}}
@@ -41,6 +164,8 @@ class GameMap:
         ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
+
+`entity.py`
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -310,6 +435,7 @@ class BaseComponent:
 {{</ original-tab >}}
 {{</ codetab >}}
 
+`fighter.py`
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -412,27 +538,9 @@ class Fighter(BaseComponent):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Fill in other rewrites here.
+TODO: Double check that this is all the rewrites.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Part 8
 
 So far, our game has movement, dungeon exploring, combat, and AI (okay, we're stretching the meaning of "intelligence" in *artificial intelligence* to its limits, but bear with me here). Now it's time for another staple of the roguelike genre: items\! Why would our rogue venture into the dungeons of doom if not for some sweet loot, after all?
 
@@ -488,6 +596,8 @@ bar_empty = (0x40, 0x10, 0x10)</pre>
 {{</ codetab >}}
 
 These will become useful shortly.
+
+
 
 TODO: Fill in this part.
 
@@ -556,7 +666,9 @@ class Impossible(Exception):
 
 ... And that's it! When we write `raise Impossible("An exception message")` in our program, the `Impossible` exception will be raised, with the given message.
 
-So what do we do with the raised exception? 
+So what do we do with the raised exception? Well, we should catch it! But where?
+
+Let's modify the `main.py` file to catch the exceptions, like this:
 
 TODO: Fill in the main changes to accomodate Impossible.
 
@@ -609,11 +721,19 @@ import tcod
 
 This is a generalized, catch all solution, which will print *all* exceptions to the message log, not just instances of `Impossible`. This can be helpful for debugging your game, or getting error reports from users.
 
+However, this solution doesn't mesh with our current implementation of the `EventHandler`. `EventHandler` currently loops through the events and converts them (to get the mouse information). We'll need to edit a few things in `input_handlers.py` to get back on track.
+
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
 import tcod
 
++from actions import (
++   Action,
++   BumpAction,
++   EscapeAction,
++   WaitAction
++)
 +import color
 +import exceptions
 -from actions import Action, BumpAction, EscapeAction, WaitAction
@@ -666,14 +786,42 @@ class MainGameEventHandler(EventHandler):
 -           self.engine.handle_enemy_turns()
 
 -           self.engine.update_fov()  # Update the FOV before the players next action.
+
+    ...
+
+class GameOverEventHandler(EventHandler):
+-   def handle_events(self, context: tcod.context.Context) -> None:
+-       for event in tcod.event.wait():
+-           action = self.dispatch(event)
+
+-           if action is None:
+-               continue
+
+-           action.perform()
++   def handle_action(self, action: Optional[Action]) -> bool:
++       if action is None:
++           return False
+
++       try:
++           action.perform()
++       except exceptions.Impossible as exc:
++           self.engine.message_log.add_message(exc.args[0], color.impossible)
+
++       return False
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>import tcod
 
-+import color
-+import exceptions
-from actions import Action, BumpAction, EscapeAction, WaitAction
+<span class="new-text">from actions import (
+    Action,
+    BumpAction,
+    EscapeAction,
+    WaitAction
+)
+import color
+import exceptions</span>
+<span class="crossed-out-text">from actions import Action, BumpAction, EscapeAction, WaitAction</span>
 
 
 class EventHandler(tcod.event.EventDispatch[Action]):
@@ -722,17 +870,38 @@ class MainGameEventHandler(EventHandler):
 
             <span class="crossed-out-text">self.engine.handle_enemy_turns()</span>
 
-            <span class="crossed-out-text">self.engine.update_fov()  # Update the FOV before the players next action.</span></pre>
+            <span class="crossed-out-text">self.engine.update_fov()  # Update the FOV before the players next action.</span>
+
+    ...
+
+class GameOverEventHandler(EventHandler):
+    <span class="crossed-out-text">def handle_events(self, context: tcod.context.Context) -> None:</span>
+        <span class="crossed-out-text">for event in tcod.event.wait():</span>
+            <span class="crossed-out-text">action = self.dispatch(event)</span>
+
+            <span class="crossed-out-text">if action is None:</span>
+                <span class="crossed-out-text">continue</span>
+
+            <span class="crossed-out-text">action.perform()</span>
+    <span class="new-text">def handle_action(self, action: Optional[Action]) -> bool:
+        if action is None:
+            return False
+
+        try:
+            action.perform()
+        except exceptions.Impossible as exc:
+            self.engine.message_log.add_message(exc.args[0], color.impossible)
+
+        return False</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
-
-TODO: Transition
-
+Now that we've got our event handlers updated, let's actually put the `Impossible` exception to good use. We can start by editing `actions.py` to make use of it when the player tries to move into an invalid area:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+...
 import color
 +import exceptions
 
@@ -768,7 +937,8 @@ class MovementAction(ActionWithDirection):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>import color
+<pre>...
+import color
 <span class="new-text">import exceptions</span>
 
 if TYPE_CHECKING:
@@ -803,14 +973,14 @@ class MovementAction(ActionWithDirection):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-
-
+Now, if you try moving into a wall, you'll get a message in the log, and the player's turn won't be wasted.
 
 So what about when the enemies try doing something impossible? You might want to know when that happens for debugging purposes, but during normal execution of our game, we can simply ignore it, and have the enemy skip their turn. To do this, modify `engine.py` like this:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+...
 from tcod.map import compute_fov
  
 +import exceptions
@@ -830,7 +1000,8 @@ from message_log import MessageLog
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>from tcod.map import compute_fov
+<pre>...
+from tcod.map import compute_fov
  
 <span class="new-text">import exceptions</span>
 from input_handlers import MainGameEventHandler
@@ -849,9 +1020,7 @@ from message_log import MessageLog
 {{</ original-tab >}}
 {{</ codetab >}}
 
-
-
-TODO: Fill in missing parts?
+This is great and all, but wasn't this chapter supposed to be about implementing items? And, yes, that's true, and we're going to transition to that now, but it'll be helpful to have a way to stop the player from wasting a turn in just a moment.
 
 The way we'll implement our health potions will be similar to how we implemented enemies: We'll create a component that holds the functionality we want, and we'll create a subclass of `Entity` that holds the relevant component. From the `Consumable` component, we can create subclasses that implement the specific functionality we want for each item. In this case, it'll be a health potion, but in the next chapter, we'll be implementing other types of consumables, so we'll want to stay flexible.
 
@@ -990,6 +1159,8 @@ if TYPE_CHECKING:
 
 `Item` isn't too different from `Actor`, except instead of implementing `fighter` and `ai`, it does `consumable`. When we create an item, we'll assign the `consumable`, which will determine what actually happens when the item gets used.
 
+To utilize our new `Item`, let's add the health potion to `entity_factories.py`:
+
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
@@ -1037,6 +1208,7 @@ troll = Actor(
 from components.fighter import Fighter
 <span class="crossed-out-text">from entity import Actor</span>
 <span class="new-text">from entity import Actor, Item</span>
+
 
 player = Actor(
     char="@",
@@ -1093,6 +1265,7 @@ def place_entities(
                 entity_factories.orc.spawn(dungeon, x, y)
             else:
                 entity_factories.troll.spawn(dungeon, x, y)
+
 +   for i in range(number_of_items):
 +       x = random.randint(room.x1 + 1, room.x2 - 1)
 +       y = random.randint(room.y1 + 1, room.y2 - 1)
@@ -1137,6 +1310,7 @@ def generate_dungeon(
                 entity_factories.orc.spawn(dungeon, x, y)
             else:
                 entity_factories.troll.spawn(dungeon, x, y)
+
     <span class="new-text">for i in range(number_of_items):
         x = random.randint(room.x1 + 1, room.x2 - 1)
         y = random.randint(room.y1 + 1, room.y2 - 1)
@@ -1165,9 +1339,68 @@ def generate_dungeon(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Double check everything til now
+TODO: Explain!
+
+Lastly, to make the health potions appear, we need to update our call in `main.py` to `generate_dungeon`. Open up `main.py` and add the following lines:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+    ...
+    max_monsters_per_room = 2
++   max_items_per_room = 2
+
+    tileset = tcod.tileset.load_tilesheet(
+        "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+    )
+
+    player = copy.deepcopy(entity_factories.player)
+
+    engine = Engine(player=player)
+
+    engine.game_map = generate_dungeon(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        max_monsters_per_room=max_monsters_per_room,
++       max_items_per_room=max_items_per_room,
+        engine=engine,
+    )
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    max_monsters_per_room = 2
+    <span class="new-text">max_items_per_room = 2</span>
+
+    tileset = tcod.tileset.load_tilesheet(
+        "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+    )
+
+    player = copy.deepcopy(entity_factories.player)
+
+    engine = Engine(player=player)
+
+    engine.game_map = generate_dungeon(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        max_monsters_per_room=max_monsters_per_room,
+        <span class="new-text">max_items_per_room=max_items_per_room,</span>
+        engine=engine,
+    )
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 Run the project now, and you should see a few health potions laying around. Success! Well, not really...
+
+![Part 8 - Health Potions](/images/part-8-health-potions.png)
 
 Those potions don't do our rogue any good right now, because we can't pick them up! We need to add the items to an inventory before we can start chugging them.
 
@@ -1385,7 +1618,58 @@ We're setting the player's inventory to 26, because when we implement the menu s
 
 TODO: Fill in here?
 
-In order to actually pick up an item of the floor, we'll require the rogue to move onto the same tile and press a key. Then, a `PickupAction` will be called, which will handle picking up the item and adding it to the inventory.
+In order to actually pick up an item of the floor, we'll require the rogue to move onto the same tile and press a key. First, we'll want an easy way to grab all the items that currently exist in the map. Open up `game_map.py` and add the following:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+...
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+-from entity import Actor
++from entity import Actor, Item
+import tile_types
+...
+
+    ...
+    @property
+    def gamemap(self) -> GameMap:
+        return self
+
++   @property
++   def items(self) -> Iterator[Item]:
++       yield from (entity for entity in self.entities if isinstance(entity, Item))
+
+    def get_blocking_entity_at_location(
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+<span class="crossed-out-text">from entity import Actor</span>
+<span class="new-text">from entity import Actor, Item</span>
+import tile_types
+...
+
+    ...
+    @property
+    def gamemap(self) -> GameMap:
+        return self
+
+    <span class="new-text">@property
+    def items(self) -> Iterator[Item]:
+        yield from (entity for entity in self.entities if isinstance(entity, Item))</span>
+
+    def get_blocking_entity_at_location(
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+We can use this new property in an action to find the item(s) on the same tile as the player. Let's define a `PickupAction`, which will handle picking up the item and adding it to the inventory.
 
 Open up `actions.py` and define `PickupAction` like this:
 
@@ -1406,7 +1690,7 @@ Open up `actions.py` and define `PickupAction` like this:
 +       for item in self.engine.game_map.items:
 +           if actor_location_x == item.x and actor_location_y == item.y:
 +               if len(inventory.items) >= inventory.capacity:
-+                   raise Impossible("Your inventory is full.")
++                   raise exceptions.Impossible("Your inventory is full.")
 
 +               self.engine.game_map.entities.remove(item)
 +               item.parent = self.entity.inventory
@@ -1415,7 +1699,7 @@ Open up `actions.py` and define `PickupAction` like this:
 +               self.engine.message_log.add_message(f"You picked up the {item.name}!")
 +               return
 
-+       raise Impossible("There is nothing here to pick up.")
++       raise exceptions.Impossible("There is nothing here to pick up.")
 
 
 class EscapeAction(Action):
@@ -1438,7 +1722,7 @@ class EscapeAction(Action):
         for item in self.engine.game_map.items:
             if actor_location_x == item.x and actor_location_y == item.y:
                 if len(inventory.items) >= inventory.capacity:
-                    raise Impossible("Your inventory is full.")
+                    raise exceptions.Impossible("Your inventory is full.")
 
                 self.engine.game_map.entities.remove(item)
                 item.parent = self.entity.inventory
@@ -1447,7 +1731,7 @@ class EscapeAction(Action):
                 self.engine.message_log.add_message(f"You picked up the {item.name}!")
                 return
 
-        raise Impossible("There is nothing here to pick up.")</span>
+        raise exceptions.Impossible("There is nothing here to pick up.")</span>
 
 
 class EscapeAction(Action):
@@ -1456,13 +1740,24 @@ class EscapeAction(Action):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain PickupAction in detail
+The action gets the entity's location, and tries to find an item that exists in the same location, iterating through `self.engine.game_map.items` (which we just defined). If an item is found, we try to add it to the inventory, checking the capacity first, and returing `Impossible` if its full. When adding an item to the inventory, we remove it from the game map and store it in the inventory, and print out a message. We then return, since only one item can be picked up per turn (it'll be possible later for multiple items to be on the same spot).
+
+If no item is found in the location, we just return `Impossible`, informing the player that there's nothing there.
 
 Let's add our new action to the event handler. Open up `input_handlers.py` and edit the key checking section of `MainGameEventHandler` to add the key for picking up items:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+from actions import (
+    Action,
+    BumpAction,
+    EscapeAction,
++   PickupAction,
+    WaitAction,
+)
+...
+
         ...
         elif key == tcod.event.K_v:
             self.engine.event_handler = HistoryViewer(self.engine)
@@ -1475,7 +1770,16 @@ Let's add our new action to the event handler. Open up `input_handlers.py` and e
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>        ...
+<pre>from actions import (
+    Action,
+    BumpAction,
+    EscapeAction,
+    <span class="new-text">PickupAction,</span>
+    WaitAction,
+)
+...
+
+        ...
         elif key == tcod.event.K_v:
             self.engine.event_handler = HistoryViewer(self.engine)
  
@@ -1487,10 +1791,450 @@ Let's add our new action to the event handler. Open up `input_handlers.py` and e
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Simple enough, if the player presses the "g" key ("g" for "get"), we call the `PickupAction`.
+Simple enough, if the player presses the "g" key ("g" for "get"), we call the `PickupAction`. Run the project now, and pick up those potions!
 
-TODO: Verify up to this point.
+Now that the player can pick up items, we'll need to create our inventory menu, where the player can see what items are in the inventory, and select which one to use. This will require a few steps.
 
-Now that the player can pick up items, we'll need to create our inventory menu, where the player can see what items are in the inventory, and select which one to use.
+First, we need a way to get input from the user. When the user opens the inventory menu, we need to get the input from the user, and if it was valid, we return to the main game's event handler, so the enemies can take their turns.
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+class EventHandler(tcod.event.EventDispatch[Action]):
+    ...
+
+
++class AskUserEventHandler(EventHandler):
++   """Handles user input for actions which require special input."""
+
++   def handle_action(self, action: Optional[Action]) -> bool:
++       """Return to the main event handler when a valid action was performed."""
++       if super().handle_action(action):
++           self.engine.event_handler = MainGameEventHandler(self.engine)
++           return True
++       return False
+
++   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
++       """By default any key exits this input handler."""
++       if event.sym in {  # Ignore modifier keys.
++           tcod.event.K_LSHIFT,
++           tcod.event.K_RSHIFT,
++           tcod.event.K_LCTRL,
++           tcod.event.K_RCTRL,
++           tcod.event.K_LALT,
++           tcod.event.K_RALT,
++       }:
++           return None
++       return self.on_exit()
+
++   def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:
++       """By default any mouse click exits this input handler."""
++       return self.on_exit()
+
++   def on_exit(self) -> Optional[Action]:
++       """Called when the user is trying to exit or cancel an action.
+
++       By default this returns to the main event handler.
++       """
++       self.engine.event_handler = MainGameEventHandler(self.engine)
++       return None
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class EventHandler(tcod.event.EventDispatch[Action]):
+    ...
+
+
+<span class="new-text">class AskUserEventHandler(EventHandler):
+    """Handles user input for actions which require special input."""
+
+    def handle_action(self, action: Optional[Action]) -> bool:
+        """Return to the main event handler when a valid action was performed."""
+        if super().handle_action(action):
+            self.engine.event_handler = MainGameEventHandler(self.engine)
+            return True
+        return False
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
+        """By default any key exits this input handler."""
+        if event.sym in {  # Ignore modifier keys.
+            tcod.event.K_LSHIFT,
+            tcod.event.K_RSHIFT,
+            tcod.event.K_LCTRL,
+            tcod.event.K_RCTRL,
+            tcod.event.K_LALT,
+            tcod.event.K_RALT,
+        }:
+            return None
+        return self.on_exit()
+
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:
+        """By default any mouse click exits this input handler."""
+        return self.on_exit()
+
+    def on_exit(self) -> Optional[Action]:
+        """Called when the user is trying to exit or cancel an action.
+
+        By default this returns to the main event handler.
+        """
+        self.engine.event_handler = MainGameEventHandler(self.engine)
+        return None</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+TODO: Explain AskUserEventHandler
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+if TYPE_CHECKING:
+    from engine import Engine
++   from entity import Item
+...
+
+
+class AskUserEventHandler(EventHandler):
+    ...
+
+
++class InventoryEventHandler(AskUserEventHandler):
++   """This handler lets the user select an item.
+
++   What happens then depends on the subclass.
++   """
+
++   TITLE = "<missing title>"
+
++   def on_render(self, console: tcod.Console) -> None:
++       """Render an inventory menu, which displays the items in the inventory, and the letter to select them.
++       Will move to a different position based on where the player is located, so the player can always see where
++       they are.
++       """
++       super().on_render(console)
++       number_of_items_in_inventory = len(self.engine.player.inventory.items)
+
++       height = number_of_items_in_inventory + 2
+
++       if height <= 3:
++           height = 3
+
++       # TODO: Fix these values, not quite right
++       if self.engine.player.x <= 20:
++           x = 20
++       else:
++           x = 0
+
++       if self.engine.player.y <= 20:
++           y = 20
++       else:
++           y = 0
+
++       width = len(self.TITLE) + 4
+
++       console.draw_frame(
++           x=x,
++           y=y,
++           width=width,
++           height=height,
++           title=self.TITLE,
++           clear=True,
++           fg=(255, 255, 255),
++           bg=(0, 0, 0),
++       )
+
++       if number_of_items_in_inventory > 0:
++           for i, item in enumerate(self.engine.player.inventory.items):
++               item_key = chr(ord("a") + i)
++               console.print(x + 1, y + i + 1, f"({item_key}) {item.name}")
++       else:
++           console.print(x + 1, y + 1, "(Empty)")
+
++   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
++       player = self.engine.player
++       key = event.sym
++       index = key - tcod.event.K_a
+
++       if 0 <= index <= 26:
++           try:
++               selected_item = player.inventory.items[index]
++           except IndexError:
++               self.engine.message_log.add_message("Invalid entry.", color.invalid)
++               return None
++           return self.on_item_selected(selected_item)
++       return super().ev_keydown(event)
+
++   def on_item_selected(self, item: Item) -> Optional[Action]:
++       """Called when the user selects a valid item."""
++       raise NotImplementedError()
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>if TYPE_CHECKING:
+    from engine import Engine
+    <span class="new-text">from entity import Item</span>
+...
+
+
+class AskUserEventHandler(EventHandler):
+    ...
+
+
+<span class="new-text">class InventoryEventHandler(AskUserEventHandler):
+    """This handler lets the user select an item.
+
+    What happens then depends on the subclass.
+    """
+
+    TITLE = "&lt;missing title&gt;"
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Render an inventory menu, which displays the items in the inventory, and the letter to select them.
+        Will move to a different position based on where the player is located, so the player can always see where
+        they are.
+        """
+        super().on_render(console)
+        number_of_items_in_inventory = len(self.engine.player.inventory.items)
+
+        height = number_of_items_in_inventory + 2
+
+        if height <= 3:
+            height = 3
+
+        # TODO: Fix these values, not quite right
+        if self.engine.player.x <= 20:
+            x = 20
+        else:
+            x = 0
+
+        if self.engine.player.y <= 20:
+            y = 20
+        else:
+            y = 0
+
+        width = len(self.TITLE) + 4
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title=self.TITLE,
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0),
+        )
+
+        if number_of_items_in_inventory > 0:
+            for i, item in enumerate(self.engine.player.inventory.items):
+                item_key = chr(ord("a") + i)
+                console.print(x + 1, y + i + 1, f"({item_key}) {item.name}")
+        else:
+            console.print(x + 1, y + 1, "(Empty)")
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
+        player = self.engine.player
+        key = event.sym
+        index = key - tcod.event.K_a
+
+        if 0 <= index <= 26:
+            try:
+                selected_item = player.inventory.items[index]
+            except IndexError:
+                self.engine.message_log.add_message("Invalid entry.", color.invalid)
+                return None
+            return self.on_item_selected(selected_item)
+        return super().ev_keydown(event)
+
+    def on_item_selected(self, item: Item) -> Optional[Action]:
+        """Called when the user selects a valid item."""
+        raise NotImplementedError()</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+TODO: Explain InventoryEventHandler
+
+TODO: Insert Consume and Drop actions here
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+if TYPE_CHECKING:
+    from engine import Engine
+-   from entity import Actor, Entity
++   from entity import Actor, Entity, Item
+...
+
+...
+class EscapeAction(Action):
+    def perform(self) -> None:
+        raise SystemExit()
+
+
++class ItemAction(Action):
++   def __init__(self, entity: Actor, item: Item):
++       super().__init__(entity)
++       self.item = item
++
++   def perform(self) -> None:
++       raise NotImplementedError()
++
++
++class ConsumeItem(ItemAction):
++   def perform(self) -> None:
++       # Consume the item.
++       self.item.consumable.consume(self.entity)
++
++       # Remove the consumed item from the inventory.
++       # If "Impossible" was raised, this will not be called and the item will remain in the inventory.
++       self.entity.inventory.items.remove(self.item)
++
++
++class DropItem(ItemAction):
++   def perform(self) -> None:
++       self.entity.inventory.drop(self.item)
+
+
+class WaitAction(Action):
+    def perform(self) -> None:
+        pass
+...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>if TYPE_CHECKING:
+    from engine import Engine
+    <span class="crossed-out-text">from entity import Actor, Entity</span>
+    <span class="new-text">from entity import Actor, Entity, Item</span>
+...
+
+...
+class EscapeAction(Action):
+    def perform(self) -> None:
+        raise SystemExit()
+
+
+<span class="new-text">class ItemAction(Action):
+    def __init__(self, entity: Actor, item: Item):
+        super().__init__(entity)
+        self.item = item
+
+    def perform(self) -> None:
+        raise NotImplementedError()
+
+
+class ConsumeItem(ItemAction):
+    def perform(self) -> None:
+        # Consume the item.
+        self.item.consumable.consume(self.entity)
+
+        # Remove the consumed item from the inventory.
+        # If "Impossible" was raised, this will not be called and the item will remain in the inventory.
+        self.entity.inventory.items.remove(self.item)
+
+
+class DropItem(ItemAction):
+    def perform(self) -> None:
+        self.entity.inventory.drop(self.item)</span>
+    
+
+class WaitAction(Action):
+    def perform(self) -> None:
+        pass
+...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+`ItemAction` is the base action class, which takes an item in its `__init__` statement.
+
+`ConsumeItem` will be used when the player wants to use an item. It will call the consumable component's `consume` method, then remove the item from the player's inventory. Since the item is no longer in the inventory or the map, it will disappear. If an exception was raised during `consume`, the item won't be deleted.
+
+`DropItem` will be used to drop something from the inventory. It just calls the `drop` method of the `Inventory` component.
+
+Now, let's put these new actions into... well... action! Open up `input_handlers.py` once again, and let's add the handlers that will handle both selecting an item and dropping one.
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+...
+import tcod
+
++import actions
+from actions import (
+    Action,
+    BumpAction,
+    EscapeAction,
+    PickupAction,
+    WaitAction,
+)
+...
+
+
+class InventoryEventHandler(AskUserEventHandler):
+    ...
+
+
++class InventoryActivateHandler(InventoryEventHandler):
++   """Handle using an inventory item."""
+
++   TITLE = "Select an item to use"
+
++   def on_item_selected(self, item: Item) -> Optional[Action]:
++       """Return the action for the selected item."""
++       return actions.ConsumeItem(self.engine.player, item)
+
+
++class InventoryDropHandler(InventoryEventHandler):
++   """Handle dropping an inventory item."""
+
++   TITLE = "Select an item to drop"
+
++   def on_item_selected(self, item: Item) -> Optional[Action]:
++       """Drop this item."""
++       return actions.DropItem(self.engine.player, item)
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+import tcod
+
+<span class="new-text">import actions</span>
+from actions import (
+    Action,
+    BumpAction,
+    EscapeAction,
+    PickupAction,
+    WaitAction,
+)
+...
+
+
+class InventoryEventHandler(AskUserEventHandler):
+    ...
+
+
+<span class="new-text">class InventoryActivateHandler(InventoryEventHandler):
+    """Handle using an inventory item."""
+
+    TITLE = "Select an item to use"
+
+    def on_item_selected(self, item: Item) -> Optional[Action]:
+        """Return the action for the selected item."""
+        return actions.ConsumeItem(self.engine.player, item)
+
+
+class InventoryDropHandler(InventoryEventHandler):
+    """Handle dropping an inventory item."""
+
+    TITLE = "Select an item to drop"
+
+    def on_item_selected(self, item: Item) -> Optional[Action]:
+        """Drop this item."""
+        return actions.DropItem(self.engine.player, item)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+TODO: Explain InventoryActivate/DropHandler
+
+
 
 TODO: Finish the tutorial.
