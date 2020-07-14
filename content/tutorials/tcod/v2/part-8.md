@@ -8,7 +8,6 @@ draft: true
 
 Once again, apologies to everyone reading this right now. After publishing the last two parts, there were once again a few refactors on code written in those parts, like at the beginning of part 6. Luckily, the changes are much less extensive this time.
 
-
 `ai.py`
 
 {{< codetab >}}
@@ -401,7 +400,7 @@ class Actor(Entity):
         y: int = 0,
         char: str = "?",
         color: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
+        name: str = "&lt;Unnamed&gt;",
         ai_cls: Type[BaseAI],
         fighter: Fighter
     ):
@@ -586,8 +585,6 @@ class Fighter(BaseComponent):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Double check that this is all the rewrites.
-
 ## Part 8
 
 So far, our game has movement, dungeon exploring, combat, and AI (okay, we're stretching the meaning of "intelligence" in *artificial intelligence* to its limits, but bear with me here). Now it's time for another staple of the roguelike genre: items\! Why would our rogue venture into the dungeons of doom if not for some sweet loot, after all?
@@ -645,11 +642,9 @@ bar_empty = (0x40, 0x10, 0x10)</pre>
 
 These will become useful shortly.
 
+There's another thing we can knock out right now that we'll use later: The ability for a `Fighter` component to recover health, and the ability for it to take damage directly, and the ability to take damage directly (without the defense modifier). We won't use the damage function this chapter, but since the two functions are effectively opposites, we can get writing it overwith now.
 
-
-TODO: Fill in this part.
-
-TODO: Figure out what's going on here
+Open up `fighter.py` and add these two functions:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -698,6 +693,8 @@ class Fighter:
 {{</ original-tab >}}
 {{</ codetab >}}
 
+`heal` will restore a certain amount of HP, up to the maximum, and return the amount that was healed. If the entity's health is at full, then just return 0. The function that handles this should display an error if the returned amount is 0, since the entity can't be healed.
+
 One thing we're going to need is a way to *not* consume an item or take a turn if something goes wrong during the process. For our health potion, think about what should happen if the player declares they want to use a health potion, but their health is already full. What should happen?
 
 We could just consume the potion anyway, and have it go to waste, but if you've played a game that does that, you know how frustrating it can be, especially if the player clicked the health potion on accident. A better way would be to warn the user that they're trying to do something that makes no sense, and save the player from wasting both the potion and their turn.
@@ -717,8 +714,6 @@ class Impossible(Exception):
 So what do we do with the raised exception? Well, we should catch it! But where?
 
 Let's modify the `main.py` file to catch the exceptions, like this:
-
-TODO: Fill in the main changes to accomodate Impossible.
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -846,16 +841,20 @@ class GameOverEventHandler(EventHandler):
 -               continue
 
 -           action.perform()
-+   def handle_action(self, action: Optional[Action]) -> bool:
-+       if action is None:
-+           return False
 
-+       try:
-+           action.perform()
-+       except exceptions.Impossible as exc:
-+           self.engine.message_log.add_message(exc.args[0], color.impossible)
+-   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
+-       action: Optional[Action] = None
 
-+       return False
+-       key = event.sym
+
+-       if key == tcod.event.K_ESCAPE:
+-           action = EscapeAction(self.engine.player)
+
+-       # No valid key was pressed
+-       return action
++   def ev_keydown(self, event: tcod.event.KeyDown) -> None:
++       if event.sym == tcod.event.K_ESCAPE:
++           raise SystemExit()
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
@@ -931,16 +930,20 @@ class GameOverEventHandler(EventHandler):
                 <span class="crossed-out-text">continue</span>
 
             <span class="crossed-out-text">action.perform()</span>
-    <span class="new-text">def handle_action(self, action: Optional[Action]) -> bool:
-        if action is None:
-            return False
 
-        try:
-            action.perform()
-        except exceptions.Impossible as exc:
-            self.engine.message_log.add_message(exc.args[0], color.impossible)
+    <span class="crossed-out-text">def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:</span>
+        <span class="crossed-out-text">action: Optional[Action] = None</span>
 
-        return False</span></pre>
+        <span class="crossed-out-text">key = event.sym</span>
+
+        <span class="crossed-out-text">if key == tcod.event.K_ESCAPE:</span>
+            <span class="crossed-out-text">action = EscapeAction(self.engine.player)</span>
+
+        <span class="crossed-out-text"># No valid key was pressed</span>
+        <span class="crossed-out-text">return action</span>
+    <span class="new-text">def ev_keydown(self, event: tcod.event.KeyDown) -> None:
+        if event.sym == tcod.event.K_ESCAPE:
+            raise SystemExit()</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
@@ -1299,7 +1302,7 @@ Alright, we're now ready to put some health potions in the dungeon. As you may h
 {{< highlight diff >}}
 def place_entities(
 -   room: RectangularRoom, dungeon: GameMap, maximum_monsters: int,
-+   room: RectangularRoom, dungeon: GameMap, maximum_monsters: int, maximum_items: int,
++   room: RectangularRoom, dungeon: GameMap, maximum_monsters: int, maximum_items: int
 ) -> None:
     number_of_monsters = random.randint(0, maximum_monsters)
 +   number_of_items = random.randint(0, maximum_items)
@@ -1344,7 +1347,7 @@ def generate_dungeon(
 {{< original-tab >}}
 <pre>def place_entities(
     <span class="crossed-out-text">room: RectangularRoom, dungeon: GameMap, maximum_monsters: int,</span>
-    <span class="new-text">room: RectangularRoom, dungeon: GameMap, maximum_monsters: int, maximum_items: int,</span>
+    <span class="new-text">room: RectangularRoom, dungeon: GameMap, maximum_monsters: int, maximum_items: int</span>
 ) -> None:
     number_of_monsters = random.randint(0, maximum_monsters)
     <span class="new-text">number_of_items = random.randint(0, maximum_items)</span>
@@ -1387,9 +1390,9 @@ def generate_dungeon(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain!
+We're doing essentially the same thing we did to create our enemies: Giving a maximum possible number for the number of items in each room, selecting a random number between that and 0, and spawning the items in a random spot in the room, assuming nothing else already exists there.
 
-Lastly, to make the health potions appear, we need to update our call in `main.py` to `generate_dungeon`. Open up `main.py` and add the following lines:
+Lastly, to make the health potions appear, we need to update our call in `main.py` to `generate_dungeon`, since we've added the `max_items_per_room` argument. Open up `main.py` and add the following lines:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -1664,8 +1667,6 @@ health_potion = Item(
 
 We're setting the player's inventory to 26, because when we implement the menu system, each letter in the (English) alphabet will correspond to one item slot. You can expand the inventory if you want, though you'll need to come up with an alternative menu system to accomodate having more choices.
 
-TODO: Fill in here?
-
 In order to actually pick up an item of the floor, we'll require the rogue to move onto the same tile and press a key. First, we'll want an easy way to grab all the items that currently exist in the map. Open up `game_map.py` and add the following:
 
 {{< codetab >}}
@@ -1845,6 +1846,8 @@ Now that the player can pick up items, we'll need to create our inventory menu, 
 
 First, we need a way to get input from the user. When the user opens the inventory menu, we need to get the input from the user, and if it was valid, we return to the main game's event handler, so the enemies can take their turns.
 
+To start, let's create a new event handler, which will return to the `MainGameEventHandler` when it handles an action successfully.
+
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
@@ -1930,7 +1933,9 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain AskUserEventHandler
+`AskUserEventHandler`, by default, just exits itself when any key is pressed, besides one of the "modifier" keys (shift, control, and alt). It also exits when clicking the mouse.
+
+What's the point of this class? By itself, nothing really. But we can create subclasses of it that actually do something useful, which is what we'll do now. Let's keep editing `input_handlers.py` and add this class:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -1971,11 +1976,13 @@ class AskUserEventHandler(EventHandler):
 +       else:
 +           x = 0
 
++       y = 0
+
 +       width = len(self.TITLE) + 4
 
 +       console.draw_frame(
 +           x=x,
-+           y=0,
++           y=y,
 +           width=width,
 +           height=height,
 +           title=self.TITLE,
@@ -2046,12 +2053,14 @@ class AskUserEventHandler(EventHandler):
             x = 40
         else:
             x = 0
+        
+        y = 0
 
         width = len(self.TITLE) + 4
 
         console.draw_frame(
             x=x,
-            y=0,
+            y=y,
             width=width,
             height=height,
             title=self.TITLE,
@@ -2087,9 +2096,11 @@ class AskUserEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain InventoryEventHandler
+`InventoryEventHandler` subclasses `AskUserEventHandler`, and renders the items within the player's `Inventory`. Depending on where the player is standing, the menu will render off to the side, so the menu won't cover the player. If there's nothing in the inventory, it just prints "Emtpy". Notice that it doesn't give itself a title, as that will be defined in a different subclass (more on that in a bit).
 
-TODO: Insert Consume and Drop actions here
+The `ev_keydown` function takes the user's input, from letters a - z, and associates that with an index in the inventory. If the player pressed "b", for example, the second item in the inventory will be selected and returned. If the player presses a key like "c" (item 3) but only has one item, then the message "Invalid entry" will display. If any other key is pressed, the menu will close.
+
+This class, still, does not actually do anything for us right now, but I promise we're close. Soon, we'll define the classes that will handle both displaying the item menu to use an item, and to drop them. But before that, we're going to need new actions to handle those things. Open up `actions.py` and add the following:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -2269,7 +2280,9 @@ class InventoryDropHandler(InventoryEventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain InventoryActivate/DropHandler
+At long last, we've got the `InventoryActivateHandler` and the `InventoryDropHandler`, which will handle using and dropping items, respectively. They both inherit from `InventoryEventHandler`, allowing the player to select an item in both menus using what we wrote in that class (selecting an item with a letter), but both handlers display a different title and call different actions, depending on the selection.
+
+All that's left now is to utilize these event handlers, based on the key we press. Let's set the game up to open the inventory menu when pressing "i", and the drop menu when pressing "d". Open `input_handlers.py`, and add the following lines to `MainGameEventHandler`:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -2306,7 +2319,7 @@ Now, when you run the project, you can, at long last, use and drop the health po
 
 ![Part 8 - Using items](/images/part-8-using-items.png)
 
-There's one last bit of housekeeping we need to do before moving on to the next part. The `parent` class attribute in the `Entity` class has a bit of a problem: it's designated as a `GameMap` type right now, but when an item moves from the map to the inventory, that isn't really true any more. Let's fix that now:
+There's two last bits of housekeeping we need to do before moving on to the next part. The `parent` class attribute in the `Entity` class has a bit of a problem: it's designated as a `GameMap` type right now, but when an item moves from the map to the inventory, that isn't really true any more. Let's fix that now:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -2351,6 +2364,84 @@ class Entity:
     <span class="new-text">parent: Union[GameMap, Inventory]</span>
 
     def __init__(
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Lastly, we can actually remote `EscapeAction`, as it can just be handled by the event handlers. Open `actions.py` and remove `EscapeAction`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+class PickupAction(Action):
+    ...
+
+
+-class EscapeAction(Action):
+-   def perform(self) -> None:
+-       raise SystemExit()
+
+
+class ItemAction(Action):
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class PickupAction(Action):
+    ...
+
+
+<span class="crossed-out-text">class EscapeAction(Action):</span>
+    <span class="crossed-out-text">def perform(self) -> None:</span>
+        <span class="crossed-out-text">raise SystemExit()</span>
+
+
+class ItemAction(Action):
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Then, remove `EscapeAction` from `input_handlers.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+...
+from actions import (
+    Action,
+    BumpAction,
+-   EscapeAction,
+    PickupAction,
+    WaitAction
+)
+...
+
+        ...
+        elif key == tcod.event.K_ESCAPE:
+-           action = EscapeAction(player)
++           raise SystemExit()
+        elif key == tcod.event.K_v:
+            self.engine.event_handler = HistoryViewer(self.engine)
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+from actions import (
+    Action,
+    BumpAction,
+    <span class="crossed-out-text">EscapeAction,</span>
+    PickupAction,
+    WaitAction
+)
+...
+
+        ...
+        elif key == tcod.event.K_ESCAPE:
+            <span class="crossed-out-text">action = EscapeAction(player)</span>
+            <span class="new-text">raise SystemExit()</span>
+        elif key == tcod.event.K_v:
+            self.engine.event_handler = HistoryViewer(self.engine)
         ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
