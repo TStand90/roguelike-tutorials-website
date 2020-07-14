@@ -1846,7 +1846,7 @@ Now that the player can pick up items, we'll need to create our inventory menu, 
 
 First, we need a way to get input from the user. When the user opens the inventory menu, we need to get the input from the user, and if it was valid, we return to the main game's event handler, so the enemies can take their turns.
 
-To start, let's create a new event handler, which will return to the `MainGameEventHandler` when it handles an action successfully.
+To start, let's create a new event handler, which will return to the `MainGameEventHandler` when it handles an action successfully. Open `input_handlers.py` and add the following class:
 
 {{< codetab >}}
 {{< diff-tab >}}
