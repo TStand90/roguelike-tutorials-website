@@ -812,6 +812,8 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 -       for event in tcod.event.wait():
 -           context.convert_event(event)
 -           self.dispatch(event)
+    
+    ...
 
 
 class MainGameEventHandler(EventHandler):
@@ -901,6 +903,8 @@ class EventHandler(tcod.event.EventDispatch[Action]):
         <span class="crossed-out-text">for event in tcod.event.wait():</span>
             <span class="crossed-out-text">context.convert_event(event)</span>
             <span class="crossed-out-text">self.dispatch(event)</span>
+    
+    ...
 
 
 class MainGameEventHandler(EventHandler):
@@ -1080,8 +1084,9 @@ In the `components` directory, create a file called `consumable.py` and fill it 
 ```py3
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
+import actions
 import color
 from components.base_component import BaseComponent
 from exceptions import Impossible
@@ -1093,7 +1098,15 @@ if TYPE_CHECKING:
 class Consumable(BaseComponent):
     parent: Item
 
-    def consume(self, consumer: Actor) -> None:
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        """Try to return the action for this item."""
+        return actions.ItemAction(consumer, self.parent)
+
+    def activate(self, action: actions.ItemAction) -> None:
+        """Invoke this items ability.
+
+        `action` is the context for this activation.
+        """
         raise NotImplementedError()
 
 
@@ -1101,7 +1114,8 @@ class HealingConsumable(Consumable):
     def __init__(self, amount: int):
         self.amount = amount
 
-    def consume(self, consumer: Actor) -> None:
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
         amount_recovered = consumer.fighter.heal(self.amount)
 
         if amount_recovered > 0:
@@ -1113,9 +1127,13 @@ class HealingConsumable(Consumable):
             raise Impossible(f"Your health is already full.")
 ```
 
-The `Consumable` class knows its parent, and defines an abstract `consume` method... and that's about it. We'll leave the more interesting bits to `HealingConsumable`.
+The `Consumable` class knows its parent, and it defines two methods: `get_action` and `activate`.
 
-`HealingConsumable` is initialized with an `amount`, which is how much the user will be healed when using the item. The `consume` function calls `fighter.heal`, and logs a message to the message log, if the entity recovered health. If not (because the user had full health already), we return that `Impossible` exception we defined earlier. This will give us a message in the log that the player's health is already full, and it won't waste the health potion.
+`get_action` gets `ItemAction`, which we haven't defined just yet (we will soon). Subclasses can override this to provide more information to `ItemAction` if needed, such as the position of a potential target (this will be useful when we have ranged targeting).
+
+`activate` is just an abstract method, it's up to the subclasses to define their own implementation. The subclasses should call this method when they're trying to actually cause the effect that they've defined for themselves (healing for healing potions, damage for lightning scrolls, etc.).
+
+`HealingConsumable` is initialized with an `amount`, which is how much the user will be healed when using the item. The `activate` function calls `fighter.heal`, and logs a message to the message log, if the entity recovered health. If not (because the user had full health already), we return that `Impossible` exception we defined earlier. This will give us a message in the log that the player's health is already full, and it won't waste the health potion.
 
 So what does this component get attached to? In order to create our health potions, we can create another subclass of `Entity`, which will represent non-actor items. Open up `entity.py` and add the following class:
 
@@ -1209,6 +1227,89 @@ if TYPE_CHECKING:
 {{</ codetab >}}
 
 `Item` isn't too different from `Actor`, except instead of implementing `fighter` and `ai`, it does `consumable`. When we create an item, we'll assign the `consumable`, which will determine what actually happens when the item gets used.
+
+The next thing we need to implement tht we used in the `Consumable` class is the `ItemAction` class. Open up `actions.py` and put the following:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+if TYPE_CHECKING:
+    from engine import Engine
+-   from entity import Actor, Entity
++   from entity import Actor, Entity, Item
+...
+
+
+class Action:
+    ...
+
+
++class ItemAction(Action):
++   def __init__(
++       self, entity: Actor, item: Item, target_xy: Optional[Tuple[int, int]] = None
++   ):
++       super().__init__(entity)
++       self.item = item
++       if not target_xy:
++           target_xy = entity.x, entity.y
++       self.target_xy = target_xy
+
++   @property
++   def target_actor(self) -> Optional[Actor]:
++       """Return the actor at this actions destination."""
++       return self.engine.game_map.get_actor_at_location(*self.target_xy)
+
++   def perform(self) -> None:
++       """Invoke the items ability, this action will be given to provide context."""
++       self.item.consumable.activate(self)
+
+
+class EscapeAction(Action):
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>if TYPE_CHECKING:
+    from engine import Engine
+    <span class="crossed-out-text">from entity import Actor, Entity</span>
+    <span class="new-text">from entity import Actor, Entity, Item</span>
+...
+
+
+class Action:
+    ...
+
+
+<span class="new-text">class ItemAction(Action):
+    def __init__(
+        self, entity: Actor, item: Item, target_xy: Optional[Tuple[int, int]] = None
+    ):
+        super().__init__(entity)
+        self.item = item
+        if not target_xy:
+            target_xy = entity.x, entity.y
+        self.target_xy = target_xy
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        """Return the actor at this actions destination."""
+        return self.engine.game_map.get_actor_at_location(*self.target_xy)
+
+    def perform(self) -> None:
+        """Invoke the items ability, this action will be given to provide context."""
+        self.item.consumable.activate(self)</span>
+        
+
+class EscapeAction(Action):
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+`ItemAction` takes several arguments in its `__init__` function: `entity`, which is the entity using the item, `item`, which is the item itself, and `target_xy`, which is the x and y coordinates of the "target" of the item, if there is one. We won't actually use this in this chapter, but it'll come in handy soon.
+
+`target_actor` gets the actor at the target location. Again, we won't actually use it this chapter, since health potions don't "target" anything.
+
+`perform` activates the consumable, with its `activate` method we defined earlier.
 
 To utilize our new `Item`, let's add the health potion to `entity_factories.py`:
 
@@ -1683,8 +1784,13 @@ import tile_types
 
     ...
     @property
-    def gamemap(self) -> GameMap:
-        return self
+    def actors(self) -> Iterator[Actor]:
+        """Iterate over this maps living actors."""
+        yield from (
+            entity
+            for entity in self.entities
+            if isinstance(entity, Actor) and entity.is_alive
+        )
 
 +   @property
 +   def items(self) -> Iterator[Item]:
@@ -1706,8 +1812,13 @@ import tile_types
 
     ...
     @property
-    def gamemap(self) -> GameMap:
-        return self
+    def actors(self) -> Iterator[Actor]:
+        """Iterate over this maps living actors."""
+        yield from (
+            entity
+            for entity in self.entities
+            if isinstance(entity, Actor) and entity.is_alive
+        )
 
     <span class="new-text">@property
     def items(self) -> Iterator[Item]:
@@ -1725,6 +1836,10 @@ Open up `actions.py` and define `PickupAction` like this:
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+class Action:
+    ...
+
+
 +class PickupAction(Action):
 +   """Pickup an item and add it to the inventory, if there is room for it."""
 
@@ -1751,13 +1866,16 @@ Open up `actions.py` and define `PickupAction` like this:
 +       raise exceptions.Impossible("There is nothing here to pick up.")
 
 
-class EscapeAction(Action):
-    def perform(self) -> None:
-        raise SystemExit()
+class ItemAction(Action):
+    ...
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre><span class="new-text">class PickupAction(Action):
+<pre>class Action:
+    ...
+
+
+<span class="new-text">class PickupAction(Action):
     """Pickup an item and add it to the inventory, if there is room for it."""
 
     def __init__(self, entity: Actor):
@@ -1783,9 +1901,8 @@ class EscapeAction(Action):
         raise exceptions.Impossible("There is nothing here to pick up.")</span>
 
 
-class EscapeAction(Action):
-    def perform(self) -> None:
-        raise SystemExit()</pre>
+class ItemAction(Action):
+    ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
@@ -2100,42 +2217,16 @@ class AskUserEventHandler(EventHandler):
 
 The `ev_keydown` function takes the user's input, from letters a - z, and associates that with an index in the inventory. If the player pressed "b", for example, the second item in the inventory will be selected and returned. If the player presses a key like "c" (item 3) but only has one item, then the message "Invalid entry" will display. If any other key is pressed, the menu will close.
 
-This class, still, does not actually do anything for us right now, but I promise we're close. Soon, we'll define the classes that will handle both displaying the item menu to use an item, and to drop them. But before that, we're going to need new actions to handle those things. Open up `actions.py` and add the following:
+This class, still, does not actually do anything for us right now, but I promise we're close. Before we implement the menus to use and drop items, we'll need to define the `Action` that drops items. Add the following class to `actions.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-if TYPE_CHECKING:
-    from engine import Engine
--   from entity import Actor, Entity
-+   from entity import Actor, Entity, Item
-...
-
-...
 class EscapeAction(Action):
     def perform(self) -> None:
         raise SystemExit()
 
 
-+class ItemAction(Action):
-+   def __init__(self, entity: Actor, item: Item):
-+       super().__init__(entity)
-+       self.item = item
-+
-+   def perform(self) -> None:
-+       raise NotImplementedError()
-+
-+
-+class ConsumeItem(ItemAction):
-+   def perform(self) -> None:
-+       # Consume the item.
-+       self.item.consumable.consume(self.entity)
-+
-+       # Remove the consumed item from the inventory.
-+       # If "Impossible" was raised, this will not be called and the item will remain in the inventory.
-+       self.entity.inventory.items.remove(self.item)
-+
-+
 +class DropItem(ItemAction):
 +   def perform(self) -> None:
 +       self.entity.inventory.drop(self.item)
@@ -2148,38 +2239,12 @@ class WaitAction(Action):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>if TYPE_CHECKING:
-    from engine import Engine
-    <span class="crossed-out-text">from entity import Actor, Entity</span>
-    <span class="new-text">from entity import Actor, Entity, Item</span>
-...
-
-...
-class EscapeAction(Action):
+<pre>class EscapeAction(Action):
     def perform(self) -> None:
         raise SystemExit()
 
 
-<span class="new-text">class ItemAction(Action):
-    def __init__(self, entity: Actor, item: Item):
-        super().__init__(entity)
-        self.item = item
-
-    def perform(self) -> None:
-        raise NotImplementedError()
-
-
-class ConsumeItem(ItemAction):
-    def perform(self) -> None:
-        # Consume the item.
-        self.item.consumable.consume(self.entity)
-
-        # Remove the consumed item from the inventory.
-        # If "Impossible" was raised, this will not be called and the item will remain in the inventory.
-        self.entity.inventory.items.remove(self.item)
-
-
-class DropItem(ItemAction):
+<span class="new-text">class DropItem(ItemAction):
     def perform(self) -> None:
         self.entity.inventory.drop(self.item)</span>
     
@@ -2191,13 +2256,9 @@ class WaitAction(Action):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`ItemAction` is the base action class, which takes an item in its `__init__` statement.
-
-`ConsumeItem` will be used when the player wants to use an item. It will call the consumable component's `consume` method, then remove the item from the player's inventory. Since the item is no longer in the inventory or the map, it will disappear. If an exception was raised during `consume`, the item won't be deleted.
-
 `DropItem` will be used to drop something from the inventory. It just calls the `drop` method of the `Inventory` component.
 
-Now, let's put these new actions into... well... action! Open up `input_handlers.py` once again, and let's add the handlers that will handle both selecting an item and dropping one.
+Now, let's put this new action into... well... action! Open up `input_handlers.py` once again, and let's add the handlers that will handle both selecting an item and dropping one.
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -2227,7 +2288,7 @@ class InventoryEventHandler(AskUserEventHandler):
 
 +   def on_item_selected(self, item: Item) -> Optional[Action]:
 +       """Return the action for the selected item."""
-+       return actions.ConsumeItem(self.engine.player, item)
++       return item.consumable.get_action(self.engine.player)
 
 
 +class InventoryDropHandler(InventoryEventHandler):
@@ -2266,7 +2327,7 @@ class InventoryEventHandler(AskUserEventHandler):
 
     def on_item_selected(self, item: Item) -> Optional[Action]:
         """Return the action for the selected item."""
-        return actions.ConsumeItem(self.engine.player, item)
+        return item.consumable.get_action(self.engine.player)
 
 
 class InventoryDropHandler(InventoryEventHandler):
@@ -2318,6 +2379,127 @@ All that's left now is to utilize these event handlers, based on the key we pres
 Now, when you run the project, you can, at long last, use and drop the health potions!
 
 ![Part 8 - Using items](/images/part-8-using-items.png)
+
+There's a major bug with our implementation though: used items won't disappear after using them. This means the player could keep consuming the same health potion over and over!
+
+Let's fix that, by opening up `consumable.py` and add the following:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
+import actions
+import color
++import components.inventory
+from components.base_component import BaseComponent
+from exceptions import Impossible
+
+if TYPE_CHECKING:
+    from entity import Actor, Item
+
+
+class Consumable(BaseComponent):
+    parent: Item
+
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        """Try to return the action for this item."""
+        return actions.ItemAction(consumer, self.parent)
+
+    def activate(self, action: actions.ItemAction) -> None:
+        """Invoke this items ability.
+
+        `action` is the context for this activation.
+        """
+        raise NotImplementedError()
+    
++   def consume(self) -> None:
++       """Remove the consumed item from its containing inventory."""
++       entity = self.parent
++       inventory = entity.parent
++       if isinstance(inventory, components.inventory.Inventory):
++           inventory.items.remove(entity)
+
+
+class HealingConsumable(Consumable):
+    def __init__(self, amount: int):
+        self.amount = amount
+
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
+        amount_recovered = consumer.fighter.heal(self.amount)
+
+        if amount_recovered > 0:
+            self.engine.message_log.add_message(
+                f"You consume the {self.parent.name}, and recover {amount_recovered} HP!",
+                color.health_recovered,
+            )
++           self.consume()
+        else:
+            raise Impossible(f"Your health is already full.")
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
+import actions
+import color
+<span class="new-text">import components.inventory</span>
+from components.base_component import BaseComponent
+from exceptions import Impossible
+
+if TYPE_CHECKING:
+    from entity import Actor, Item
+
+
+class Consumable(BaseComponent):
+    parent: Item
+
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        """Try to return the action for this item."""
+        return actions.ItemAction(consumer, self.parent)
+
+    def activate(self, action: actions.ItemAction) -> None:
+        """Invoke this items ability.
+
+        `action` is the context for this activation.
+        """
+        raise NotImplementedError()
+    
+    <span class="new-text">def consume(self) -> None:
+        """Remove the consumed item from its containing inventory."""
+        entity = self.parent
+        inventory = entity.parent
+        if isinstance(inventory, components.inventory.Inventory):
+            inventory.items.remove(entity)</span>
+
+
+class HealingConsumable(Consumable):
+    def __init__(self, amount: int):
+        self.amount = amount
+
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
+        amount_recovered = consumer.fighter.heal(self.amount)
+
+        if amount_recovered > 0:
+            self.engine.message_log.add_message(
+                f"You consume the {self.parent.name}, and recover {amount_recovered} HP!",
+                color.health_recovered,
+            )
+            <span class="new-text">self.consume()</span>
+        else:
+            raise Impossible(f"Your health is already full.")</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+`consume` removes the item from the `Inventory` container it occupies. Since it no longer belongs to the inventory or the map, it disappears from the game. We use the `consume` method when the health potion is successfully used, and we don't if it's not.
+
+With that, the health potions will disappear after use.
 
 There's two last bits of housekeeping we need to do before moving on to the next part. The `parent` class attribute in the `Entity` class has a bit of a problem: it's designated as a `GameMap` type right now, but when an item moves from the map to the inventory, that isn't really true any more. Let's fix that now:
 
