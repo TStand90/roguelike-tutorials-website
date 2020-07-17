@@ -12,8 +12,8 @@ draft: false
   - [Part 5 - Placing enemies and kicking them (harmlessly)](/tutorials/tcod/v2/part-5)
   - [Part 6 - Doing (and taking) some damage](/tutorials/tcod/v2/part-6)
   - [Part 7 - Creating the Interface](/tutorials/tcod/v2/part-7)
-  - Part 8 - Items and Inventory - Coming July 14th
-  - Part 9 - Ranged Scrolls and Targeting - Coming July 14th
+  - [Part 8 - Items and Inventory](/tutorials/tcod/v2/part-9)
+  - [Part 9 - Ranged Scrolls and Targeting](/tutorials/tcod/v2/part-9)
   - Part 10 - Saving and loading - Coming July 21st
   - Part 11 - Delving into the Dungeon - Coming July 21st
   - Part 12 - Increasing Difficulty - Coming July 28th

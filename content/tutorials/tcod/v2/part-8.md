@@ -1,7 +1,7 @@
 ---
 title: "Part 8 - Items and Inventory"
 date: 2020-07-14
-draft: true
+draft: false
 ---
 
 ## Quick refactors

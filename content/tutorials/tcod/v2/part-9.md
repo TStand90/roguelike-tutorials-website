@@ -1,7 +1,7 @@
 ---
 title: "Part 9 - Ranged Scrolls and Targeting"
 date: 2020-07-14
-draft: true
+draft: false
 ---
 
 Adding health potions was a big step, but we won't stop there. Let's continue adding a few items, this time with a focus on offense. We'll add a few scrolls, which will give the player a one-time ranged attack. This gives the player a lot more tactical options to work with, and is definitely something you'll want to expand upon in your own game.
