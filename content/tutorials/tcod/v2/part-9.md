@@ -436,9 +436,23 @@ class MainGameEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain LookHandler and SelectIndexHandler
+`SelectIndexHandler` is what we'll use when we want to select a tile on the map. It has several methods, which we'll break down now.
 
-TODO: Fill this in, jumping ahead....
+`__init__` simply sets the `mouse_location` to the player's current location. This is so that the cursor we're about to draw appears over the player first, rather than somewhere else. Chances are, the tile the player wants to select will be nearby.
+
+`on_render` will render the console as normal, by calling `super().on_render`, but it also adds a cursor on top, that can be used to show where the current cursor position is. This is especially useful if the player is navigating around with the keyboard.
+
+`ev_keydown` gives us a way to move the cursor we're drawing around using the keyboard instead of the mouse (using the mouse is still possible). By using the same movement keys we use to move the player around, we can move the cursor around, with a few extra options. By holding, shift, control, or alt while pressing a movement key, the cursor will move around faster by skipping over a few spaces. This could be very helpful if you plan on making your map larger. If the user presses a "confirm" key, the method returns the current cursor's location.
+
+`ev_mousebuttondown` also returns the location, if the clicked space is within the map boundaries.
+
+`on_index_selected` is an abstract method, which will be up to the subclasses to implement. We do that immediately with `LookHandler`.
+
+`LookHandler` inherits from `SelectIndexHandler`, and all it does is return to the `MainGameEventHandler` when receiving a confirmation key. This is because it doesn't need to do anything special, it's just used in the case where our player wants to have a look around.
+
+Alright, with that in place, we can move on to implementing a scroll that asks for a target. Let's implement a confusion scroll, which will take a target, and change that target's AI so that it stumbles around for a few turns before returning to normal.
+
+We need to define a new type of AI to handle how enemies act when they're confused. Open up `ai.py` and add the following:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -571,9 +585,17 @@ class BaseAI(Action):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain ConfusedAI
+The `__init__` function takes three arguments:
 
+* `entity`: The actor who is being confused.
+* `previous_ai`: The AI class that the actor currently has. We need this, because when the confusion effect wears off, we'll want to revert the entity back to its previous AI.
+* `turns_remaining`: How many turns the confusion effect will last for.
 
+`perform` causes the entity to move in a randomly selected direction. It uses `BumpAction`, which means that it will try to move into a tile, and if there's an actor there, it will attack it (regardless if its the player or another monster). Each turn, the `turns_remaining` will decrement, and when it's less than or equal to zero, the AI reverts back and the entity is no longer confused.
+
+In order to inflict this status on an enemy, we'll need to do a few things. Obviously, we need a consumable that inflicts the `ConfusedEnemy` AI on an enemy, but we also need a way to select which enemy gets confused.
+
+To do that, let's expand on our `SelectIndexHandler` from earlier. We can create a handler that allows us to select a single enemy and apply some sort of function on it. Open up `input_handlers.py` and add the following class:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -642,7 +664,9 @@ class MainGameEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain SingleRangedAttackHandler
+`SingleRangedAttackHandler` doesn't do much, except define a `callback` function that activates when the user selects a target. `callback` can be any function with a Tuple of two integers (x and y coordinates), so `SingleRangedAttackHandler` can be used for any scroll or ranged attack that targets one location.
+
+So what do we pass as the `callback`? Let's define that now, in `consumable.py`. We'll add the component that causes the confusion effect, called `ConfusionConsumable`. It looks like this:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -763,7 +787,19 @@ class HealingConsumable(Consumable):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain ConfusionConsumable
+`ConfusionConsumable` takes one argument in `__init__`, which is `number_of_turns`. As you might have guessed, this represents the number of turns that the confusion effect lasts for.
+
+`get_action` will ask the player to select a target location, and switch the game's event handler to `SingleRangedAttackHandler`. The `callback` is a `lambda` function (an anonymous, inline function), which takes "xy" as a parameter. "xy" will be the coordinates of the target. The lambda function executes `ItemAction`, which receives the consumer, the parent (the item), and the "xy" coordinates.
+
+`activate` is what happens when the player selects a target. First, we get the actor at the location, and make sure that the target is,
+
+1. In sight
+2. A valid actor
+3. Not the player
+
+If all those things are true, then we apply the `ConfusedEnemy` AI to that target, and consume the scroll.
+
+With the consumable component in place, we can add `confusion_scroll` to `entity_factories.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -831,7 +867,9 @@ Run the project now, and cast some confusion on your enemies!
 
 So we currently have two types of ranged spells to use: One that targets the nearest enemy automatically, and one that asks for a target. We'll finish this chapter by implementing a third type: One that asks for a target, but affects everything within a certain radius of that target. I'm talking, of course, about an exploding fireball spell!
 
-TODO: Fill in here
+To implement our fireball, we'll need a new event handler. `SingleRangedAttackHandler` isn't quite enough, because it targets one enemy actor and nothing else. For our fireball, we want to select an *area* to hit which can include multiple targets, and might even burn the player! It's not actually necessary that the cursor be on an enemy either; the fireball can be offset to catch multiple enemies in its blast radius.
+
+So, with that in mind, let's implement a new event handler, which will handle area of effect attacks. We can call it `AreaRangedAttackHandler`, and define it like this:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -922,12 +960,13 @@ class MainGameEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain AreaRangedAttackHandler
+`AreaRangedAttackHandler` takes a `callback`, like `SingleRangedAttackHandler`, but also defies a `radius`, which tells us how large the area of effect will be.
 
+`on_render` highlights the cursor, but also draws a "frame" (an empty rectangle) around the area we'll be targeting. This will help the player determine which area will be in the blast.
 
+`on_index_selected` is the same as the one we defined for `SingleRangedAttackHandler`.
 
-TODO: Fill in some stuff here....
-
+To do the damage, we'll need to implement the `Consumable` class for the fireball scroll. Open up `consumable.py` and add this class:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -1040,6 +1079,12 @@ class LightningDamageConsumable(Consumable):
 {{</ original-tab >}}
 {{</ codetab >}}
 
+`FireballDamageConsumable` takes `damage` and `radius` as arguments in `__init__`, which shouldn't be too surprising.
+
+`get_action`, similar to the confusion scroll, asks the user to select a target, and switches the event handler, this time to `AreaRangedAttackHandler`. The callback is once again a `lambda` function, which is similar to how we handled the confusion scroll.
+
+`activate` gets the target location, and ensures that it is within the line of sight. It then checks for entities within the radius, damaging any that are close enough to hit (take note, there's no exception for the player, so you can get blasted by your own fireball!). If no enemies were hit at all, the `Impossible` exception is raised, and the scroll isn't consumed, as it would probably be frustrating to waste a scroll on something like a misclick. Assuming at least one entity *was* damaged, the scroll is consumed.
+
 Let's add the new fireball scroll to `entity_factories.py` so we can put it to use:
 
 {{< codetab >}}
@@ -1100,7 +1145,12 @@ Finally, let's add it to `procgen.py` so it will show up:
 {{</ original-tab >}}
 {{</ codetab >}}
 
+Run the project now, and blast away your enemies!
 
+![Part 9 - Fireball Targeting](/images/part-9-fireball-targeting.png)
 
+With that, we've now got three different types of scrolls, and four types of consumables overall! With the event handlers that are in place, it should be fairly simple to add more types of consumables, if you wish. Feel free to experiment with different types of attacks, and add variety to your game.
 
-TODO: Finish the tutorial
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-9).
+
+We aim to have the next part of the tutorial finished by July 21st, though, like this part, it may come a bit late. Apologies for the wait. Check back soon!
