@@ -450,6 +450,38 @@ class MainGameEventHandler(EventHandler):
 
 `LookHandler` inherits from `SelectIndexHandler`, and all it does is return to the `MainGameEventHandler` when receiving a confirmation key. This is because it doesn't need to do anything special, it's just used in the case where our player wants to have a look around.
 
+We can utilize `LookHandler` by adding this to `ev_keydown` in `MainGameEventHandler`:
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+        ...
+        elif key == tcod.event.K_i:
+            self.engine.event_handler = InventoryActivateHandler(self.engine)
+        elif key == tcod.event.K_d:
+            self.engine.event_handler = InventoryDropHandler(self.engine)
++       elif key == tcod.event.K_SLASH:
++           self.engine.event_handler = LookHandler(self.engine)
+
+        # No valid key was pressed
+        return action
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        ...
+        elif key == tcod.event.K_i:
+            self.engine.event_handler = InventoryActivateHandler(self.engine)
+        elif key == tcod.event.K_d:
+            self.engine.event_handler = InventoryDropHandler(self.engine)
+        <span class="new-text">elif key == tcod.event.K_SLASH:
+            self.engine.event_handler = LookHandler(self.engine)</span>
+
+        # No valid key was pressed
+        return action</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+By pressing the forward slash key, you can look around the map with either the mouse or keyboard. Pressing the Escape key (or any non-movement key for that matter) exits this mode.
+
 Alright, with that in place, we can move on to implementing a scroll that asks for a target. Let's implement a confusion scroll, which will take a target, and change that target's AI so that it stumbles around for a few turns before returning to normal.
 
 We need to define a new type of AI to handle how enemies act when they're confused. Open up `ai.py` and add the following:
