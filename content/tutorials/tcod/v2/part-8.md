@@ -642,7 +642,7 @@ bar_empty = (0x40, 0x10, 0x10)</pre>
 
 These will become useful shortly.
 
-There's another thing we can knock out right now that we'll use later: The ability for a `Fighter` component to recover health, and the ability for it to take damage directly, and the ability to take damage directly (without the defense modifier). We won't use the damage function this chapter, but since the two functions are effectively opposites, we can get writing it overwith now.
+There's another thing we can knock out right now that we'll use later: The ability for a `Fighter` component to recover health, and the ability for it to take damage directly, and the ability to take damage directly (without the defense modifier). We won't use the damage function this chapter, but since the two functions are effectively opposites, we can get writing it over with now.
 
 Open up `fighter.py` and add these two functions:
 
@@ -1228,7 +1228,7 @@ if TYPE_CHECKING:
 
 `Item` isn't too different from `Actor`, except instead of implementing `fighter` and `ai`, it does `consumable`. When we create an item, we'll assign the `consumable`, which will determine what actually happens when the item gets used.
 
-The next thing we need to implement tht we used in the `Consumable` class is the `ItemAction` class. Open up `actions.py` and put the following:
+The next thing we need to implement that we used in the `Consumable` class is the `ItemAction` class. Open up `actions.py` and put the following:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -1766,7 +1766,7 @@ health_potion = Item(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-We're setting the player's inventory to 26, because when we implement the menu system, each letter in the (English) alphabet will correspond to one item slot. You can expand the inventory if you want, though you'll need to come up with an alternative menu system to accomodate having more choices.
+We're setting the player's inventory to 26, because when we implement the menu system, each letter in the (English) alphabet will correspond to one item slot. You can expand the inventory if you want, though you'll need to come up with an alternative menu system to accommodate having more choices.
 
 In order to actually pick up an item of the floor, we'll require the rogue to move onto the same tile and press a key. First, we'll want an easy way to grab all the items that currently exist in the map. Open up `game_map.py` and add the following:
 
@@ -1906,7 +1906,7 @@ class ItemAction(Action):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-The action gets the entity's location, and tries to find an item that exists in the same location, iterating through `self.engine.game_map.items` (which we just defined). If an item is found, we try to add it to the inventory, checking the capacity first, and returing `Impossible` if its full. When adding an item to the inventory, we remove it from the game map and store it in the inventory, and print out a message. We then return, since only one item can be picked up per turn (it'll be possible later for multiple items to be on the same spot).
+The action gets the entity's location, and tries to find an item that exists in the same location, iterating through `self.engine.game_map.items` (which we just defined). If an item is found, we try to add it to the inventory, checking the capacity first, and returning `Impossible` if its full. When adding an item to the inventory, we remove it from the game map and store it in the inventory, and print out a message. We then return, since only one item can be picked up per turn (it'll be possible later for multiple items to be on the same spot).
 
 If no item is found in the location, we just return `Impossible`, informing the player that there's nothing there.
 
@@ -2213,7 +2213,7 @@ class AskUserEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`InventoryEventHandler` subclasses `AskUserEventHandler`, and renders the items within the player's `Inventory`. Depending on where the player is standing, the menu will render off to the side, so the menu won't cover the player. If there's nothing in the inventory, it just prints "Emtpy". Notice that it doesn't give itself a title, as that will be defined in a different subclass (more on that in a bit).
+`InventoryEventHandler` subclasses `AskUserEventHandler`, and renders the items within the player's `Inventory`. Depending on where the player is standing, the menu will render off to the side, so the menu won't cover the player. If there's nothing in the inventory, it just prints "Empty". Notice that it doesn't give itself a title, as that will be defined in a different subclass (more on that in a bit).
 
 The `ev_keydown` function takes the user's input, from letters a - z, and associates that with an index in the inventory. If the player pressed "b", for example, the second item in the inventory will be selected and returned. If the player presses a key like "c" (item 3) but only has one item, then the message "Invalid entry" will display. If any other key is pressed, the menu will close.
 
