@@ -942,7 +942,7 @@ class MovementAction(ActionWithDirection):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Just like `MovementAction`, `MeleeAction` inheirits from `ActionWithDirection`. The `perform` method it implements is what we'll use to attack... eventually. Right now, we're just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).
+Just like `MovementAction`, `MeleeAction` inherits from `ActionWithDirection`. The `perform` method it implements is what we'll use to attack... eventually. Right now, we're just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).
 
 Still, we're not actually *using* `MeleeAction` anywhere, yet. Let's add one more class, which is what will make the determination on whether our player is moving or attacking:
 
@@ -1005,7 +1005,7 @@ class MovementAction(ActionWithDirection):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-This class also inheirits from `ActionWithDirection`, but its `perform` method doesn't actually perform anything, except deciding which class, between `MeleeAction` and `MovementAction` to return. Those classes are what are actually doing the work. `BumpAction` just determines which one is appropriate to call, based on whether there is a blocking entity at the given destination or not. Notice we're using the function we defined earlier in our map to decide if there's a valid target or not.
+This class also inherits from `ActionWithDirection`, but its `perform` method doesn't actually perform anything, except deciding which class, between `MeleeAction` and `MovementAction` to return. Those classes are what are actually doing the work. `BumpAction` just determines which one is appropriate to call, based on whether there is a blocking entity at the given destination or not. Notice we're using the function we defined earlier in our map to decide if there's a valid target or not.
 
 Now that our new actions are in place, we need to modify our `input_handlers.py` file to use `BumpAction` instead of `MovementAction`. It's a pretty simple change:
 
