@@ -610,7 +610,7 @@ Edit `main.py` like this:
 {{</ original-tab >}}
 {{</ codetab >}}
 
-We're adding the console's `clear` back to main, as well as the context's `present`. Also, we're calling a method that we haven't defined yet: `on_render`, but don't worry, we'll define it in a moment. Basically, this method tell the engine to render.
+We're adding the console's `clear` back to main, as well as the context's `present`. Also, we're calling a method that we haven't defined yet: `on_render`, but don't worry, we'll define it in a moment. Basically, this method tells the engine to render.
 
 We're also passing the `context` to `handle_events` now, because we need to call an extra method on it to capture the mouse input.
 
@@ -691,7 +691,7 @@ class GameOverEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-We're modifying the `handle_events` method in `EventHandler` to actually have an implementation. It iterates through the events, and uses `context.convert_event` to give the event knowledge on the mouse position. It then dispatches that event, to be handled like normal
+We're modifying the `handle_events` method in `EventHandler` to actually have an implementation. It iterates through the events, and uses `context.convert_event` to give the event knowledge on the mouse position. It then dispatches that event, to be handled like normal.
 
 `on_render` just tells the `Engine` class to call its render method, using the given console.
 
@@ -760,7 +760,7 @@ class Engine:
 {{</ original-tab >}}
 {{</ codetab >}}
 
-We've also remove the `console.clear` call, as that's being handled by `main.py`.
+We've also removed the `console.clear` call, as that's being handled by `main.py`.
 
 So we're passing the context around to different classes and converting the events to capture the mouse location. But where does that information actually get stored? Let's add a data point on to the `Engine` class to hold that information. Add the following to `engine.py`:
 
