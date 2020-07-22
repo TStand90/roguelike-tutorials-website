@@ -589,7 +589,7 @@ class Fighter(BaseComponent):
 
 So far, our game has movement, dungeon exploring, combat, and AI (okay, we're stretching the meaning of "intelligence" in *artificial intelligence* to its limits, but bear with me here). Now it's time for another staple of the roguelike genre: items\! Why would our rogue venture into the dungeons of doom if not for some sweet loot, after all?
 
-In this part of the tutorial, we'll acheive a few things: a working inventory, and a functioning healing potion. The next part will add more items that can be picked up, but for now, just the healing potion will suffice.
+In this part of the tutorial, we'll achieve a few things: a working inventory, and a functioning healing potion. The next part will add more items that can be picked up, but for now, just the healing potion will suffice.
 
 For this part, we'll need four more colors. Let's get adding those out of the way now. Open up `colors.py` and add these colors:
 
@@ -699,7 +699,7 @@ One thing we're going to need is a way to *not* consume an item or take a turn i
 
 We could just consume the potion anyway, and have it go to waste, but if you've played a game that does that, you know how frustrating it can be, especially if the player clicked the health potion on accident. A better way would be to warn the user that they're trying to do something that makes no sense, and save the player from wasting both the potion and their turn.
 
-But how can we acheive that? We'll discuss it a bit more later on, but the idea is that if we do something impossible, we should raise an exception. Which one? Well, we can define a custom exception, which can give us details on what happened. Create a new file called `exceptions.py` and put the following class into it:
+But how can we achieve that? We'll discuss it a bit more later on, but the idea is that if we do something impossible, we should raise an exception. Which one? Well, we can define a custom exception, which can give us details on what happened. Create a new file called `exceptions.py` and put the following class into it:
 
 ```py3
 class Impossible(Exception):

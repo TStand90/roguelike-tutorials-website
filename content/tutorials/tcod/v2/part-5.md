@@ -467,7 +467,7 @@ We select a random `x` and `y` to place the entity, and do a quick check to make
 
 As described earlier, there should be an 80% chance of there being an Orc, and 20% chance for a Troll. For now, we're using `pass` to skip over actually putting them down, because that requires a bit more work first.
 
-There's a few ways we could go about creating the new entities. Assuming that every Orc and Troll we spawn will always have the same attributes as their bretheren, we can create initial instances of `orc` and `troll`, then copy those every time we want to create a new one.
+There's a few ways we could go about creating the new entities. Assuming that every Orc and Troll we spawn will always have the same attributes as their brethren, we can create initial instances of `orc` and `troll`, then copy those every time we want to create a new one.
 
 Why not just create the entities right here in the function? We could (the 1st version of this tutorial does, in fact), but that's a bit of a pain to go back and edit. Imagine if you had 100 enemies in your game at some point in the future. Would you rather search for those entity definitions in one file that *only* exists to define entities, or try finding it in the file that generates our dungeon? Not to mention, what happens if you want to create a new dungeon generator? Are you going to copy over the entity definitions and have them defined in two places?
 

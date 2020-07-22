@@ -687,7 +687,7 @@ def generate_dungeon(
 ) -> GameMap:
 ```
 
-This is the function defition itself. We pass several arguments to it.
+This is the function definition itself. We pass several arguments to it.
 
 * `max_rooms`: The maximum number of rooms allowed in the dungeon. We'll use this to control our iteration.
 * `room_min_size`: The minimum size of one room.
