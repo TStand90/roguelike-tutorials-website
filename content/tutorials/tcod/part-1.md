@@ -392,7 +392,7 @@ move us '0' on the x axis, and '-1' on the y axis.
 {{</ highlight >}}
 
 These are our non-movement actions that we're allowing for now. If the
-user presset ALT+Enter, the game will go full screen. If the user
+user pressed ALT+Enter, the game will go full screen. If the user
 presses 'Esc', the game will exit.
 
 {{< highlight py3 >}}
