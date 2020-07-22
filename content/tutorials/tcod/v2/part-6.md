@@ -1670,7 +1670,7 @@ WAIT_KEYS = {
 {{</ original-tab >}}
 {{</ codetab >}}
 
-The `MOVE_KEYS` dictionary holds various different possibilities for movement. Some roguelikes utilize the numpad for movement, some use "Vi Keys." Our will actually use both for the time being. Feel free to change the key scheme if you're not a fan of it.
+The `MOVE_KEYS` dictionary holds various different possibilities for movement. Some roguelikes utilize the numpad for movement, some use "Vi Keys." Ours will actually use both for the time being. Feel free to change the key scheme if you're not a fan of it.
 
 Where we used to do `if...elif` statements for each direction, we can now just check if the key was part of `MOVE_KEYS`, and if it was, we return the `dx` and `dy` values from the dictionary. This is a lot simpler and cleaner than our previous format.
 

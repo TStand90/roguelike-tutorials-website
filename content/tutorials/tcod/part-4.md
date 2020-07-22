@@ -9,7 +9,7 @@ really *exploring* the dungeon if we can just see it all from the
 beginning?
 
 Most roguelikes (not all\!) only let you see within a certain range of
-your character, and our will be no different. We need to implement a way
+your character, and ours will be no different. We need to implement a way
 to calculate the "Field of View" for our adventurer, and fortunately,
 libtcod makes that easy\!
 

@@ -570,7 +570,7 @@ class Entity:
 
 We've added two new attributes to `Entity`: `name` and `blocks_movement`. `name` is straightforward: it's what the Entity is called. `blocks_movement` describes whether or not this `Entity` can be moved over or not. Enemies will have `blocks_movement` set to `True`, while in the future, things like consumable items and equipment will be set to `False`.
 
-Notice that' we've also provided defaults for each of the attributes in the `__init__` function as well, whereas we were not before. This is because we'll soon not need to pass `x` and `y` during the initialization. More on that in a second.
+Notice that we've also provided defaults for each of the attributes in the `__init__` function as well, whereas we were not before. This is because we'll soon not need to pass `x` and `y` during the initialization. More on that in a second.
 
 The more complex section is the `spawn` method. It takes the `GameMap` instance, along with `x` and `y` for locations. It then creates a `clone` of the instance of `Entity`, and assigns the `x` and `y` variables to it (this is why we don't need `x` and `y` in the initializer anymore, they're set here). It then adds the entity to the `gamemap`'s entities, and returns the `clone`.
 
