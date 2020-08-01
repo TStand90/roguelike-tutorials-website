@@ -20,7 +20,7 @@ paragraph if you're feeling bold\!
 
 #### Installation
 
-To do this tutorial, you'll need Python version 3.6 or higher. The
+To do this tutorial, you'll need Python version 3.7 or higher. The
 latest version of Python is recommended (currently 3.8 as of June
 2020). **Note: Python 2 is not compatible.**
 

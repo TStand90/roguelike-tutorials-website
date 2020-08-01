@@ -9,7 +9,7 @@ pygmentsCodeFencesGuessSyntax = true
 [languages.en]
   languageName = "English"
 
-  copyright = "Last updated June 28th, 2020"
+  copyright = "Last updated July 7th, 2020"
 
   [[languages.en.menu.main]]
     url = "/"

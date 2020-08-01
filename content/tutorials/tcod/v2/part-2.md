@@ -172,7 +172,7 @@ Soon, we're going to need to add a map as well. It's starting to become a bit mu
 
 One thing we can do is pass of some of these responsibilities to another class, which will be responsible for "running" our game. The `main.py` file can still set things up and tell that new class what to do, but this design should help keep the `main.py` file from getting too large over time.
 
-Let's create an `Engine` class, which will take the responsibilities of drawing the map and entities, as well as handling the player's input.
+Let's create an `Engine` class, which will take the responsibilities of drawing the map and entities, as well as handling the player's input. Create a new file, and call it `engine.py`. In that file, put the following contents:
 
 
 ```py3
@@ -927,7 +927,7 @@ Much simpler! Run the project again, and it should function the same as before.
 With that, Part 2 is now complete! We've managed to lay the groundwork for generating dungeons and moving through them, which, as it happens, is what the next part is all about.
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-1).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-2).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/v2/part-3)
