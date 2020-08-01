@@ -591,7 +591,7 @@ So far, our game has movement, dungeon exploring, combat, and AI (okay, we're st
 
 In this part of the tutorial, we'll achieve a few things: a working inventory, and a functioning healing potion. The next part will add more items that can be picked up, but for now, just the healing potion will suffice.
 
-For this part, we'll need four more colors. Let's get adding those out of the way now. Open up `colors.py` and add these colors:
+For this part, we'll need four more colors. Let's get adding those out of the way now. Open up `color.py` and add these colors:
 
 {{< codetab >}}
 {{< diff-tab >}}

@@ -296,6 +296,19 @@ Open up `input_handlers.py` and add the following contents:
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
+...
+WAIT_KEYS = {
+    tcod.event.K_PERIOD,
+    tcod.event.K_KP_5,
+    tcod.event.K_CLEAR,
+}
+
++CONFIRM_KEYS = {
++   tcod.event.K_RETURN,
++   tcod.event.K_KP_ENTER,
++}
+
+...
 class InventoryDropHandler(InventoryEventHandler):
     ...
 
@@ -366,7 +379,20 @@ class MainGameEventHandler(EventHandler):
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>class InventoryDropHandler(InventoryEventHandler):
+<pre>...
+WAIT_KEYS = {
+    tcod.event.K_PERIOD,
+    tcod.event.K_KP_5,
+    tcod.event.K_CLEAR,
+}
+
+<span class="new-text">CONFIRM_KEYS = {
+    tcod.event.K_RETURN,
+    tcod.event.K_KP_ENTER,
+}</span>
+
+...
+class InventoryDropHandler(InventoryEventHandler):
     ...
 
 
