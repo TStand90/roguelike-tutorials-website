@@ -397,7 +397,7 @@ Run the project, and you'll see a horizontal tunnel that connects the two rooms.
 
 ![Part 3 - Two Rooms](/images/part-3-two-rooms-connected.png)
 
-Now that we've demonstrated to ourselves that our room and tunnel functions work as intended, it's time to move on to an actual dungeon generation algorithm. Our will be fairly simple; we'll place rooms one at a time, making sure they don't overlap, and connect them with tunnels.
+Now that we've demonstrated to ourselves that our room and tunnel functions work as intended, it's time to move on to an actual dungeon generation algorithm. Ours will be fairly simple; we'll place rooms one at a time, making sure they don't overlap, and connect them with tunnels.
 
 We'll want a method that tells us if our room is intersecting with another room. Enter the following into the `RectangularRoom` class:
 
@@ -492,7 +492,7 @@ def tunnel_between(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`interects` checks if the room and another room (`other` in the arguments) intersect or not. It returns `True` if the do, `False` if they don't. We'll use this to determine if two rooms are overlapping or not.
+`intersects` checks if the room and another room (`other` in the arguments) intersect or not. It returns `True` if the do, `False` if they don't. We'll use this to determine if two rooms are overlapping or not.
 
 We're going to need a few variables to set the maximum and minimum size of the rooms, along with the maximum number of rooms one floor can have. Add the following to `main.py`:
 
@@ -687,7 +687,7 @@ def generate_dungeon(
 ) -> GameMap:
 ```
 
-This is the function defition itself. We pass several arguments to it.
+This is the function definition itself. We pass several arguments to it.
 
 * `max_rooms`: The maximum number of rooms allowed in the dungeon. We'll use this to control our iteration.
 * `room_min_size`: The minimum size of one room.

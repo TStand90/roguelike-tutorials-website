@@ -36,7 +36,7 @@ if __name__ == '__main__':
     main()
 {{</ highlight >}}
 
-You can run the program by like any other Python program, but for those
+You can run the program like any other Python program, but for those
 who are brand new, you do that by typing `python engine.py` in the
 terminal. If you have both Python 2 and 3 installed on your machine, you
 might have to use `python3 engine.py` to run (it depends on your default
@@ -392,7 +392,7 @@ move us '0' on the x axis, and '-1' on the y axis.
 {{</ highlight >}}
 
 These are our non-movement actions that we're allowing for now. If the
-user presset ALT+Enter, the game will go full screen. If the user
+user pressed ALT+Enter, the game will go full screen. If the user
 presses 'Esc', the game will exit.
 
 {{< highlight py3 >}}

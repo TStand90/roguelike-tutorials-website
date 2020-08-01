@@ -467,7 +467,7 @@ We select a random `x` and `y` to place the entity, and do a quick check to make
 
 As described earlier, there should be an 80% chance of there being an Orc, and 20% chance for a Troll. For now, we're using `pass` to skip over actually putting them down, because that requires a bit more work first.
 
-There's a few ways we could go about creating the new entities. Assuming that every Orc and Troll we spawn will always have the same attributes as their bretheren, we can create initial instances of `orc` and `troll`, then copy those every time we want to create a new one.
+There's a few ways we could go about creating the new entities. Assuming that every Orc and Troll we spawn will always have the same attributes as their brethren, we can create initial instances of `orc` and `troll`, then copy those every time we want to create a new one.
 
 Why not just create the entities right here in the function? We could (the 1st version of this tutorial does, in fact), but that's a bit of a pain to go back and edit. Imagine if you had 100 enemies in your game at some point in the future. Would you rather search for those entity definitions in one file that *only* exists to define entities, or try finding it in the file that generates our dungeon? Not to mention, what happens if you want to create a new dungeon generator? Are you going to copy over the entity definitions and have them defined in two places?
 
@@ -570,7 +570,7 @@ class Entity:
 
 We've added two new attributes to `Entity`: `name` and `blocks_movement`. `name` is straightforward: it's what the Entity is called. `blocks_movement` describes whether or not this `Entity` can be moved over or not. Enemies will have `blocks_movement` set to `True`, while in the future, things like consumable items and equipment will be set to `False`.
 
-Notice that' we've also provided defaults for each of the attributes in the `__init__` function as well, whereas we were not before. This is because we'll soon not need to pass `x` and `y` during the initialization. More on that in a second.
+Notice that we've also provided defaults for each of the attributes in the `__init__` function as well, whereas we were not before. This is because we'll soon not need to pass `x` and `y` during the initialization. More on that in a second.
 
 The more complex section is the `spawn` method. It takes the `GameMap` instance, along with `x` and `y` for locations. It then creates a `clone` of the instance of `Entity`, and assigns the `x` and `y` variables to it (this is why we don't need `x` and `y` in the initializer anymore, they're set here). It then adds the entity to the `gamemap`'s entities, and returns the `clone`.
 
@@ -942,7 +942,7 @@ class MovementAction(ActionWithDirection):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Just like `MovementAction`, `MeleeAction` inheirits from `ActionWithDirection`. The `perform` method it implements is what we'll use to attack... eventually. Right now, we're just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).
+Just like `MovementAction`, `MeleeAction` inherits from `ActionWithDirection`. The `perform` method it implements is what we'll use to attack... eventually. Right now, we're just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).
 
 Still, we're not actually *using* `MeleeAction` anywhere, yet. Let's add one more class, which is what will make the determination on whether our player is moving or attacking:
 
@@ -1005,7 +1005,7 @@ class MovementAction(ActionWithDirection):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-This class also inheirits from `ActionWithDirection`, but its `perform` method doesn't actually perform anything, except deciding which class, between `MeleeAction` and `MovementAction` to return. Those classes are what are actually doing the work. `BumpAction` just determines which one is appropriate to call, based on whether there is a blocking entity at the given destination or not. Notice we're using the function we defined earlier in our map to decide if there's a valid target or not.
+This class also inherits from `ActionWithDirection`, but its `perform` method doesn't actually perform anything, except deciding which class, between `MeleeAction` and `MovementAction` to return. Those classes are what are actually doing the work. `BumpAction` just determines which one is appropriate to call, based on whether there is a blocking entity at the given destination or not. Notice we're using the function we defined earlier in our map to decide if there's a valid target or not.
 
 Now that our new actions are in place, we need to modify our `input_handlers.py` file to use `BumpAction` instead of `MovementAction`. It's a pretty simple change:
 

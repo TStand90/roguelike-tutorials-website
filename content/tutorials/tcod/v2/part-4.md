@@ -19,7 +19,7 @@ When walking around the dungeon, there will essentially be three "states" a tile
 2. Not visible
 3. Not visible, but previously seen
 
-What this means is that we should draw the "visible" tiles as well as the "not visible, but previously seen" ones to the screen, but differentiate them somehow. The "not visible" tiles can simply be drawn as an empty tile, witht he color black, gray, or whatever you want to use.
+What this means is that we should draw the "visible" tiles as well as the "not visible, but previously seen" ones to the screen, but differentiate them somehow. The "not visible" tiles can simply be drawn as an empty tile, with the color black, gray, or whatever you want to use.
 
 In order to differentiate between these tiles, we'll need two new Numpy arrays: One to keep track of the tiles that are currently visible, and another to keep track of all the tiles that our character has seen before. Add the two arrays to `GameMap` like this:
 

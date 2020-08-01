@@ -27,7 +27,7 @@ if __name__ == "__main__":
     main()
 {{</ highlight >}}
 
-You can run the program by like any other Python program, but for those who are brand new, you do that by typing `python main.py` in the terminal. If you have both Python 2 and 3 installed on your machine, you might have to use `python3 main.py` to run (it depends on your default python, and whether you're using a virtualenv or not).
+You can run the program like any other Python program, but for those who are brand new, you do that by typing `python main.py` in the terminal. If you have both Python 2 and 3 installed on your machine, you might have to use `python3 main.py` to run (it depends on your default python, and whether you're using a virtualenv or not).
 
 Alternatively, because of the first line, `#!urs/bin/env python`, you can run the program by typing `./main.py`, assuming you've either activated your virtual environment, or installed tcod on your base Python installation. This line is called a "shebang".
 
@@ -340,7 +340,7 @@ From there, we go down a list of possible keys pressed. For example:
             action = MovementAction(dx=0, dy=-1)
 {{</ highlight >}}
 
-In this case, the user pressed the up-arrow key, so we're creating an `MovementAction`. Notice that here (and in all the other cases of `MovementAction`) we provide `dx` and `dy`. These describe which direction our character will move in.
+In this case, the user pressed the up-arrow key, so we're creating a `MovementAction`. Notice that here (and in all the other cases of `MovementAction`) we provide `dx` and `dy`. These describe which direction our character will move in.
 
 {{< highlight py3 >}}
         elif key == tcod.event.K_ESCAPE:
@@ -486,7 +486,7 @@ This is pretty straightforward: If `action` is `None` (that is, no key was press
                     player_y += action.dy
 {{</ highlight >}}
 
-Now we arrive at the interesting part. If the `action` is an instance of the class `MovementAction`, we need to move our "@" symbol. We grab the `dx` and `dy` values we gave to `MovementAction` earlier, which will the "@" symbol in which direction we want it to move. `dx` and `dy`, as of now, will only ever be -1, 0, or 1. Regardless of what the value is, we add `dx` and `dy` to `player_x` and `player_y`, respectively. Because the console is using `player_x` and `player_y` to draw where our "@" symbol is, modifying these two variables will cause the symbol to move.
+Now we arrive at the interesting part. If the `action` is an instance of the class `MovementAction`, we need to move our "@" symbol. We grab the `dx` and `dy` values we gave to `MovementAction` earlier, which will move the "@" symbol in which direction we want it to move. `dx` and `dy`, as of now, will only ever be -1, 0, or 1. Regardless of what the value is, we add `dx` and `dy` to `player_x` and `player_y`, respectively. Because the console is using `player_x` and `player_y` to draw where our "@" symbol is, modifying these two variables will cause the symbol to move.
 
 {{< highlight py3 >}}
                 elif isinstance(action, EscapeAction):

@@ -548,7 +548,7 @@ one.
 Most roguelikes (and RPGs in general) reward the player with experience
 points upon killing an opponent. Once a certain amount of experience has
 been collected, the player levels up and gets stronger. In order to
-acheive that, we'll need to do several things. Let's start by modifying
+achieve that, we'll need to do several things. Let's start by modifying
 the `Fighter` component to hold a new variable: `xp`. This will
 represent the experience points the player receives upon killing an
 enemy (but not the experience points of the Entity itself, more on that

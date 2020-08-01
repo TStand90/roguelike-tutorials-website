@@ -316,7 +316,7 @@ Let's put this code to use by drawing a tunnel between our two rooms.
 
 Now that we've demonstrated to ourselves that our room and tunnel
 functions work as intended, it's time to move on to an actual dungeon
-generation algorithm. Our will be fairly simple; we'll place rooms one
+generation algorithm. Ours will be fairly simple; we'll place rooms one
 at a time, making sure they don't overlap, and connect them with
 tunnels.
 

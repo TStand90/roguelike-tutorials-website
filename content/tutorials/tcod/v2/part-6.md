@@ -692,7 +692,7 @@ class Entity:
         return clone
     
 +   def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
-+       """Place this entitiy at a new location.  Handles moving across GameMaps."""
++       """Place this entity at a new location.  Handles moving across GameMaps."""
 +       self.x = x
 +       self.y = y
 +       if gamemap:
@@ -753,7 +753,7 @@ class Entity:
         return clone
     
     <span class="new-text">def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
-        """Place this entitiy at a new location.  Handles moving across GameMaps."""
+        """Place this entity at a new location.  Handles moving across GameMaps."""
         self.x = x
         self.y = y
         if gamemap:
@@ -953,7 +953,7 @@ The last part of this tutorial set us up for combat, so now it's time to actuall
 
 In order to make "killable" Entities, rather than attaching hit points to each Entity we create, we'll create a **component**, called `Fighter`, which will hold information related to combat, like HP, max HP, attack, and defense. If an Entity can fight, it will have this component attached to it, and if not, it won't. This way of doing things is called **composition**, and it's an alternative to your typical inheritance-based programming model. (This tutorial uses both composition *and* inheritance).
 
-Create a new Python package (a folder with an empty \_\_init\_\_.py file), called `components`. In that new directory, add two new files, one called `base_component.py`, and another called `fighter.py`. The `Fighter` class in `fighter.py` will inheirit from the class we put in `base_component.py`, so let's start with that one:
+Create a new Python package (a folder with an empty \_\_init\_\_.py file), called `components`. In that new directory, add two new files, one called `base_component.py`, and another called `fighter.py`. The `Fighter` class in `fighter.py` will inherit from the class we put in `base_component.py`, so let's start with that one:
 
 ```py3
 from __future__ import annotations
@@ -996,13 +996,13 @@ class Fighter(BaseComponent):
         self._hp = max(0, min(value, self.max_hp))
 ```
 
-We import and inheirit from `BaseComponent`, which gives us access to the parent entity and the engine, which will be useful later on.
+We import and inherit from `BaseComponent`, which gives us access to the parent entity and the engine, which will be useful later on.
 
 The `__init__` function takes a few arguments. `hp` represents the entity's hit points. `defense` is how much taken damage will be reduced. `power` is the entity's raw attack power.
 
 What's with the `hp` property? We define both a getter and setter, which will allow the class to access `hp` like a normal variable. The getter (the one with the `@property` thing above the method) doesn't do anything special: it just returns the HP. The `setter` (`@hp.setter`) is where things get more interesting.
 
-By defining HP this way, we can modify the value as its set within the method. This line:
+By defining HP this way, we can modify the value as it's set within the method. This line:
 
 ```py3
         self._hp = max(0, min(value, self.max_hp))
@@ -1060,7 +1060,7 @@ class BaseAI(Action, BaseComponent):
         return [(index[0], index[1]) for index in path]
 ```
 
-`BaseAI` doesn't implement a `perform` method, since the entities which will be using AI to act will have to have an AI class that inheirits from this one.
+`BaseAI` doesn't implement a `perform` method, since the entities which will be using AI to act will have to have an AI class that inherits from this one.
 
 `get_path_to` uses the "walkable" tiles in our map, along with some TCOD pathfinding tools to get the path from the `BaseAI`'s parent entity to whatever their target might be. In the case of this tutorial, the target will always be the player, though you could theoretically write a monster that cares more about food or treasure than attacking the player.
 
@@ -1670,7 +1670,7 @@ WAIT_KEYS = {
 {{</ original-tab >}}
 {{</ codetab >}}
 
-The `MOVE_KEYS` dictionary holds various different possibilities for movement. Some roguelikes utilize the numpad for movement, some use "Vi Keys." Our will actually use both for the time being. Feel free to change the key scheme if you're not a fan of it.
+The `MOVE_KEYS` dictionary holds various different possibilities for movement. Some roguelikes utilize the numpad for movement, some use "Vi Keys." Ours will actually use both for the time being. Feel free to change the key scheme if you're not a fan of it.
 
 Where we used to do `if...elif` statements for each direction, we can now just check if the key was part of `MOVE_KEYS`, and if it was, we return the `dx` and `dy` values from the dictionary. This is a lot simpler and cleaner than our previous format.
 
@@ -1989,7 +1989,7 @@ class RenderOrder(Enum):
 
 *Note: You'll need Python 3.6 or higher for the `auto` function to work.*
 
-`RenderOrder` is an `Enum`. An "Enum" is a set of named values that won't change, so it's perfect for things like this. `auto` assigns incementing integer values automatically, so we don't need to retype them if we add more values later on.
+`RenderOrder` is an `Enum`. An "Enum" is a set of named values that won't change, so it's perfect for things like this. `auto` assigns incrementing integer values automatically, so we don't need to retype them if we add more values later on.
 
 To use this new Enum, let's edit `entity.py`:
 
@@ -2257,7 +2257,7 @@ Run the project now, and the corpse ordering issue should be resolved.
 
 Now, onto the more important issue: solving the player's death.
 
-One thing that would be helpful right now is being able to see the player's HP. Otherwise, the player will just kinda drop dead after awhile, and it'll be difficult for the player to know how close they are to death's door.
+One thing that would be helpful right now is being able to see the player's HP. Otherwise, the player will just kinda drop dead after a while, and it'll be difficult for the player to know how close they are to death's door.
 
 Add the following line to the `render` function in the `Engine` class:
 
@@ -2324,9 +2324,9 @@ Pretty simple. We're printing the player's HP current health over maximum health
 
 Notice that we also updated the type hint for the `player` argument in the Engine's `__init__` function.
 
-The health indicator great and all, but our player is still animated after death. There's a few ways to handle this, but the way we'll go with is swapping out the `EventHandler` class. Why? Because what we want to do right now is disallow the player from moving around after dying. An easy way to do that is to stop reacting to the movement keypresses. By switching to a different `EventHandler`, we can do just that.
+The health indicator is great and all, but our player is still animated after death. There's a few ways to handle this, but the way we'll go with is swapping out the `EventHandler` class. Why? Because what we want to do right now is disallow the player from moving around after dying. An easy way to do that is to stop reacting to the movement keypresses. By switching to a different `EventHandler`, we can do just that.
 
-What we'll want to do is actually modify our existing `EventHandler` to be a base class, and inheirit from it in two new classes: `MainGameEventHandler`, and `GameOverEventHandler`. `MainGameEventHandler` will actually do what our current implementation of `EventHandler` does, and `GameOverEventHandler` will handle things when the main character meets his or her untimely demise.
+What we'll want to do is actually modify our existing `EventHandler` to be a base class, and inherit from it in two new classes: `MainGameEventHandler`, and `GameOverEventHandler`. `MainGameEventHandler` will actually do what our current implementation of `EventHandler` does, and `GameOverEventHandler` will handle things when the main character meets his or her untimely demise.
 
 Open up `input_handlers.py` and make the following adjustments:
 
