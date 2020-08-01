@@ -6,7 +6,7 @@ draft: false
 
 ## Check your TCOD installation
 
-Before proceeding any further, you'll want to upgrade to TCOD version 11.5, if you don't already have it. This version of TCOD was released *during* the tutorial event, so if you're following along on a weekly basis, you probably *don't* have this version installed!
+Before proceeding any further, you'll want to upgrade to TCOD version 11.15, if you don't already have it. This version of TCOD was released *during* the tutorial event, so if you're following along on a weekly basis, you probably *don't* have this version installed!
 
 ## Refactoring previous code
 
