@@ -1,8 +1,10 @@
 ---
-title: "Part 11"
+title: "Part 11 - Delving into the Dungeon"
 date: 2020-07-21
 draft: true
 ---
+
+Our game isn’t much of a “dungeon crawler” if there’s only one floor to our dungeon. In this chapter, we’ll allow the player to go down a level, and we’ll put a very basic leveling up system in place, to make the dive all the more rewarding.
 
 Before diving into the code for this section, let's add the color we'll need this chapter, for when the player descends down a level in the dungeon. Open up `color.py` and add this line:
 
@@ -33,10 +35,200 @@ enemy_die = (0xFF, 0xA0, 0x30)
 {{</ original-tab >}}
 {{</ codetab >}}
 
+We'll also need a new tile type to represent the downward stairs in the dungeon. Typically, roguelikes represent this with the `>` character, and we'll do the same. Add the following to `tile_types.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+...
+wall = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord(" "), (255, 255, 255), (0, 0, 100)),
+    light=(ord(" "), (255, 255, 255), (130, 110, 50)),
+)
++down_stairs = new_tile(
++   walkable=True,
++   transparent=True,
++   dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
++   light=(ord(">"), (255, 255, 255), (200, 180, 50)),
++)
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+wall = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord(" "), (255, 255, 255), (0, 0, 100)),
+    light=(ord(" "), (255, 255, 255), (130, 110, 50)),
+)
+<span class="new-text">down_stairs = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
+    light=(ord(">"), (255, 255, 255), (200, 180, 50)),
+)</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
 
 
 
-`actions.py`
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+class GameMap:
+    def __init__(
+        self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()
+    ):
+        ...
+        self.explored = np.full(
+            (width, height), fill_value=False, order="F"
+        )  # Tiles the player has seen before
+ 
++       self.downstairs_location = (0, 0)
+
+    @property
+    def gamemap(self) -> GameMap:
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class GameMap:
+    def __init__(
+        self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()
+    ):
+        ...
+        self.explored = np.full(
+            (width, height), fill_value=False, order="F"
+        )  # Tiles the player has seen before
+ 
+        <span class="new-text">self.downstairs_location = (0, 0)</span>
+
+    @property
+    def gamemap(self) -> GameMap:
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+To hold the information about the maps, including the size, the room variables (size and maximum number), along with the floor that the player is currently on, we can add a class to hold these variables, as well as generate new maps when the time comes. Open up `game_map.py` and add the following class:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+class GameMap:
+    ...
+
+
++class GameWorld:
++   """
++   Holds the settings for the GameMap, and generates new maps when moving down the stairs.
++   """
+
++   def __init__(
++       self,
++       *,
++       engine: Engine,
++       map_width: int,
++       map_height: int,
++       max_rooms: int,
++       room_min_size: int,
++       room_max_size: int,
++       max_monsters_per_room: int,
++       max_items_per_room: int,
++       current_floor: int = 0
++   ):
++       self.engine = engine
+
++       self.map_width = map_width
++       self.map_height = map_height
+
++       self.max_rooms = max_rooms
+
++       self.room_min_size = room_min_size
++       self.room_max_size = room_max_size
+
++       self.max_monsters_per_room = max_monsters_per_room
++       self.max_items_per_room = max_items_per_room
+
++       self.current_floor = current_floor
+
++   def generate_floor(self) -> None:
++       from procgen import generate_dungeon
+
++       self.current_floor += 1
+
++       self.engine.game_map = generate_dungeon(
++           max_rooms=self.max_rooms,
++           room_min_size=self.room_min_size,
++           room_max_size=self.room_max_size,
++           map_width=self.map_width,
++           map_height=self.map_height,
++           max_monsters_per_room=self.max_monsters_per_room,
++           max_items_per_room=self.max_items_per_room,
++           engine=self.engine,
++       )
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class GameMap:
+    ...
+
+
+<span class="new-text">class GameWorld:
+    """
+    Holds the settings for the GameMap, and generates new maps when moving down the stairs.
+    """
+
+    def __init__(
+        self,
+        *,
+        engine: Engine,
+        map_width: int,
+        map_height: int,
+        max_rooms: int,
+        room_min_size: int,
+        room_max_size: int,
+        max_monsters_per_room: int,
+        max_items_per_room: int,
+        current_floor: int = 0
+    ):
+        self.engine = engine
+
+        self.map_width = map_width
+        self.map_height = map_height
+
+        self.max_rooms = max_rooms
+
+        self.room_min_size = room_min_size
+        self.room_max_size = room_max_size
+
+        self.max_monsters_per_room = max_monsters_per_room
+        self.max_items_per_room = max_items_per_room
+
+        self.current_floor = current_floor
+
+    def generate_floor(self) -> None:
+        from procgen import generate_dungeon
+
+        self.current_floor += 1
+
+        self.engine.game_map = generate_dungeon(
+            max_rooms=self.max_rooms,
+            room_min_size=self.room_min_size,
+            room_max_size=self.room_max_size,
+            map_width=self.map_width,
+            map_height=self.map_height,
+            max_monsters_per_room=self.max_monsters_per_room,
+            max_items_per_room=self.max_items_per_room,
+            engine=self.engine,
+        )</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+The `generate_floor` method will create the new maps each time we go down a floor, using the variables that `GameWorld` stores. In this tutorial, we won't program in the ability to go back up a floor after going down one, but you could perhaps modify `GameWorld` to hold the previous maps.
+
+In order to actually take the stairs, we'll need to add an action and a way for the player to trigger it. Adding the action is pretty simple. Add the following to `actions.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -86,6 +278,49 @@ class ActionWithDirection(Action):
 class ActionWithDirection(Action):
     def __init__(self, entity: Actor, dx: int, dy: int):
         super().__init__(entity)</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+To call this action, the player should be able to press the `>` key. This can be accomplished by adding this to `input_handlers.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+class MainGameEventHandler(EventHandler):
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        action: Optional[Action] = None
+ 
+        key = event.sym
++       modifier = event.mod
+ 
+        player = self.engine.player
+ 
++       if key == tcod.event.K_PERIOD and modifier & (
++           tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
++       ):
++           return actions.TakeStairsAction(player)
+
+        if key in MOVE_KEYS:
+            dx, dy = MOVE_KEYS[key]
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class MainGameEventHandler(EventHandler):
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        action: Optional[Action] = None
+ 
+        key = event.sym
+        <span class="new-text">modifier = event.mod</span>
+ 
+        player = self.engine.player
+ 
+        <span class="new-text">if key == tcod.event.K_PERIOD and modifier & (
+            tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
+        ):
+            return actions.TakeStairsAction(player)</span>
+
+        if key in MOVE_KEYS:
+            dx, dy = MOVE_KEYS[key]</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
@@ -316,149 +551,6 @@ confusion_scroll = Item(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-
-`game_map.py`
-
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-class GameMap:
-    def __init__(
-        self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()
-    ):
-        ...
-        self.explored = np.full(
-            (width, height), fill_value=False, order="F"
-        )  # Tiles the player has seen before
- 
-+       self.downstairs_location = (0, 0)
-
-    @property
-    def gamemap(self) -> GameMap:
-        ...
-
-
-
-+class GameWorld:
-+   """
-+   Holds the settings for the GameMap, and generates new maps when moving down the stairs.
-+   """
-
-+   def __init__(
-+       self,
-+       *,
-+       engine: Engine,
-+       map_width: int,
-+       map_height: int,
-+       max_rooms: int,
-+       room_min_size: int,
-+       room_max_size: int,
-+       max_monsters_per_room: int,
-+       max_items_per_room: int,
-+       current_floor: int = 0
-+   ):
-+       self.engine = engine
-
-+       self.map_width = map_width
-+       self.map_height = map_height
-
-+       self.max_rooms = max_rooms
-
-+       self.room_min_size = room_min_size
-+       self.room_max_size = room_max_size
-
-+       self.max_monsters_per_room = max_monsters_per_room
-+       self.max_items_per_room = max_items_per_room
-
-+       self.current_floor = current_floor
-
-+   def generate_floor(self) -> None:
-+       from procgen import generate_dungeon
-
-+       self.current_floor += 1
-
-+       self.engine.game_map = generate_dungeon(
-+           max_rooms=self.max_rooms,
-+           room_min_size=self.room_min_size,
-+           room_max_size=self.room_max_size,
-+           map_width=self.map_width,
-+           map_height=self.map_height,
-+           max_monsters_per_room=self.max_monsters_per_room,
-+           max_items_per_room=self.max_items_per_room,
-+           engine=self.engine,
-+       )
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>class GameMap:
-    def __init__(
-        self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()
-    ):
-        ...
-        self.explored = np.full(
-            (width, height), fill_value=False, order="F"
-        )  # Tiles the player has seen before
- 
-        <span class="new-text">self.downstairs_location = (0, 0)</span>
-
-    @property
-    def gamemap(self) -> GameMap:
-        ...
-
-
-
-<span class="new-text">class GameWorld:
-    """
-    Holds the settings for the GameMap, and generates new maps when moving down the stairs.
-    """
-
-    def __init__(
-        self,
-        *,
-        engine: Engine,
-        map_width: int,
-        map_height: int,
-        max_rooms: int,
-        room_min_size: int,
-        room_max_size: int,
-        max_monsters_per_room: int,
-        max_items_per_room: int,
-        current_floor: int = 0
-    ):
-        self.engine = engine
-
-        self.map_width = map_width
-        self.map_height = map_height
-
-        self.max_rooms = max_rooms
-
-        self.room_min_size = room_min_size
-        self.room_max_size = room_max_size
-
-        self.max_monsters_per_room = max_monsters_per_room
-        self.max_items_per_room = max_items_per_room
-
-        self.current_floor = current_floor
-
-    def generate_floor(self) -> None:
-        from procgen import generate_dungeon
-
-        self.current_floor += 1
-
-        self.engine.game_map = generate_dungeon(
-            max_rooms=self.max_rooms,
-            room_min_size=self.room_min_size,
-            room_max_size=self.room_max_size,
-            map_width=self.map_width,
-            map_height=self.map_height,
-            max_monsters_per_room=self.max_monsters_per_room,
-            max_items_per_room=self.max_items_per_room,
-            engine=self.engine,
-        )</span></pre>
-{{</ original-tab >}}
-{{</ codetab >}}
-
-
 `input_handlers.py`
 
 
@@ -655,41 +747,3 @@ import input_handlers
     ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
-
-`tile_types`
-
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-...
-wall = new_tile(
-    walkable=False,
-    transparent=False,
-    dark=(ord(" "), (255, 255, 255), (0, 0, 100)),
-    light=(ord(" "), (255, 255, 255), (130, 110, 50)),
-)
-+down_stairs = new_tile(
-+   walkable=True,
-+   transparent=True,
-+   dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
-+   light=(ord(">"), (255, 255, 255), (200, 180, 50)),
-+)
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>...
-wall = new_tile(
-    walkable=False,
-    transparent=False,
-    dark=(ord(" "), (255, 255, 255), (0, 0, 100)),
-    light=(ord(" "), (255, 255, 255), (130, 110, 50)),
-)
-<span class="new-text">down_stairs = new_tile(
-    walkable=True,
-    transparent=True,
-    dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
-    light=(ord(">"), (255, 255, 255), (200, 180, 50)),
-)</span></pre>
-{{</ original-tab >}}
-{{</ codetab >}}
-
