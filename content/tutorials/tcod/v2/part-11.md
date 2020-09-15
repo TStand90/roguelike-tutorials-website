@@ -4,7 +4,7 @@ date: 2020-07-21
 draft: true
 ---
 
-Our game isn’t much of a “dungeon crawler” if there’s only one floor to our dungeon. In this chapter, we’ll allow the player to go down a level, and we’ll put a very basic leveling up system in place, to make the dive all the more rewarding.
+Our game isn't much of a "dungeon crawler" if there’s only one floor to our dungeon. In this chapter, we'll allow the player to go down a level, and we'll put a very basic leveling up system in place, to make the dive all the more rewarding.
 
 Before diving into the code for this section, let's add the color we'll need this chapter, for when the player descends down a level in the dungeon. Open up `color.py` and add this line:
 
@@ -34,6 +34,8 @@ enemy_die = (0xFF, 0xA0, 0x30)
 ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
+
+We will use this color later on, when adding a message to the message log that the player went down one floor.
 
 We'll also need a new tile type to represent the downward stairs in the dungeon. Typically, roguelikes represent this with the `>` character, and we'll do the same. Add the following to `tile_types.py`:
 
@@ -72,7 +74,7 @@ wall = new_tile(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-
+To keep track of where our downwards stairs are located on the map, we can add a new variable in out `__init__` function in the `GameMap` class. The variable needs some sort of default, so to start, we can set that up to be `(0, 0)` by default. Add the following line to `game_map.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -110,6 +112,63 @@ class GameMap:
         ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
+
+Of course, `(0, 0)` won't be the actual location of the stairs. In order to actually place the downwards stairs, we'll need to edit our procedural dungeon generator to place the stairs at the proper place. We'll keep things simple and just place the stairs in the last room that our algorithm generates, by keeping track of the center coordinates of the last room we created. Modify `generate_dungeon` function in `procgen.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+    ...
+    rooms: List[RectangularRoom] = []
+ 
++   center_of_last_room = (0, 0)
+
+    for r in range(max_rooms):
+        ...
+            ...
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                dungeon.tiles[x, y] = tile_types.floor
+ 
++           center_of_last_room = new_room.center
+
+        place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
+ 
++       dungeon.tiles[center_of_last_room] = tile_types.down_stairs
++       dungeon.downstairs_location = center_of_last_room
+
+        # Finally, append the new room to the list.
+        rooms.append(new_room)
+    
+    return dungeon
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>    ...
+    rooms: List[RectangularRoom] = []
+ 
+    <span class="new-text">center_of_last_room = (0, 0)</span>
+
+    for r in range(max_rooms):
+        ...
+            ...
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                dungeon.tiles[x, y] = tile_types.floor
+ 
+            <span class="new-text">center_of_last_room = new_room.center</span>
+
+        place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
+ 
+        <span class="new-text">dungeon.tiles[center_of_last_room] = tile_types.down_stairs
+        dungeon.downstairs_location = center_of_last_room</span>
+
+        # Finally, append the new room to the list.
+        rooms.append(new_room)
+    
+    return dungeon</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Whichever room is generated last, we take its center and set the `downstairs_location` equal to those coordinates. We also replace whatever tile type with the `down_stairs`, so the player can clearly see the location.
 
 To hold the information about the maps, including the size, the room variables (size and maximum number), along with the floor that the player is currently on, we can add a class to hold these variables, as well as generate new maps when the time comes. Open up `game_map.py` and add the following class:
 
@@ -228,6 +287,112 @@ class GameMap:
 
 The `generate_floor` method will create the new maps each time we go down a floor, using the variables that `GameWorld` stores. In this tutorial, we won't program in the ability to go back up a floor after going down one, but you could perhaps modify `GameWorld` to hold the previous maps.
 
+In order to utilize the new `GameWorld` class, we'll need to add it to the `Engine`, like this:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+... 
+if TYPE_CHECKING:
+    from entity import Actor
+-   from game_map import GameMap
++   from game_map import GameMap, GameWorld
+ 
+ 
+class Engine:
+    game_map: GameMap
++   game_world: GameWorld
+ 
+    def __init__(self, player: Actor):
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>... 
+if TYPE_CHECKING:
+    from entity import Actor
+    <span class="crossed-out-text">from game_map import GameMap</span>
+    <span class="new-text">from game_map import GameMap, GameWorld</span>
+ 
+ 
+class Engine:
+    game_map: GameMap
+    <span class="new-text">game_world: GameWorld</span>
+ 
+    def __init__(self, player: Actor):
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Pretty simple. To utilize the new `game_world` class attribute, edit `setup_game.py` like this:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+import tcod
+import color
+from engine import Engine
+import entity_factories
++from game_map import GameWorld
+import input_handlers
+-from procgen import generate_dungeon
+... 
+ 
+    ...
+    engine = Engine(player=player)
+ 
+-   engine.game_map = generate_dungeon(
++   engine.game_world = GameWorld(
++       engine=engine,
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        max_monsters_per_room=max_monsters_per_room,
+        max_items_per_room=max_items_per_room,
+-       engine=engine,
+    )
+
++   engine.game_world.generate_floor()
+    engine.update_fov()
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>import tcod
+import color
+from engine import Engine
+import entity_factories
+<span class="new-text">from game_map import GameWorld</span>
+import input_handlers
+<span class="crossed-out-text">from procgen import generate_dungeon</span>
+... 
+ 
+    ...
+    engine = Engine(player=player)
+ 
+    <span class="crossed-out-text">engine.game_map = generate_dungeon(</span>
+    <span class="new-text">engine.game_world = GameWorld(
+        engine=engine,</span>
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        max_monsters_per_room=max_monsters_per_room,
+        max_items_per_room=max_items_per_room,
+        <span class="crossed-out-text">engine=engine,</span>
+    )
+
+    <span class="new-text">engine.game_world.generate_floor()</span>
+    engine.update_fov()
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Now, instead of calling `generate_dungeon` directly, we create a new `GameWorld` and allow it to call its `generate_floor` method. While this doesn't change anything for the first floor that's created, it will allows us to more easily create new floors on the fly.
+
 In order to actually take the stairs, we'll need to add an action and a way for the player to trigger it. Adding the action is pretty simple. Add the following to `actions.py`:
 
 {{< codetab >}}
@@ -324,6 +489,187 @@ class MainGameEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
+TODO: Explain the additions to `input_handlers.py`
+
+With that, the player can now descend the staircase to the next floor of the dungeon!
+
+One little touch we can add before moving on to the next section is adding a way to see which floor the player is on. It's simple enough: We'll use the `current_floor` in `GameWorld` to know which floor we're on, and we'll modify our `render_functions.py` file to add a method to print this information out to the UI.
+
+Add this function to `render_functions.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+from __future__ import annotations
+ 
+-from typing import TYPE_CHECKING
++from typing import Tuple, TYPE_CHECKING
+ 
+import color
+...
+
+...
+def render_bar(
+    console: Console, current_value: int, maximum_value: int, total_width: int
+) -> None:
+    ...
+ 
+ 
++def render_dungeon_level(
++   console: Console, dungeon_level: int, location: Tuple[int, int]
++) -> None:
++   """
++   Render the level the player is currently on, at the given location.
++   """
++   x, y = location
+
++   console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")
+
+
+def render_names_at_mouse_location(
+    console: Console, x: int, y: int, engine: Engine
+) -> None:
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from __future__ import annotations
+ 
+<span class="crossed-out-text">from typing import TYPE_CHECKING</span>
+<span class="new-text">from typing import Tuple, TYPE_CHECKING</span>
+ 
+import color
+...
+
+...
+def render_bar(
+    console: Console, current_value: int, maximum_value: int, total_width: int
+) -> None:
+    ...
+ 
+ 
+<span class="new-text">def render_dungeon_level(
+    console: Console, dungeon_level: int, location: Tuple[int, int]
+) -> None:
+    """
+    Render the level the player is currently on, at the given location.
+    """
+    x, y = location
+
+    console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")</span>
+
+
+def render_names_at_mouse_location(
+    console: Console, x: int, y: int, engine: Engine
+) -> None:
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+The `render_dungeon_level` function is fairly straightforward: Given a set of `(x, y)` coordinates as a Tuple, it prints to the console which dungeon level was passed to the function.
+
+To call this function, we can edit the `Engine`'s `render` function, like so:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+... 
+import exceptions
+from message_log import MessageLog
+-from render_functions import (
+-   render_bar,
+-   render_names_at_mouse_location,
+-)
++import render_functions
+
+if TYPE_CHECKING:
+    ...
+
+
+class Engine:
+    ...
+
+    def render(self, console: Console) -> None:
+        self.game_map.render(console)
+
+        self.message_log.render(console=console, x=21, y=45, width=40, height=5)
+ 
+-       render_bar(
++       render_functions.render_bar(
+            console=console,
+            current_value=self.player.fighter.hp,
+            maximum_value=self.player.fighter.max_hp,
+            total_width=20,
+        )
+ 
+-       render_names_at_mouse_location(console=console, x=21, y=44, engine=self)
++       render_functions.render_dungeon_level(
++           console=console,
++           dungeon_level=self.game_world.current_floor,
++           location=(0, 47),
++       )
+
++       render_functions.render_names_at_mouse_location(
++           console=console, x=21, y=44, engine=self
++       )
+
+    def save_as(self, filename: str) -> None:
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>... 
+import exceptions
+from message_log import MessageLog
+<span class="crossed-out-text">from render_functions import (</span>
+    <span class="crossed-out-text">render_bar,</span>
+    <span class="crossed-out-text">render_names_at_mouse_location,</span>
+<span class="crossed-out-text">)</span>
+<span class="new-text">import render_functions</span>
+
+if TYPE_CHECKING:
+    ...
+
+
+class Engine:
+    ...
+
+    def render(self, console: Console) -> None:
+        self.game_map.render(console)
+
+        self.message_log.render(console=console, x=21, y=45, width=40, height=5)
+ 
+        <span class="crossed-out-text">render_bar(</span>
+        <span class="new-text">render_functions.render_bar(</span>
+            console=console,
+            current_value=self.player.fighter.hp,
+            maximum_value=self.player.fighter.max_hp,
+            total_width=20,
+        )
+ 
+        <span class="crossed-out-text">render_names_at_mouse_location(console=console, x=21, y=44, engine=self)</span>
+        <span class="new-text">render_functions.render_dungeon_level(
+            console=console,
+            dungeon_level=self.game_world.current_floor,
+            location=(0, 47),
+        )
+
+        render_functions.render_names_at_mouse_location(
+            console=console, x=21, y=44, engine=self
+        )</span>
+ 
+    def save_as(self, filename: str) -> None:
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Note that we're now importing `render_functions` instead of importing the functions it contains. After awhile, it makes sense to just import the entire module rather than a few functions here and there. Otherwise, the file can get a bit difficult to read.
+
+The call to `render_dungeon_level` shouldn't be anything too surprising. We use `self.game_world.current_floor` as our `dungeon_level`, and the location of the printed string is below the health bar (feel free to move this somewhere else, if you like).
+
+Try going down a few levels and make sure everything works as expected. If so, congratulations! Your dungeon now has multiple levels!
+
+Speaking of "levels", many roguelikes (not all!) feature some sort of level-up system, where your character gains experience and gets stronger by fighting monsters. The rest of this chapter will be spent implementing one such system.
 
 `fighter.py`
 
@@ -354,114 +700,6 @@ class Fighter(BaseComponent):
         <span class="new-text">self.engine.player.level.add_xp(self.parent.level.xp_given)</span>
 
     def heal(self, amount: int) -> int:
-        ...</pre>
-{{</ original-tab >}}
-{{</ codetab >}}
-
-
-`engine.py`
-
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-... 
-import exceptions
-from message_log import MessageLog
--from render_functions import (
--   render_bar,
--   render_names_at_mouse_location,
--)
-+import render_functions
- 
-if TYPE_CHECKING:
-    from entity import Actor
--   from game_map import GameMap
-+   from game_map import GameMap, GameWorld
- 
- 
-class Engine:
-    game_map: GameMap
-+   game_world: GameWorld
- 
-    def __init__(self, player: Actor):
-        ...
-
-    def render(self, console: Console) -> None:
-        self.game_map.render(console)
-
-        self.message_log.render(console=console, x=21, y=45, width=40, height=5)
- 
--       render_bar(
-+       render_functions.render_bar(
-            console=console,
-            current_value=self.player.fighter.hp,
-            maximum_value=self.player.fighter.max_hp,
-            total_width=20,
-        )
- 
--       render_names_at_mouse_location(console=console, x=21, y=44, engine=self)
-+       render_functions.render_dungeon_level(
-+           console=console,
-+           dungeon_level=self.game_world.current_floor,
-+           location=(0, 47),
-+       )
-
-+       render_functions.render_names_at_mouse_location(
-+           console=console, x=21, y=44, engine=self
-+       )
- 
-    def save_as(self, filename: str) -> None:
-        ...
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>... 
-import exceptions
-from message_log import MessageLog
-<span class="crossed-out-text">from render_functions import (</span>
-    <span class="crossed-out-text">render_bar,</span>
-    <span class="crossed-out-text">render_names_at_mouse_location,</span>
-<span class="crossed-out-text">)</span>
-<span class="new-text">import render_functions</span>
- 
-if TYPE_CHECKING:
-    from entity import Actor
-    <span class="crossed-out-text">from game_map import GameMap</span>
-    <span class="new-text">from game_map import GameMap, GameWorld</span>
- 
- 
-class Engine:
-    game_map: GameMap
-    <span class="new-text">game_world: GameWorld</span>
- 
-    def __init__(self, player: Actor):
-        ...
-
-    def render(self, console: Console) -> None:
-        self.game_map.render(console)
-
-        self.message_log.render(console=console, x=21, y=45, width=40, height=5)
- 
-        <span class="crossed-out-text">render_bar(</span>
-        <span class="new-text">render_functions.render_bar(</span>
-            console=console,
-            current_value=self.player.fighter.hp,
-            maximum_value=self.player.fighter.max_hp,
-            total_width=20,
-        )
- 
-        <span class="crossed-out-text">render_names_at_mouse_location(console=console, x=21, y=44, engine=self)</span>
-        <span class="new-text">render_functions.render_dungeon_level(
-            console=console,
-            dungeon_level=self.game_world.current_floor,
-            location=(0, 47),
-        )
-
-        render_functions.render_names_at_mouse_location(
-            console=console, x=21, y=44, engine=self
-        )</span>
- 
-    def save_as(self, filename: str) -> None:
         ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
@@ -552,198 +790,3 @@ confusion_scroll = Item(
 {{</ codetab >}}
 
 `input_handlers.py`
-
-
-`procgen.py`
-
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-    ...
-    rooms: List[RectangularRoom] = []
- 
-+   center_of_last_room = (0, 0)
-
-    for r in range(max_rooms):
-        ...
-            ...
-            for x, y in tunnel_between(rooms[-1].center, new_room.center):
-                dungeon.tiles[x, y] = tile_types.floor
- 
-+           center_of_last_room = new_room.center
-
-        place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
- 
-+       dungeon.tiles[center_of_last_room] = tile_types.down_stairs
-+       dungeon.downstairs_location = center_of_last_room
-
-        # Finally, append the new room to the list.
-        rooms.append(new_room)
-    
-    return dungeon
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>    ...
-    rooms: List[RectangularRoom] = []
- 
-    <span class="new-text">center_of_last_room = (0, 0)</span>
-
-    for r in range(max_rooms):
-        ...
-            ...
-            for x, y in tunnel_between(rooms[-1].center, new_room.center):
-                dungeon.tiles[x, y] = tile_types.floor
- 
-            <span class="new-text">center_of_last_room = new_room.center</span>
-
-        place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
- 
-        <span class="new-text">dungeon.tiles[center_of_last_room] = tile_types.down_stairs
-        dungeon.downstairs_location = center_of_last_room</span>
-
-        # Finally, append the new room to the list.
-        rooms.append(new_room)
-    
-    return dungeon</pre>
-{{</ original-tab >}}
-{{</ codetab >}}
-
-
-`render_functions.py`
-
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-from __future__ import annotations
- 
--from typing import TYPE_CHECKING
-+from typing import Tuple, TYPE_CHECKING
- 
-import color
-...
-
-...
-def render_bar(
-    console: Console, current_value: int, maximum_value: int, total_width: int
-) -> None:
-    ...
- 
- 
-+def render_dungeon_level(
-+   console: Console, dungeon_level: int, location: Tuple[int, int]
-+) -> None:
-+   """
-+   Render the level the player is currently on, at the given location.
-+   """
-+   x, y = location
-
-+   console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")
-
-
-def render_names_at_mouse_location(
-    console: Console, x: int, y: int, engine: Engine
-) -> None:
-    ...
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>from __future__ import annotations
- 
-<span class="crossed-out-text">from typing import TYPE_CHECKING</span>
-<span class="new-text">from typing import Tuple, TYPE_CHECKING</span>
- 
-import color
-...
-
-...
-def render_bar(
-    console: Console, current_value: int, maximum_value: int, total_width: int
-) -> None:
-    ...
- 
- 
-<span class="new-text">def render_dungeon_level(
-    console: Console, dungeon_level: int, location: Tuple[int, int]
-) -> None:
-    """
-    Render the level the player is currently on, at the given location.
-    """
-    x, y = location
-
-    console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")</span>
-
-
-def render_names_at_mouse_location(
-    console: Console, x: int, y: int, engine: Engine
-) -> None:
-    ...</pre>
-{{</ original-tab >}}
-{{</ codetab >}}
-
-`setup_game.py`
-
-{{< codetab >}}
-{{< diff-tab >}}
-{{< highlight diff >}}
-import tcod
-import color
-from engine import Engine
-import entity_factories
-+from game_map import GameWorld
-import input_handlers
--from procgen import generate_dungeon
-... 
- 
-    ...
-    engine = Engine(player=player)
- 
--   engine.game_map = generate_dungeon(
-+   engine.game_world = GameWorld(
-+       engine=engine,
-        max_rooms=max_rooms,
-        room_min_size=room_min_size,
-        room_max_size=room_max_size,
-        map_width=map_width,
-        map_height=map_height,
-        max_monsters_per_room=max_monsters_per_room,
-        max_items_per_room=max_items_per_room,
--       engine=engine,
-    )
-
-+   engine.game_world.generate_floor()
-    engine.update_fov()
-    ...
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre>import tcod
-import color
-from engine import Engine
-import entity_factories
-+from game_map import GameWorld
-import input_handlers
--from procgen import generate_dungeon
-... 
- 
-    ...
-    engine = Engine(player=player)
- 
-    <span class="crossed-out-text">engine.game_map = generate_dungeon(</span>
-    <span class="new-text">engine.game_world = GameWorld(
-        engine=engine,</span>
-        max_rooms=max_rooms,
-        room_min_size=room_min_size,
-        room_max_size=room_max_size,
-        map_width=map_width,
-        map_height=map_height,
-        max_monsters_per_room=max_monsters_per_room,
-        max_items_per_room=max_items_per_room,
-        <span class="crossed-out-text">engine=engine,</span>
-    )
-
-    <span class="new-text">engine.game_world.generate_floor()</span>
-    engine.update_fov()
-    ...</pre>
-{{</ original-tab >}}
-{{</ codetab >}}
