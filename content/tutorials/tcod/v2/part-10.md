@@ -1751,6 +1751,6 @@ Last thing before we wrap up: We're creating the `.sav` files to represent our s
 
 _The rest of the .gitignore is omitted, as your .gitignore file may look different from mine. It doesn't matter where you add this in._
 
-If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-9).
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-10).
 
 [Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-11)
