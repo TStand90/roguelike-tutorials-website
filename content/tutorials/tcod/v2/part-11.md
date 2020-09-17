@@ -730,7 +730,7 @@ class Level(BaseComponent):
 
         if self.requires_level_up:
             self.engine.message_log.add_message(
-                f"You advance to level {self.current_level}!"
+                f"You advance to level {self.current_level + 1}!"
             )
 
     def increase_level(self) -> None:
@@ -817,7 +817,7 @@ We'll use this property to determine if the player needs to level up or not. If 
 
         if self.requires_level_up:
             self.engine.message_log.add_message(
-                f"You advance to level {self.current_level}!"
+                f"You advance to level {self.current_level + 1}!"
             )
 ```
 
@@ -836,7 +836,116 @@ This method adds +1 to the `current_level`, while decreasing the `current_xp` by
 
 Lastly, the functions `increase_max_hp`, `increase_power`, and `increase_defense` all do basically the same thing: they raise one of the Entity's attributes, add a message to the message log, then call `increase_level`.
 
-Let's add this component to our entities in `entity_factories.py` now:
+To use this component, we need to add it to our `Actor` class. Make the following changes to the file `entity.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+if TYPE_CHECKING:
+    from components.ai import BaseAI
+    from components.consumable import Consumable
+    from components.fighter import Fighter
+    from components.inventory import Inventory
++   from components.level import Level
+    from game_map import GameMap
+ 
+T = TypeVar("T", bound="Entity")
+...
+
+class Actor(Entity):
+    def __init__(
+        self,
+        *,
+        x: int = 0,
+        y: int = 0,
+        char: str = "?",
+        color: Tuple[int, int, int] = (255, 255, 255),
+        name: str = "<Unnamed>",
+        ai_cls: Type[BaseAI],
+        fighter: Fighter,
+        inventory: Inventory,
++       level: Level,
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=True,
+            render_order=RenderOrder.ACTOR,
+        )
+
+        self.ai: Optional[BaseAI] = ai_cls(self)
+
+        self.fighter = fighter
+        self.fighter.parent = self
+
+        self.inventory = inventory
+        self.inventory.parent = self
+
++       self.level = level
++       self.level.parent = self
+
+    @property
+    def is_alive(self) -> bool:
+        ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>if TYPE_CHECKING:
+    from components.ai import BaseAI
+    from components.consumable import Consumable
+    from components.fighter import Fighter
+    from components.inventory import Inventory
+    <span class="new-text">from components.level import Level</span>
+    from game_map import GameMap
+ 
+T = TypeVar("T", bound="Entity")
+...
+
+class Actor(Entity):
+    def __init__(
+        self,
+        *,
+        x: int = 0,
+        y: int = 0,
+        char: str = "?",
+        color: Tuple[int, int, int] = (255, 255, 255),
+        name: str = "&lt;Unnamed&gt;",
+        ai_cls: Type[BaseAI],
+        fighter: Fighter,
+        inventory: Inventory,
+        <span class="new-text">level: Level,</span>
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=True,
+            render_order=RenderOrder.ACTOR,
+        )
+
+        self.ai: Optional[BaseAI] = ai_cls(self)
+
+        self.fighter = fighter
+        self.fighter.parent = self
+
+        self.inventory = inventory
+        self.inventory.parent = self
+
+        <span class="new-text">self.level = level
+        self.level.parent = self</span>
+
+    @property
+    def is_alive(self) -> bool:
+        ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Let's also modify our entities in `entity_factories.py` now:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -933,7 +1042,6 @@ class Fighter(BaseComponent):
         ...
 
         self.engine.message_log.add_message(death_message, death_message_color)
-        self.engine.message_log.add_message(death_message, death_message_color)
  
 +       self.engine.player.level.add_xp(self.parent.level.xp_given)
 
@@ -946,7 +1054,6 @@ class Fighter(BaseComponent):
     def die(self) -> None:
         ...
 
-        self.engine.message_log.add_message(death_message, death_message_color)
         self.engine.message_log.add_message(death_message, death_message_color)
  
         <span class="new-text">self.engine.player.level.add_xp(self.parent.level.xp_given)</span>
@@ -1146,6 +1253,8 @@ Using `LevelUpEventHandler` is actually quite simple: We can check when the play
 
 Now, when the player gains the necessary number of experience points, the player will have the chance to level up!
 
+![Part 11 - Level Up](/images/part-11-level-up.png)
+
 Before finishing this chapter, there's one last quick thing we can do to improve the user experience: Add a "character information" screen, which displays the player's stats and current experience. It's actually quite simple. Add the following class to `input_handlers.py`:
 
 {{< codetab >}}
@@ -1281,6 +1390,8 @@ To open the screen, we'll have the player press the `c` key. Add the following t
             return LookHandler(self.engine)</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
+
+![Part 11 - Character Screen](/images/part-11-character-screen.png)
 
 That's it for this chapter. We've added the ability to go down floors, and to level up. While the player can now "progress", the environment itself doesn't. The items that spawn on each floor are always the same, and the enemies don't get tougher as we go down floors. The next part will address that.
 
