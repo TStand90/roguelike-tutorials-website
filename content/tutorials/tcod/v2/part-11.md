@@ -489,9 +489,12 @@ class MainGameEventHandler(EventHandler):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-TODO: Explain the additions to `input_handlers.py`
+`modifier` tells us if the player is holding a key like control, alt, or shift. In this case, we're checking if the user is holding shift while pressing the period key, which gives us the ">" key.
 
 With that, the player can now descend the staircase to the next floor of the dungeon!
+
+![Part 11 - Stairs](/images/part-11-stairs.png)
+![Part 11 - Stairs Taken](/images/part-11-stairs-taken.png)
 
 One little touch we can add before moving on to the next section is adding a way to see which floor the player is on. It's simple enough: We'll use the `current_floor` in `GameWorld` to know which floor we're on, and we'll modify our `render_functions.py` file to add a method to print this information out to the UI.
 
@@ -669,9 +672,258 @@ The call to `render_dungeon_level` shouldn't be anything too surprising. We use 
 
 Try going down a few levels and make sure everything works as expected. If so, congratulations! Your dungeon now has multiple levels!
 
+![Part 11 - Dungeon Level](/images/part-11-dungeon-level.png)
+
 Speaking of "levels", many roguelikes (not all!) feature some sort of level-up system, where your character gains experience and gets stronger by fighting monsters. The rest of this chapter will be spent implementing one such system.
 
-`fighter.py`
+In order to allow the rogue to level up, we need to modify the actors in two ways:
+1. The player needs to gain experience points, keeping track of the XP gained thus far, and know when it's time to level up.
+2. The enemies need to give experience points when they are defeated.
+
+There are several calculations we could use to compute how much XP a player needs to level up (or, theoretically, you could just hard code the values). Ours will be fairly simple: We'll start with a base number, and add the product of our player's current level and some other number, which will make it so each level up requires more XP than the last. For this tutorial, the "base" will be 200, and the "factor" will be 150 (so going to level 2 will take 350 XP, level 3 will take 500, and so on).
+
+We can accomplish both of these goals by adding one component: `Level`. The `Level` component will hold all of the information that we need to accomplish these goals. Create a file called `level.py` in the `components` directory, and put the following contents in it:
+
+```py3
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from components.base_component import BaseComponent
+
+if TYPE_CHECKING:
+    from entity import Actor
+
+
+class Level(BaseComponent):
+    parent: Actor
+
+    def __init__(
+        self,
+        current_level: int = 1,
+        current_xp: int = 0,
+        level_up_base: int = 0,
+        level_up_factor: int = 150,
+        xp_given: int = 0,
+    ):
+        self.current_level = current_level
+        self.current_xp = current_xp
+        self.level_up_base = level_up_base
+        self.level_up_factor = level_up_factor
+        self.xp_given = xp_given
+
+    @property
+    def experience_to_next_level(self) -> int:
+        return self.level_up_base + self.current_level * self.level_up_factor
+
+    @property
+    def requires_level_up(self) -> bool:
+        return self.current_xp > self.experience_to_next_level
+
+    def add_xp(self, xp: int) -> None:
+        if xp == 0 or self.level_up_base == 0:
+            return
+
+        self.current_xp += xp
+
+        self.engine.message_log.add_message(f"You gain {xp} experience points.")
+
+        if self.requires_level_up:
+            self.engine.message_log.add_message(
+                f"You advance to level {self.current_level}!"
+            )
+
+    def increase_level(self) -> None:
+        self.current_xp -= self.experience_to_next_level
+
+        self.current_level += 1
+
+    def increase_max_hp(self, amount: int = 20) -> None:
+        self.parent.fighter.max_hp += amount
+        self.parent.fighter.hp += amount
+
+        self.engine.message_log.add_message("Your health improves!")
+
+        self.increase_level()
+
+    def increase_power(self, amount: int = 1) -> None:
+        self.parent.fighter.power += amount
+
+        self.engine.message_log.add_message("You feel stronger!")
+
+        self.increase_level()
+
+    def increase_defense(self, amount: int = 1) -> None:
+        self.parent.fighter.defense += amount
+
+        self.engine.message_log.add_message("Your movements are getting swifter!")
+
+        self.increase_level()
+```
+
+Let's go over what was just added.
+
+```py3
+class Level(BaseComponent):
+    parent: Actor
+
+    def __init__(
+        self,
+        current_level: int = 1,
+        current_xp: int = 0,
+        level_up_base: int = 0,
+        level_up_factor: int = 150,
+        xp_given: int = 0,
+    ):
+        self.current_level = current_level
+        self.current_xp = current_xp
+        self.level_up_base = level_up_base
+        self.level_up_factor = level_up_factor
+        self.xp_given = xp_given
+```
+
+The values in our `__init__` function break down like this:
+
+* current_level: The current level of the Entity, defaults to 1.
+* current_xp: The Entity's current experience points.
+* level_up_base: The base number we decide for leveling up. We'll set this to 200 when creating the Player.
+* level_up_factor: The number to multiply against the Entity's current level.
+* xp_given: When the Entity dies, this is how much XP the Player will gain.
+
+```py3
+    @property
+    def experience_to_next_level(self) -> int:
+        return self.level_up_base + self.current_level * self.level_up_factor
+```
+
+This represents how much experience the player needs until hitting the next level. The formula is explained above. Again, feel free to tweak this formula in any way you see fit.
+
+```py3
+    @property
+    def requires_level_up(self) -> bool:
+        return self.current_xp > self.experience_to_next_level
+```
+
+We'll use this property to determine if the player needs to level up or not. If the `current_xp` is higher than the `experience_to_next_level` property, then the player levels up. If not, nothing happens.
+
+```py3
+    def add_xp(self, xp: int) -> None:
+        if xp == 0 or self.level_up_base == 0:
+            return
+
+        self.current_xp += xp
+
+        self.engine.message_log.add_message(f"You gain {xp} experience points.")
+
+        if self.requires_level_up:
+            self.engine.message_log.add_message(
+                f"You advance to level {self.current_level}!"
+            )
+```
+
+This method adds experience points to the Entity's XP pool, as the name implies. If the value is 0, we just return, as there's nothing to do. Notice that we also return if the `level_up_base` is set to 0. Why? In this tutorial, the enemies don't gain XP, so we'll set their `level_up_base` to 0 so that there's no way they could ever gain experience. Perhaps in your game, monsters *will* gain XP, and you'll want to adjust this, but that's left up to you.
+
+The rest of the method adds the xp, adds a message to the message log, and, if the Entity levels up, posts another message.
+
+```py3
+    def increase_level(self) -> None:
+        self.current_xp -= self.experience_to_next_level
+
+        self.current_level += 1
+```
+
+This method adds +1 to the `current_level`, while decreasing the `current_xp` by the `experience_to_next_level`. We do this because if we didn't it would always just take the `level_up_factor` amount to level up, which isn't what we want. If you wanted to keep track of the player's *cumulative* XP throughout the playthrough, you could skip decrementing the `current_xp` and instead adjust the `experience_to_next_level` formula accordingly.
+
+Lastly, the functions `increase_max_hp`, `increase_power`, and `increase_defense` all do basically the same thing: they raise one of the Entity's attributes, add a message to the message log, then call `increase_level`.
+
+Let's add this component to our entities in `entity_factories.py` now:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+from components.ai import HostileEnemy
+from components import consumable
+from components.fighter import Fighter
+from components.inventory import Inventory
++from components.level import Level
+from entity import Actor, Item
+
+
+player = Actor(
+    char="@",
+    color=(255, 255, 255),
+    name="Player",
+    ai_cls=HostileEnemy,
+    fighter=Fighter(hp=30, defense=2, power=5),
+    inventory=Inventory(capacity=26),
++   level=Level(level_up_base=200),
+)
+
+orc = Actor(
+    char="o",
+    color=(63, 127, 63),
+    name="Orc",
+    ai_cls=HostileEnemy,
+    fighter=Fighter(hp=10, defense=0, power=3),
+    inventory=Inventory(capacity=0),
++   level=Level(xp_given=35),
+)
+troll = Actor(
+    char="T",
+    color=(0, 127, 0),
+    name="Troll",
+    ai_cls=HostileEnemy,
+    fighter=Fighter(hp=16, defense=1, power=4),
+    inventory=Inventory(capacity=0),
++   level=Level(xp_given=100),
+)
+...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from components.ai import HostileEnemy
+from components import consumable
+from components.fighter import Fighter
+from components.inventory import Inventory
+<span class="new-text">from components.level import Level</span>
+from entity import Actor, Item
+
+
+player = Actor(
+    char="@",
+    color=(255, 255, 255),
+    name="Player",
+    ai_cls=HostileEnemy,
+    fighter=Fighter(hp=30, defense=2, power=5),
+    inventory=Inventory(capacity=26),
+    <span class="new-text">level=Level(level_up_base=200),</span>
+)
+
+orc = Actor(
+    char="o",
+    color=(63, 127, 63),
+    name="Orc",
+    ai_cls=HostileEnemy,
+    fighter=Fighter(hp=10, defense=0, power=3),
+    inventory=Inventory(capacity=0),
+    <span class="new-text">level=Level(xp_given=35),</span>
+)
+troll = Actor(
+    char="T",
+    color=(0, 127, 0),
+    name="Troll",
+    ai_cls=HostileEnemy,
+    fighter=Fighter(hp=16, defense=1, power=4),
+    inventory=Inventory(capacity=0),
+    <span class="new-text">level=Level(xp_given=100),</span>
+)
+...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+As mentioned, the `level_up_base` for the player is set to 200. Orcs give 35 XP, and Trolls give 100, since they're stronger. These values are completely arbitrary, so feel free to adjust them in any way you see fit.
+
+When an enemy dies, we need to give the player XP. This is as simple as adding one line to the `Fighter` component, so open up `fighter.py` and add this:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -704,89 +956,334 @@ class Fighter(BaseComponent):
 {{</ original-tab >}}
 {{</ codetab >}}
 
+Now the player will gain XP for defeating enemies!
 
-`entity.py`
+While the player does gain XP now, notice that we haven't actually _called_ the functions that increase the player's stats and levels the player up. We'll need a new interface to do this. The way it will work is that as soon as the player gets enough experience to level up, we'll display a message to the player, giving the player three choices on what stat to increase. When chosen, the appropriate function will be called, and the message will close.
+
+Let's create a new event handler, called `LevelUpEventHandler`, that will do just that. Create the following class in `input_handlers.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-if TYPE_CHECKING:
-    from components.consumable import Consumable
-    from components.fighter import Fighter
-    from components.inventory import Inventory
-+   from components.level import Level
-    from game_map import GameMap
- 
-T = TypeVar("T", bound="Entity")
-@@ -94,6 +95,7 @@ class Actor(Entity):
-        ai_cls: Type[BaseAI],
-        fighter: Fighter,
-        inventory: Inventory,
-+       level: Level,
-    ):
-        super().__init__(
+class AskUserEventHandler(EventHandler):
+    ...
+
++class LevelUpEventHandler(AskUserEventHandler):
++   TITLE = "Level Up"
+
++   def on_render(self, console: tcod.Console) -> None:
++       super().on_render(console)
+
++       if self.engine.player.x <= 30:
++           x = 40
++       else:
++           x = 0
+
++       console.draw_frame(
++           x=x,
++           y=0,
++           width=35,
++           height=8,
++           title=self.TITLE,
++           clear=True,
++           fg=(255, 255, 255),
++           bg=(0, 0, 0),
++       )
+
++       console.print(x=x + 1, y=1, string="Congratulations! You level up!")
++       console.print(x=x + 1, y=2, string="Select an attribute to increase.")
+
++       console.print(
++           x=x + 1,
++           y=4,
++           string=f"a) Constitution (+20 HP, from {self.engine.player.fighter.max_hp})",
++       )
++       console.print(
++           x=x + 1,
++           y=5,
++           string=f"b) Strength (+1 attack, from {self.engine.player.fighter.power})",
++       )
++       console.print(
++           x=x + 1,
++           y=6,
++           string=f"c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
++       )
+
++   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
++       player = self.engine.player
++       key = event.sym
++       index = key - tcod.event.K_a
+
++       if 0 <= index <= 2:
++           if index == 0:
++               player.level.increase_max_hp()
++           elif index == 1:
++               player.level.increase_power()
++           else:
++               player.level.increase_defense()
++       else:
++           self.engine.message_log.add_message("Invalid entry.", color.invalid)
+
++           return None
+
++       return super().ev_keydown(event)
+
++   def ev_mousebuttondown(
++       self, event: tcod.event.MouseButtonDown
++   ) -> Optional[ActionOrHandler]:
++       """
++       Don't allow the player to click to exit the menu, like normal.
++       """
++       return None
+
+
+class InventoryEventHandler(AskUserEventHandler):
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class AskUserEventHandler(EventHandler):
+    ...
+
+<span class="new-text">class LevelUpEventHandler(AskUserEventHandler):
+    TITLE = "Level Up"
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        if self.engine.player.x <= 30:
+            x = 40
+        else:
+            x = 0
+
+        console.draw_frame(
             x=x,
-@@ -113,6 +115,9 @@ class Actor(Entity):
-        self.inventory = inventory
-        self.inventory.parent = self
- 
-+       self.level = level
-+       self.level.parent = self
+            y=0,
+            width=35,
+            height=8,
+            title=self.TITLE,
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0),
+        )
 
-    @property
-    def is_alive(self) -> bool:
-        ...
-{{</ highlight >}}
-{{</ diff-tab >}}
-{{< original-tab >}}
-<pre></pre>
+        console.print(x=x + 1, y=1, string="Congratulations! You level up!")
+        console.print(x=x + 1, y=2, string="Select an attribute to increase.")
+
+        console.print(
+            x=x + 1,
+            y=4,
+            string=f"a) Constitution (+20 HP, from {self.engine.player.fighter.max_hp})",
+        )
+        console.print(
+            x=x + 1,
+            y=5,
+            string=f"b) Strength (+1 attack, from {self.engine.player.fighter.power})",
+        )
+        console.print(
+            x=x + 1,
+            y=6,
+            string=f"c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
+        )
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        player = self.engine.player
+        key = event.sym
+        index = key - tcod.event.K_a
+
+        if 0 <= index <= 2:
+            if index == 0:
+                player.level.increase_max_hp()
+            elif index == 1:
+                player.level.increase_power()
+            else:
+                player.level.increase_defense()
+        else:
+            self.engine.message_log.add_message("Invalid entry.", color.invalid)
+
+            return None
+
+        return super().ev_keydown(event)
+        
+    def ev_mousebuttondown(
+        self, event: tcod.event.MouseButtonDown
+    ) -> Optional[ActionOrHandler]:
+        """
+        Don't allow the player to click to exit the menu, like normal.
+        """
+        return None</span>
+
+
+class InventoryEventHandler(AskUserEventHandler):
+    ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
+The idea here is very similar to `InventoryEventHandler` (it inherits from the same `AskUserEventHandler` class), but instead of having a variable number of options, it's set to three, one for each of the primary attributes. Furthermore, there's no way to exit this menu without selecting something. The user __must__ level up before continuing. (Notice, we had to override `ev_mousebutton` to prevent clicks from closing the menu.)
 
-`entity_factories.py`
-
+Using `LevelUpEventHandler` is actually quite simple: We can check when the player requires a level up at the same time when we check if the player is still alive. Edit the `handle_events` method of `EventHandler` like this:
 
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-from components.ai import HostileEnemy
-from components import consumable
-from components.fighter import Fighter
-from components.inventory import Inventory
-+from components.level import Level
-from entity import Actor, Item
- 
- 
-@@ -12,6 +13,7 @@ player = Actor(
-    ai_cls=HostileEnemy,
-    fighter=Fighter(hp=30, defense=2, power=5),
-    inventory=Inventory(capacity=26),
-+   level=Level(level_up_base=200),
-)
- 
-orc = Actor(
-@@ -21,6 +23,7 @@ orc = Actor(
-    ai_cls=HostileEnemy,
-    fighter=Fighter(hp=10, defense=0, power=3),
-    inventory=Inventory(capacity=0),
-+   level=Level(xp_given=35),
-)
-troll = Actor(
-    char="T",
-@@ -29,6 +32,7 @@ troll = Actor(
-    ai_cls=HostileEnemy,
-    fighter=Fighter(hp=16, defense=1, power=4),
-    inventory=Inventory(capacity=0),
-+   level=Level(xp_given=100),
-)
- 
-confusion_scroll = Item(
+            if not self.engine.player.is_alive:
+                # The player was killed sometime during or after the action.
+                return GameOverEventHandler(self.engine)
++           elif self.engine.player.level.requires_level_up:
++               return LevelUpEventHandler(self.engine)
+            return MainGameEventHandler(self.engine)  # Return to the main handler.
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre></pre>
+<pre>            if not self.engine.player.is_alive:
+                # The player was killed sometime during or after the action.
+                return GameOverEventHandler(self.engine)
+            <span class="new-text">elif self.engine.player.level.requires_level_up:
+                return LevelUpEventHandler(self.engine)</span>
+            return MainGameEventHandler(self.engine)  # Return to the main handler.</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`input_handlers.py`
+Now, when the player gains the necessary number of experience points, the player will have the chance to level up!
+
+Before finishing this chapter, there's one last quick thing we can do to improve the user experience: Add a "character information" screen, which displays the player's stats and current experience. It's actually quite simple. Add the following class to `input_handlers.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+class AskUserEventHandler(EventHandler):
+    ...
+
++class CharacterScreenEventHandler(AskUserEventHandler):
++   TITLE = "Character Information"
+
++   def on_render(self, console: tcod.Console) -> None:
++       super().on_render(console)
+
++       if self.engine.player.x <= 30:
++           x = 40
++       else:
++           x = 0
+
++       y = 0
+
++       width = len(self.TITLE) + 4
+
++       console.draw_frame(
++           x=x,
++           y=y,
++           width=width,
++           height=7,
++           title=self.TITLE,
++           clear=True,
++           fg=(255, 255, 255),
++           bg=(0, 0, 0),
++       )
+
++       console.print(
++           x=x + 1, y=y + 1, string=f"Level: {self.engine.player.level.current_level}"
++       )
++       console.print(
++           x=x + 1, y=y + 2, string=f"XP: {self.engine.player.level.current_xp}"
++       )
++       console.print(
++           x=x + 1,
++           y=y + 3,
++           string=f"XP for next Level: {self.engine.player.level.experience_to_next_level}",
++       )
+
++       console.print(
++           x=x + 1, y=y + 4, string=f"Attack: {self.engine.player.fighter.power}"
++       )
++       console.print(
++           x=x + 1, y=y + 5, string=f"Defense: {self.engine.player.fighter.defense}"
++       )
+
+class LevelUpEventHandler(AskUserEventHandler):
+    ...
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>class AskUserEventHandler(EventHandler):
+    ...
+
+<span class="new-text">class CharacterScreenEventHandler(AskUserEventHandler):
+    TITLE = "Character Information"
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        if self.engine.player.x <= 30:
+            x = 40
+        else:
+            x = 0
+
+        y = 0
+
+        width = len(self.TITLE) + 4
+
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=7,
+            title=self.TITLE,
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0),
+        )
+
+        console.print(
+            x=x + 1, y=y + 1, string=f"Level: {self.engine.player.level.current_level}"
+        )
+        console.print(
+            x=x + 1, y=y + 2, string=f"XP: {self.engine.player.level.current_xp}"
+        )
+        console.print(
+            x=x + 1,
+            y=y + 3,
+            string=f"XP for next Level: {self.engine.player.level.experience_to_next_level}",
+        )
+
+        console.print(
+            x=x + 1, y=y + 4, string=f"Attack: {self.engine.player.fighter.power}"
+        )
+        console.print(
+            x=x + 1, y=y + 5, string=f"Defense: {self.engine.player.fighter.defense}"
+        )</span>
+
+class LevelUpEventHandler(AskUserEventHandler):
+    ...</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+Similar to `LevelUpEventHandler`, `CharacterScreenEventHandler` shows information in a window, but there's no real "choices" to be made here. Any input will simply close the screen.
+
+To open the screen, we'll have the player press the `c` key. Add the following to `MainGameEventHandler`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+        elif key == tcod.event.K_d:
+            return InventoryDropHandler(self.engine)
++       elif key == tcod.event.K_c:
++           return CharacterScreenEventHandler(self.engine)
+        elif key == tcod.event.K_SLASH:
+            return LookHandler(self.engine)
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>        elif key == tcod.event.K_d:
+            return InventoryDropHandler(self.engine)
+        <span class="new-text">elif key == tcod.event.K_c:
+            return CharacterScreenEventHandler(self.engine)</span>
+        elif key == tcod.event.K_SLASH:
+            return LookHandler(self.engine)</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+That's it for this chapter. We've added the ability to go down floors, and to level up. While the player can now "progress", the environment itself doesn't. The items that spawn on each floor are always the same, and the enemies don't get tougher as we go down floors. The next part will address that.
+
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-11).
+
+[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-12)
