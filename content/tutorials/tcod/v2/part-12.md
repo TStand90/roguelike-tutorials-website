@@ -1,7 +1,7 @@
 ---
 title: "Part 12 - Increasing Difficulty"
 date: 2020-07-28
-draft: true
+draft: false
 ---
 
 Despite the fact that we can go down floors now, the dungeon doesn't get progressively more difficult as the player descends. This is because the method in which we place monsters and items is the same on each floor. In this chapter, we'll adjust how we place things in the dungeon, so things get more difficult with each floor.
@@ -706,4 +706,4 @@ With those changes, the dungeon will get progressively more difficult! You may w
 
 If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-12).
 
-[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-13)
+The next (and final) part of this tutorial will be available soon!

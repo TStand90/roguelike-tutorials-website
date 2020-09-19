@@ -1211,4 +1211,4 @@ With that, we've now got three different types of scrolls, and four types of con
 
 If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-9).
 
-We aim to have the next part of the tutorial finished by July 21st, though, like this part, it may come a bit late. Apologies for the wait. Check back soon!
+[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-10)

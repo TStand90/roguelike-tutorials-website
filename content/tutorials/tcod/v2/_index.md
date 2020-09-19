@@ -3,6 +3,9 @@ title: "Yet Another Roguelike Tutorial - Written in Python 3 and TCOD"
 date: 2020-06-14T11:35:22-07:00
 draft: false
 ---
+
+#### Main Tutorial:
+
   - [Part 0 - Setting Up](/tutorials/tcod/v2/part-0)
   - [Part 1 - Drawing the ‘@’ symbol and moving it
     around](/tutorials/tcod/v2/part-1)
@@ -14,10 +17,10 @@ draft: false
   - [Part 7 - Creating the Interface](/tutorials/tcod/v2/part-7)
   - [Part 8 - Items and Inventory](/tutorials/tcod/v2/part-8)
   - [Part 9 - Ranged Scrolls and Targeting](/tutorials/tcod/v2/part-9)
-  - Part 10 - Saving and loading - Coming July 21st
-  - Part 11 - Delving into the Dungeon - Coming July 21st
-  - Part 12 - Increasing Difficulty - Coming July 28th
-  - Part 13 - Gearing up - Coming July 28th
+  - [Part 10 - Saving and loading](/tutorials/tcod/v2/part-10)
+  - [Part 11 - Delving into the Dungeon](/tutorials/tcod/v2/part-11)
+  - [Part 12 - Increasing Difficulty](/tutorials/tcod/v2/part-12)
+  - Part 13 - Gearing up - Coming soon
 
-### Extras:
+#### Extras:
   -  [A more "Traditional" Look](/tutorials/tcod/v2/extras/traditional-look)

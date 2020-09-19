@@ -1,7 +1,7 @@
 ---
 title: "Part 10 - Saving and loading"
 date: 2020-07-21
-draft: true
+draft: false
 ---
 
 Saving and loading is essential to almost every roguelike, but it can be a pain to manage if you don't start early. By the end of this chapter, our game will be able to save and load one file to the disk, which you could easily expand to multiple saves if you wanted to.

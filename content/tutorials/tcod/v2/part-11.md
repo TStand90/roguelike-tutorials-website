@@ -1,7 +1,7 @@
 ---
 title: "Part 11 - Delving into the Dungeon"
 date: 2020-07-21
-draft: true
+draft: false
 ---
 
 Our game isn't much of a "dungeon crawler" if there’s only one floor to our dungeon. In this chapter, we'll allow the player to go down a level, and we'll put a very basic leveling up system in place, to make the dive all the more rewarding.
