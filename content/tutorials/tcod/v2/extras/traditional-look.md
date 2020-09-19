@@ -1,7 +1,7 @@
 ---
 title: "Extra - A more \"Traditional\" Look"
 date: 2020-09-18T16:39:01-07:00
-draft: true
+draft: false
 ---
 
 _Prerequisites: Completion of [part 4](/tutorials/tcod/v2/part-4/)_
