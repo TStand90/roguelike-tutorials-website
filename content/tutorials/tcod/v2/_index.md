@@ -18,3 +18,6 @@ draft: false
   - Part 11 - Delving into the Dungeon - Coming July 21st
   - Part 12 - Increasing Difficulty - Coming July 28th
   - Part 13 - Gearing up - Coming July 28th
+
+### Extras:
+  -  [A more "Traditional" Look](/tutorials/tcod/v2/extras/traditional-look)

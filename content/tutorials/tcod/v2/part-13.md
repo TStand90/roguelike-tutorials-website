@@ -4,6 +4,8 @@ date: 2020-07-28
 draft: true
 ---
 
+For the final part of this tutorial, we'll implement something that _most_ roguelikes have: equipment. Our implementation will be extremely simple: equipping a weapon increases attack power, and equipping armor increases defense. Many roguelikes have more equipment types than just these two, and the effects of equipment can go much further than this, but this should be enough to get you started.
+
 diff --git a/actions.py b/actions.py
 index 439c055..b7a8fde 100644
 --- a/actions.py
