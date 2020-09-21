@@ -6,7 +6,26 @@ draft: true
 
 For the final part of this tutorial, we'll implement something that _most_ roguelikes have: equipment. Our implementation will be extremely simple: equipping a weapon increases attack power, and equipping armor increases defense. Many roguelikes have more equipment types than just these two, and the effects of equipment can go much further than this, but this should be enough to get you started.
 
-`equippable.py`
+First, we'll want to define the types of equipment that can be found in the dungeon. As with the `RenderOrder` class, we can use `Enum` to define the types. For now, we'll leave it at weapons and armor, but feel free to add more types as you see fit.
+
+Create a new file, `equipment_types.py`, and put the following contents in it:
+
+```py3
+from enum import auto, Enum
+
+
+class EquipmentType(Enum):
+    WEAPON = auto()
+    ARMOR = auto()
+```
+
+Now it's time to create the component that we'll attach to the equipment. We'll call the component `Equippable`, which will have a few different attributes:
+
+* `equipment_type`: The type of equipment, using the `EquipmentType` enum.
+* `power_bonus`: How much the wielder's attack power will be increased. Currently used for just weapons.
+* `defense_bonus`: How much the wearer's defense will be increased. Currently just for armor.
+
+Create the file `equippable.py` in the `components` directory, and fill it with the following:
 
 ```py3
 from __future__ import annotations
@@ -54,6 +73,281 @@ class ChainMail(Equippable):
     def __init__(self) -> None:
         super().__init__(equipment_type=EquipmentType.ARMOR, defense_bonus=3)
 ```
+
+Aside from creating the `Equippable` class, as described earlier, we've also created a few types of equppable components, for each equippable entity that we'll end up creating, similar to what we did with the `Consumable` classes. You don't have to do it this way, you could just define these when creating the entities, but you might want to add additional functionality to weapons and armor at some point, and defining the `Equippable` classes this way might make that easier. You might also want to move these classes to their own file, but that's outside the scope of this tutorial.
+
+To create the actual equppable entities, we'll want to adjust our `Item` class. We can use the same class that we used for our consumables, and just handle them slightly differently. Another approach would be to create another subclass of `Entity`, but for the sake of keeping the number of `Entity` subclasses in this tutorial short, we'll adjust `Item`. Make the following adjustments to `entity.py`:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+...
+if TYPE_CHECKING:
+    from components.ai import BaseAI
+    from components.consumable import Consumable
++   from components.equippable import Equippable
+    from components.fighter import Fighter
+    from components.inventory import Inventory
+    from components.level import Level
+    from game_map import GameMap
+...
+
+class Item(Entity):
+    def __init__(
+        self,
+        *,
+        x: int = 0,
+        y: int = 0,
+        char: str = "?",
+        color: Tuple[int, int, int] = (255, 255, 255),
+        name: str = "<Unnamed>",
+-       consumable: Consumable,
++       consumable: Optional[Consumable] = None,
++       equippable: Optional[Equippable] = None,
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=False,
+            render_order=RenderOrder.ITEM,
+        )
+
+        self.consumable = consumable
+-       self.consumable.parent = self
+
++       if self.consumable:
++           self.consumable.parent = self
+
++       self.equippable = equippable
+
++       if self.equippable:
++           self.equippable.parent = self
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>...
+if TYPE_CHECKING:
+    from components.ai import BaseAI
+    from components.consumable import Consumable
+    <span class="new-text">from components.equippable import Equippable</span>
+    from components.fighter import Fighter
+    from components.inventory import Inventory
+    from components.level import Level
+    from game_map import GameMap
+...
+
+class Item(Entity):
+    def __init__(
+        self,
+        *,
+        x: int = 0,
+        y: int = 0,
+        char: str = "?",
+        color: Tuple[int, int, int] = (255, 255, 255),
+        name: str = "<Unnamed>",
+        <span class="crossed-out-text">consumable: Consumable,</span>
+        <span class="new-text">consumable: Optional[Consumable] = None,
+        equippable: Optional[Equippable] = None,</span>
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=False,
+            render_order=RenderOrder.ITEM,
+        )
+
+        self.consumable = consumable
+        <span class="crossed-out-text">self.consumable.parent = self</span>
+
+        <span class="new-text">if self.consumable:
+            self.consumable.parent = self
+
+        self.equippable = equippable
+
+        if self.equippable:
+            self.equippable.parent = self</span></pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+We've added `Equippable` as an optional component for the `Item` class, and also made `Consumable` optional, so that not all `Item` instances will be consumable.
+
+In order to actually create the equippable entities, we'll want to add a few examples to `entity_factories.py`. The entities we will add will correspond to the `Equippable` subclasses we already made. Edit `entity_factories.py` like this:
+
+{{< codetab >}}
+{{< diff-tab >}}
+{{< highlight diff >}}
+from components.ai import HostileEnemy
+-from components import consumable
++from components import consumable, equippable
+from components.fighter import Fighter
+from components.inventory import Inventory
+from components.level import Level
+
+...
+lightning_scroll = Item(
+    char="~",
+    color=(255, 255, 0),
+    name="Lightning Scroll",
+    consumable=consumable.LightningDamageConsumable(damage=20, maximum_range=5),
+)
+
++dagger = Item(
++   char="/", color=(0, 191, 255), name="Dagger", equippable=equippable.Dagger()
++)
++
++sword = Item(char="/", color=(0, 191, 255), name="Sword", equippable=equippable.Sword())
+
++leather_armor = Item(
++   char="[",
++   color=(139, 69, 19),
++   name="Leather Armor",
++   equippable=equippable.LeatherArmor(),
++)
+
++chain_mail = Item(
++   char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
++)
+{{</ highlight >}}
+{{</ diff-tab >}}
+{{< original-tab >}}
+<pre>from components.ai import HostileEnemy
+<span class="crossed-out-text">from components import consumable</span>
+<span class="new-text">from components import consumable, equippable</span>
+from components.fighter import Fighter
+from components.inventory import Inventory
+from components.level import Level
+
+...
+lightning_scroll = Item(
+    char="~",
+    color=(255, 255, 0),
+    name="Lightning Scroll",
+    consumable=consumable.LightningDamageConsumable(damage=20, maximum_range=5),
+)
+
+<span class="new-text">dagger = Item(
+    char="/", color=(0, 191, 255), name="Dagger", equippable=equippable.Dagger()
+)
+
+sword = Item(char="/", color=(0, 191, 255), name="Sword", equippable=equippable.Sword())
+
+leather_armor = Item(
+    char="[",
+    color=(139, 69, 19),
+    name="Leather Armor",
+    equippable=equippable.LeatherArmor(),
+)
+
+chain_mail = Item(
+    char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
+)</span</pre>
+{{</ original-tab >}}
+{{</ codetab >}}
+
+The creation of these entities is very similar to the consumables, except we give them the `Equippable` component instead of `Consumable`. This is all we need to do to create the entities themselves, but we're far from finished. We still need to make these entities appear on the map, make them equippable (there's nothing for them to attach _to_ on the player right now), and make equipping them actually do something.
+
+To handle the equipment that the player has equipped at the moment, we can create yet another component to handle the player's (or the monster's, for that matter) equipment. Create a new file called `equipment.py` in the `components` folder, and add these contents:
+
+```py3
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
+from components.base_component import BaseComponent
+from equipment_types import EquipmentType
+
+if TYPE_CHECKING:
+    from entity import Actor, Item
+
+
+class Equipment(BaseComponent):
+    parent: Actor
+
+    def __init__(self, weapon: Optional[Item] = None, armor: Optional[Item] = None):
+        self.weapon = weapon
+        self.armor = armor
+
+    @property
+    def defense_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.defense_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.defense_bonus
+
+        return bonus
+
+    @property
+    def power_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.power_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.power_bonus
+
+        return bonus
+
+    def item_is_equipped(self, item: Item) -> bool:
+        return self.weapon == item or self.armor == item
+
+    def unequip_message(self, item_name: str) -> None:
+        self.parent.gamemap.engine.message_log.add_message(
+            f"You remove the {item_name}."
+        )
+
+    def equip_message(self, item_name: str) -> None:
+        self.parent.gamemap.engine.message_log.add_message(
+            f"You equip the {item_name}."
+        )
+
+    def equip_to_slot(self, slot: str, item: Item, add_message: bool) -> None:
+        current_item = self.__getattribute__(slot)
+
+        if current_item is not None:
+            self.unequip_from_slot(slot, add_message)
+
+        self.__setattr__(slot, item)
+
+        if add_message:
+            self.equip_message(item.name)
+
+    def unequip_from_slot(self, slot: str, add_message: bool) -> None:
+        current_item = self.__getattribute__(slot)
+
+        if add_message:
+            self.unequip_message(current_item.name)
+
+        self.__setattr__(slot, None)
+
+    def toggle_equip(self, equippable_item: Item, add_message: bool = True) -> None:
+        if (
+            equippable_item.equippable
+            and equippable_item.equippable.equipment_type == EquipmentType.WEAPON
+        ):
+            slot = "weapon"
+        else:
+            slot = "armor"
+
+        if self.__getattribute__(slot) == equippable_item:
+            self.unequip_from_slot(slot, add_message)
+        else:
+            self.equip_to_slot(slot, equippable_item, add_message)
+```
+
+TODO: Explain `equipment.py`
+
+TODO: Finish the tutorial!
+
 
 `fighter.py`
 
@@ -160,98 +454,6 @@ class Fighter(BaseComponent):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`equipment.py`
-
-```py3
-from __future__ import annotations
-
-from typing import Optional, TYPE_CHECKING
-
-from components.base_component import BaseComponent
-from equipment_types import EquipmentType
-
-if TYPE_CHECKING:
-    from entity import Actor, Item
-
-
-class Equipment(BaseComponent):
-    parent: Actor
-
-    def __init__(self, weapon: Optional[Item] = None, armor: Optional[Item] = None):
-        self.weapon = weapon
-        self.armor = armor
-
-    @property
-    def defense_bonus(self) -> int:
-        bonus = 0
-
-        if self.weapon is not None and self.weapon.equippable is not None:
-            bonus += self.weapon.equippable.defense_bonus
-
-        if self.armor is not None and self.armor.equippable is not None:
-            bonus += self.armor.equippable.defense_bonus
-
-        return bonus
-
-    @property
-    def power_bonus(self) -> int:
-        bonus = 0
-
-        if self.weapon is not None and self.weapon.equippable is not None:
-            bonus += self.weapon.equippable.power_bonus
-
-        if self.armor is not None and self.armor.equippable is not None:
-            bonus += self.armor.equippable.power_bonus
-
-        return bonus
-
-    def item_is_equipped(self, item: Item) -> bool:
-        return self.weapon == item or self.armor == item
-
-    def unequip_message(self, item_name: str) -> None:
-        self.parent.gamemap.engine.message_log.add_message(
-            f"You remove the {item_name}."
-        )
-
-    def equip_message(self, item_name: str) -> None:
-        self.parent.gamemap.engine.message_log.add_message(
-            f"You equip the {item_name}."
-        )
-
-    def equip_to_slot(self, slot: str, item: Item, add_message: bool) -> None:
-        current_item = self.__getattribute__(slot)
-
-        if current_item is not None:
-            self.unequip_from_slot(slot, add_message)
-
-        self.__setattr__(slot, item)
-
-        if add_message:
-            self.equip_message(item.name)
-
-    def unequip_from_slot(self, slot: str, add_message: bool) -> None:
-        current_item = self.__getattribute__(slot)
-
-        if add_message:
-            self.unequip_message(current_item.name)
-
-        self.__setattr__(slot, None)
-
-    def toggle_equip(self, equippable_item: Item, add_message: bool = True) -> None:
-        if (
-            equippable_item.equippable
-            and equippable_item.equippable.equipment_type == EquipmentType.WEAPON
-        ):
-            slot = "weapon"
-        else:
-            slot = "armor"
-
-        if self.__getattribute__(slot) == equippable_item:
-            self.unequip_from_slot(slot, add_message)
-        else:
-            self.equip_to_slot(slot, equippable_item, add_message)
-```
-
 `level.py`
 
 {{< codetab >}}
@@ -294,16 +496,6 @@ class Level(BaseComponent):
         self.engine.message_log.add_message("Your movements are getting swifter!")</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
-
-`equipment_types.py`
-```py3
-from enum import auto, Enum
-
-
-class EquipmentType(Enum):
-    WEAPON = auto()
-    ARMOR = auto()
-```
 
 `procgen.py`
 
