@@ -246,7 +246,7 @@ leather_armor = Item(
 
 chain_mail = Item(
     char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
-)</span</pre>
+)</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
@@ -346,10 +346,12 @@ class Equipment(BaseComponent):
 
 TODO: Explain `equipment.py`
 
-TODO: Finish the tutorial!
 
+One thing we need to do is change the way `power` and `defense` are calculated in the `Fighter` component. Currently, the values are set directly in the class, but we'll want to calculate them based on their base values (what gets leveled up), and the bonus values (based on the equipment).
 
-`fighter.py`
+We can redefine `power` and `defense` as properties, and rename what we set in the class to `base_power` and `base_defense`. `power` and `defense` will then get their values from their respective bases and equipment bonuses.
+
+This will require edits to several places, but we'll start first with the most obvious: the `Fighter` class itself.
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -454,7 +456,9 @@ class Fighter(BaseComponent):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`level.py`
+Now, the `power` and `defense` values will be adjusted when the player equips different types of equipment.
+
+We'll need to edit `level.py` to reflect the new attribute names as well:
 
 {{< codetab >}}
 {{< diff-tab >}}
@@ -909,7 +913,7 @@ leather_armor = Item(
 
 chain_mail = Item(
     char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
-)</span</pre>
+)</span></pre>
 {{</ original-tab >}}
 {{</ codetab >}}
 
@@ -1001,6 +1005,8 @@ class InventoryDropHandler(InventoryEventHandler):
     ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
+
+One last thing we can do is give the player a bit of equipment to start. We'll spawn a dagger and leather armor, and immediately add them to the player's inventory.
 
 `setup_game.py`
 
