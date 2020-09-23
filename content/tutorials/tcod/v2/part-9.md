@@ -126,16 +126,13 @@ class HealingConsumable(Consumable):
 +       self.damage = damage
 +       self.maximum_range = maximum_range
 
-+   def consume(self, consumer: Actor) -> None:
++   def activate(self, action: actions.ItemAction) -> None:
++       consumer = action.entity
 +       target = None
 +       closest_distance = self.maximum_range + 1.0
 
 +       for actor in self.engine.game_map.actors:
-+           if (
-+               actor.fighter
-+               and actor != consumer
-+               and self.parent.gamemap.visible[actor.x, actor.y]
-+           ):
++           if actor is not consumer and self.parent.gamemap.visible[actor.x, actor.y]:
 +               distance = consumer.distance(actor.x, actor.y)
 
 +               if distance < closest_distance:
@@ -147,6 +144,7 @@ class HealingConsumable(Consumable):
 +               f"A lighting bolt strikes the {target.name} with a loud thunder, for {self.damage} damage!"
 +           )
 +           target.fighter.take_damage(self.damage)
++           self.consume()
 +       else:
 +           raise Impossible("No enemy is close enough to strike.")
 {{</ highlight >}}
