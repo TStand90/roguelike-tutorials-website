@@ -20,7 +20,7 @@ draft: false
   - [Part 10 - Saving and loading](/tutorials/tcod/v2/part-10)
   - [Part 11 - Delving into the Dungeon](/tutorials/tcod/v2/part-11)
   - [Part 12 - Increasing Difficulty](/tutorials/tcod/v2/part-12)
-  - Part 13 - Gearing up - Coming soon
+  - [Part 13 - Gearing up](/tutorials/tcod/v2/part-13)
 
 #### Extras:
   -  [A more "Traditional" Look](/tutorials/tcod/v2/extras/traditional-look)

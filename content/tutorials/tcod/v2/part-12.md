@@ -706,4 +706,4 @@ With those changes, the dungeon will get progressively more difficult! You may w
 
 If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-12).
 
-The next (and final) part of this tutorial will be available soon!
+[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-13)
