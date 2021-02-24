@@ -1207,6 +1207,6 @@ Run the project now, and blast away your enemies!
 
 With that, we've now got three different types of scrolls, and four types of consumables overall! With the event handlers that are in place, it should be fairly simple to add more types of consumables, if you wish. Feel free to experiment with different types of attacks, and add variety to your game.
 
-If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-9).
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-9).
 
 [Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-10)

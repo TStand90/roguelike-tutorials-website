@@ -704,6 +704,6 @@ Now `place_entities` is just getting the amount of monsters and items to generat
 
 With those changes, the dungeon will get progressively more difficult! You may want to tweak certain numbers, like the strength of the enemies or how much health you recover with potions, to get a more challenging experience (our game is still not _that_ difficult, if you increase your defense by just 1, Orcs are no longer a threat).
 
-If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-12).
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-12).
 
 [Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-13)

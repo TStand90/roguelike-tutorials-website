@@ -542,7 +542,7 @@ other form of version control (and I recommend you do), commit your
 changes now.
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-1).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-1).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/v2/part-2)

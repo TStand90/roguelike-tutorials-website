@@ -1166,4 +1166,4 @@ Be sure to check out the [Roguelike Development Subreddit](https://www.reddit.co
 
 Best of luck on your roguelike development journey!
 
-If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-13).
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-13).

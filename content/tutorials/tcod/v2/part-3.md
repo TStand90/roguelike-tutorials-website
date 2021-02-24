@@ -818,7 +818,7 @@ And that's it\! There's our functioning, albeit basic, dungeon generation algori
 *Note: Your dungeon will look different from this one, so don't worry if it doesn't match the screenshot.*
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-3).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-3).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/v2/part-4)

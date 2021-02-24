@@ -1165,6 +1165,6 @@ To show this new view, all we need to do is this, in `MainGameEventHandler`:
 
 Now all the player has to do is press the "v" key to see a log of all past messages. By using the up and down keys, you can scroll through the log.
 
-If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-7).
+If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-7).
 
 [Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-8)

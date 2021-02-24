@@ -389,7 +389,7 @@ It's hard to believe, but that's all we need to do for a functioning field of vi
 This chapter was a shorter one, but we've accomplished quite a lot. Our dungeon feels a lot more mysterious, and in coming chapters, it will get a lot more dangerous.
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-3).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-3).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/v2/part-5)

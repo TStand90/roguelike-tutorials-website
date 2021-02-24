@@ -2587,7 +2587,7 @@ class Fighter(BaseComponent):
 And with that last change, the main character should die, for real this time! You'll be unable to move or attack, but you can still exit the game as normal.
 
 If you want to see the code so far in its entirety, [click
-here](https://github.com/TStand90/tcod_tutorial_v2/tree/part-6).
+here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-6).
 
 [Click here to move on to the next part of this
 tutorial.](/tutorials/tcod/v2/part-7)
