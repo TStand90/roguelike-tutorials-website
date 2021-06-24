@@ -2,6 +2,7 @@
 title: "Part 1 - Drawing the '@' symbol and moving it around"
 date: 2019-03-30T08:39:15-07:00
 draft: false
+aliases: /tutorials/tcod/part-1
 ---
 
 Welcome to part 1 of the **Roguelike Tutorial Revised**\! This series
@@ -16,7 +17,7 @@ guidance of those who wrote that tutorial, along with all the wonderful
 contributors to libtcod and python-tcod over the years.
 
 This part assumes that you have either checked [Part
-0](/tutorials/tcod/part-0) and are already set up and ready to go. If
+0](/tutorials/tcod/2019/part-0) and are already set up and ready to go. If
 not, be sure to check that page, and make sure that you've got Python
 and TCOD installed, and a file called `engine.py` created in the
 directory that you want to work in.
@@ -187,10 +188,10 @@ create two variables, `player_x` and `player_y` to keep track of this.
 {{< highlight diff >}}
     ...
     screen_height = 50
-+   
++
 +   player_x = int(screen_width / 2)
 +   player_y = int(screen_height / 2)
-+   
++
     libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
     ...
 {{</ highlight >}}
@@ -400,7 +401,7 @@ presses 'Esc', the game will exit.
 {{</ highlight >}}
 
 Because our engine will be expecting a dictionary, we have to return
-*something*, even if nothing happened.  
+*something*, even if nothing happened.
 
 This may seem confusing, but it will likely make sense in a minute.
 Let's return to our `engine.py` file and call our `handle_keys`
@@ -514,14 +515,14 @@ Modify the `engine.py` file like this:
 
     while not libtcod.console_is_window_closed():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
-+       
++
 +       libtcod.console_set_default_foreground(con, libtcod.white)
 +       libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)
 +       libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
 -       libtcod.console_set_default_foreground(0, libtcod.white)
 -       libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)
         libtcod.console_flush()
-+       
++
 +       libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)
 -       libtcod.console_put_char(0, player_x, player_y, ' ', libtcod.BKGND_NONE)
 {{</ highlight >}}
@@ -559,6 +560,6 @@ here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part1).
 The files you'll want to check are `engine.py` and `input_handlers.py`
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-2)
+tutorial.](/tutorials/tcod/2019/part-2)
 
 <script src="/js/codetabs.js"></script>

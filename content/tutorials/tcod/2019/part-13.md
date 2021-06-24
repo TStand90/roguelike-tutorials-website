@@ -2,6 +2,7 @@
 title: "Part 13 - Gearing up"
 date: 2019-03-30T09:34:10-07:00
 draft: false
+aliases: /tutorials/tcod/part-13
 ---
 For the final part of our tutorial series, we'll take a look at
 implementing some equipment. Equipment is a subtype of items that the

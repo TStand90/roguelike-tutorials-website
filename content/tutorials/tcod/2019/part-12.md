@@ -2,6 +2,7 @@
 title: "Part 12 - Increasing Difficulty"
 date: 2019-03-30T09:34:08-07:00
 draft: false
+aliases: /tutorials/tcod/part-12
 ---
 Right now, our game doesn't feel like much of a roguelike. It's far too
 easy\! On top of that, the game doesn't get harder as you progress.
@@ -545,6 +546,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part12).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-13)
+tutorial.](/tutorials/tcod/2019/part-13)
 
 <script src="/js/codetabs.js"></script>

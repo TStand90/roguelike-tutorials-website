@@ -2,6 +2,7 @@
 title: "Part 11 - Delving into the Dungeon"
 date: 2019-03-30T09:34:06-07:00
 draft: false
+aliases: /tutorials/tcod/part-11
 ---
 Our game isn't much of a "dungeon crawler" if there's only one floor to
 our dungeon. In this chapter, we'll allow the player to go down a level,
@@ -1573,6 +1574,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part11).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-12)
+tutorial.](/tutorials/tcod/2019/part-12)
 
 <script src="/js/codetabs.js"></script>

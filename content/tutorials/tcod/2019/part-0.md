@@ -2,6 +2,7 @@
 title: "Part 0 - Setting Up"
 date: 2019-03-30T09:53:48-07:00
 draft: false
+aliases: /tutorials/tcod/part-0
 ---
 
 #### Prior knowledge
@@ -203,6 +204,6 @@ link there to the Discord channel as well.
 ### Ready to go?
 
 Once you're set up and ready to go, you can proceed to [Part
-1](/tutorials/tcod/part-1).
+1](/tutorials/tcod/2019/part-1).
 
 <script src="/js/codetabs.js"></script>

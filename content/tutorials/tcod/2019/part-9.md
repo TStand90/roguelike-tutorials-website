@@ -2,6 +2,7 @@
 title: "Part 9 - Ranged Scrolls and Targeting"
 date: 2019-03-30T09:34:01-07:00
 draft: false
+aliases: /tutorials/tcod/part-9
 ---
 
 Adding health potions was a big step, but we won't stop there. Let's
@@ -1032,6 +1033,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part9).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-10)
+tutorial.](/tutorials/tcod/2019/part-10)
 
 <script src="/js/codetabs.js"></script>
