@@ -2550,7 +2550,7 @@ class Entity:
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Lastly, we can actually remote `EscapeAction`, as it can just be handled by the event handlers. Open `actions.py` and remove `EscapeAction`:
+Lastly, we can actually remove `EscapeAction`, as it can just be handled by the event handlers. Open `actions.py` and remove `EscapeAction`:
 
 {{< codetab >}}
 {{< diff-tab >}}
