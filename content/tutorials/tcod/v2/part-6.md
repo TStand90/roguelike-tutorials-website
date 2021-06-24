@@ -2474,7 +2474,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 {{</ original-tab >}}
 {{</ codetab >}}
 
-`EventHandler` is not the base class for our other two classes.
+`EventHandler` is now the base class for our other two classes.
 
 `MainGameEventHandler` is almost identical to our original `EventHandler` class, except that it doesn't need to implement `ev_quit`, as `EventHandler` takes care of that just fine.
 
