@@ -2,6 +2,7 @@
 title: "Part 4 - Field of View"
 date: 2019-03-30T09:33:44-07:00
 draft: false
+aliases: /tutorials/tcod/part-4
 ---
 
 We have a dungeon now, and we can move about it freely. But are we
@@ -276,7 +277,7 @@ def render_all(con, entities, game_map, screen_width, screen_height, colors):
 -       for x in range(game_map.width):
 +       for y in range(game_map.height):
 -           wall = game_map.tiles[x][y].block_sight
-- 
+-
 -           if wall:
 -               libtcod.console_set_char_background(con, x, y, colors.get('dark_wall'), libtcod.BKGND_SET)
 -           else:
@@ -489,6 +490,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part4).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-5)
+tutorial.](/tutorials/tcod/2019/part-5)
 
 <script src="/js/codetabs.js"></script>

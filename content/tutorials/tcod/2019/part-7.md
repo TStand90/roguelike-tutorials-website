@@ -2,6 +2,7 @@
 title: "Part 7 - Creating the Interface"
 date: 2019-03-30T09:33:53-07:00
 draft: false
+aliases: /tutorials/tcod/part-7
 ---
 
 Our game is looking more and more playable by the chapter, but before we
@@ -642,6 +643,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part7).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-8)
+tutorial.](/tutorials/tcod/2019/part-8)
 
 <script src="/js/codetabs.js"></script>

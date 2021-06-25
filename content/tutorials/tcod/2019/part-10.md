@@ -2,6 +2,7 @@
 title: "Part 10 - Saving and loading"
 date: 2019-03-30T09:34:04-07:00
 draft: false
+aliases: /tutorials/tcod/part-10
 ---
 Saving and loading is essential to almost every roguelike, but it can be
 a pain to manage if you don't start early. By the end of this chapter,
@@ -1110,6 +1111,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part10).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-11)
+tutorial.](/tutorials/tcod/2019/part-11)
 
 <script src="/js/codetabs.js"></script>

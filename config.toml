@@ -17,11 +17,11 @@ pygmentsCodeFencesGuessSyntax = true
     weight = 1
   [[languages.en.menu.main]]
     url = "/tutorials/tcod/v2/"
-    name = "TCOD Tutorial (New)"
+    name = "TCOD Tutorial (2020)"
     weight = 2
   [[languages.en.menu.main]]
-    url = "/tutorials/tcod/"
-    name = "TCOD Tutorial (Old)"
+    url = "/tutorials/tcod/2019/"
+    name = "TCOD Tutorial (2019)"
     weight = 2
   [[languages.en.menu.main]]
     url = "/about/"
@@ -33,6 +33,6 @@ pygmentsCodeFencesGuessSyntax = true
 
   [params.sidebar]
     showRecent = false
-  
+
   [params.header]
     colorScheme = "dark"

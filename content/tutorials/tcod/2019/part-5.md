@@ -2,6 +2,7 @@
 title: "Part 5 - Placing Enemies and kicking them (harmlessly)"
 date: 2019-03-30T09:33:48-07:00
 draft: false
+aliases: /tutorials/tcod/part-5
 ---
 
 What good is a dungeon with no monsters to bash? This chapter will focus
@@ -566,6 +567,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part5).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-6)
+tutorial.](/tutorials/tcod/2019/part-6)
 
 <script src="/js/codetabs.js"></script>

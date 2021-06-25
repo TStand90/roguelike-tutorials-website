@@ -2,6 +2,7 @@
 title: "Part 3 - Generating a dungeon"
 date: 2019-03-30T08:39:22-07:00
 draft: false
+aliases: /tutorials/tcod/part-3
 ---
 
 Welcome back to the Roguelike Tutorial Revised\! In this tutorial, we'll
@@ -130,7 +131,7 @@ saying when we tell our program that we want a room at coordinates (1,
 like this one (remember that lists are 0-indexed, so (0, 0) is a wall in
 this case):
 
-``` 
+```
   0 1 2 3 4 5 6 7
 0 # # # # # # # #
 1 # . . . . . . #
@@ -145,7 +146,7 @@ this case):
 That's all fine and good, but what happens if we put a room right next
 to it? Let's say this room starts at (7, 1) and goes to (9, 6)
 
-``` 
+```
   0 1 2 3 4 5 6 7 8 9 10
 0 # # # # # # # # # # #
 1 # . . . . . . . . . #
@@ -164,7 +165,7 @@ when digging out a room. So if we have a rectangle with coordinates x1 =
 1, x2 = 6, y1 = 1, and y2 = 6, then the room should actually look like
 this:
 
-``` 
+```
   0 1 2 3 4 5 6 7
 0 # # # # # # # #
 1 # # # # # # # #
@@ -274,7 +275,7 @@ the following methods to `GameMap`:
 
     def is_blocked(self, x, y):
         ...
-        
+
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
@@ -644,6 +645,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part3).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-4)
+tutorial.](/tutorials/tcod/2019/part-4)
 
 <script src="/js/codetabs.js"></script>

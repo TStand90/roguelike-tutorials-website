@@ -2,6 +2,7 @@
 title: "Part 8 - Items and Inventory"
 date: 2019-03-30T09:33:55-07:00
 draft: false
+aliases: /tutorials/tcod/part-8
 ---
 
 So far, our game has movement, dungeon exploring, combat, and AI (okay,
@@ -1683,6 +1684,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part8).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-9)
+tutorial.](/tutorials/tcod/2019/part-9)
 
 <script src="/js/codetabs.js"></script>

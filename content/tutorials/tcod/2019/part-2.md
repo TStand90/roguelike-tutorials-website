@@ -2,6 +2,7 @@
 title: "Part 2 - The generic Entity, the render functions, and the map"
 date: 2019-03-30T08:39:20-07:00
 draft: false
+aliases: /tutorials/tcod/part-2
 ---
 
 Now that we can move our little '@' symbol around, we need to give it
@@ -326,13 +327,13 @@ class Tile:
     """
     def __init__(self, blocked, block_sight=None):
         self.blocked = blocked
-        
+
         # By default, if a tile is blocked, it also blocks sight
         if block_sight is None:
             block_sight = blocked
-        
+
         self.block_sight = block_sight
-    
+
 {{</ highlight >}}
 
 Nothing too complicated here. The `Tile` class holds whether or not the
@@ -495,7 +496,7 @@ Open up `render_functions.py` and modify `render_all` like this:
 +               libtcod.console_set_char_background(con, x, y, colors.get('dark_wall'), libtcod.BKGND_SET)
 +           else:
 +               libtcod.console_set_char_background(con, x, y, colors.get('dark_ground'), libtcod.BKGND_SET)
-+   
++
     # Draw all entities in the list
     for entity in entities:
         draw_entity(con, entity)
@@ -578,6 +579,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part2).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/part-3)
+tutorial.](/tutorials/tcod/2019/part-3)
 
 <script src="/js/codetabs.js"></script>
