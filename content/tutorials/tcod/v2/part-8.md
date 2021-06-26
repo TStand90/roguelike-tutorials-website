@@ -187,7 +187,7 @@ class MessageLog:
 class GameMap:
     ...
     )  # Tiles the player has seen before
- 
+
 +   @property
 +   def gamemap(self) -> GameMap:
 +       return self
@@ -201,7 +201,7 @@ class GameMap:
 <pre>class GameMap:
     ...
     )  # Tiles the player has seen before
- 
+
     <span class="new-text">@property
     def gamemap(self) -> GameMap:
         return self</span>
@@ -266,7 +266,7 @@ class Entity:
 +       clone.parent = gamemap
         gamemap.entities.add(clone)
         return clone
-    
+
     def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
         """Place this entity at a new location.  Handles moving across GameMaps."""
         self.x = x
@@ -371,7 +371,7 @@ class Actor(Entity):
         <span class="new-text">clone.parent = gamemap</span>
         gamemap.entities.add(clone)
         return clone
-    
+
     def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
         """Place this entity at a new location.  Handles moving across GameMaps."""
         self.x = x
@@ -385,7 +385,7 @@ class Actor(Entity):
                     self.gamemap.entities.remove(self)
             self.parent = gamemap</span>
             gamemap.entities.add(self)
-            
+
     def move(self, dx: int, dy: int) -> None:
         # Move the entity by a given amount
         self.x += dx
@@ -440,8 +440,8 @@ if TYPE_CHECKING:
     from engine import Engine
     from entity import Entity
 +   from game_map import GameMap
- 
- 
+
+
 class BaseComponent:
 -   entity: Entity  # Owning entity instance.
 +   parent: Entity  # Owning entity instance.
@@ -449,7 +449,7 @@ class BaseComponent:
 +   @property
 +   def gamemap(self) -> GameMap:
 +       return self.parent.gamemap
- 
+
     @property
     def engine(self) -> Engine:
 -       return self.entity.gamemap.engine
@@ -465,8 +465,8 @@ if TYPE_CHECKING:
     from engine import Engine
     from entity import Entity
     <span class="new-text">from game_map import GameMap</span>
- 
- 
+
+
 class BaseComponent:
     <span class="crossed-out-text">entity: Entity  # Owning entity instance.</span>
     <span class="new-text">parent: Entity  # Owning entity instance.
@@ -474,7 +474,7 @@ class BaseComponent:
     @property
     def gamemap(self) -> GameMap:
         return self.parent.gamemap</span>
- 
+
     @property
     def engine(self) -> Engine:
         <span class="crossed-out-text">return self.entity.gamemap.engine</span>
@@ -490,7 +490,7 @@ class BaseComponent:
 class Fighter(BaseComponent):
 -   entity: Actor
 +   parent: Actor
- 
+
     def __init__(self, hp: int, defense: int, power: int):
         self.max_hp = hp
         self._hp = hp
@@ -507,7 +507,7 @@ class Fighter(BaseComponent):
 -       if self._hp == 0 and self.entity.ai:
 +       if self._hp == 0 and self.parent.ai:
             self.die()
- 
+
     def die(self) -> None:
 -       if self.engine.player is self.entity:
 +       if self.engine.player is self.parent:
@@ -518,7 +518,7 @@ class Fighter(BaseComponent):
 -           death_message = f"{self.entity.name} is dead!"
 +           death_message = f"{self.parent.name} is dead!"
             death_message_color = color.enemy_die
- 
+
 +       self.parent.char = "%"
 +       self.parent.color = (191, 0, 0)
 +       self.parent.blocks_movement = False
@@ -531,7 +531,7 @@ class Fighter(BaseComponent):
 -       self.entity.ai = None
 -       self.entity.name = f"remains of {self.entity.name}"
 -       self.entity.render_order = RenderOrder.CORPSE
- 
+
         self.engine.message_log.add_message(death_message, death_message_color)
 {{</ highlight >}}
 {{</ diff-tab >}}
@@ -539,7 +539,7 @@ class Fighter(BaseComponent):
 <pre>class Fighter(BaseComponent):
     <span class="crossed-out-text">entity: Actor</span>
     <span class="new-text">parent: Actor</span>
- 
+
     def __init__(self, hp: int, defense: int, power: int):
         self.max_hp = hp
         self._hp = hp
@@ -556,7 +556,7 @@ class Fighter(BaseComponent):
         <span class="crossed-out-text">if self._hp == 0 and self.entity.ai:</span>
         <span class="new-text">if self._hp == 0 and self.parent.ai:</span>
             self.die()
- 
+
     def die(self) -> None:
         <span class="crossed-out-text">if self.engine.player is self.entity:</span>
         <span class="new-text">if self.engine.player is self.parent:</span>
@@ -567,7 +567,7 @@ class Fighter(BaseComponent):
             <span class="crossed-out-text">death_message = f"{self.entity.name} is dead!"</span>
             <span class="new-text">death_message = f"{self.parent.name} is dead!"</span>
             death_message_color = color.enemy_die
- 
+
         <span class="new-text">self.parent.char = "%"
         self.parent.color = (191, 0, 0)
         self.parent.blocks_movement = False
@@ -580,7 +580,7 @@ class Fighter(BaseComponent):
         <span class="crossed-out-text">self.entity.ai = None</span>
         <span class="crossed-out-text">self.entity.name = f"remains of {self.entity.name}"</span>
         <span class="crossed-out-text">self.entity.render_order = RenderOrder.CORPSE</span>
- 
+
         self.engine.message_log.add_message(death_message, death_message_color)</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
@@ -604,7 +604,7 @@ enemy_atk = (0xFF, 0xC0, 0xC0)
 
 player_die = (0xFF, 0x30, 0x30)
 enemy_die = (0xFF, 0xA0, 0x30)
- 
+
 +invalid = (0xFF, 0xFF, 0x00)
 +impossible = (0x80, 0x80, 0x80)
 +error = (0xFF, 0x40, 0x40)
@@ -727,7 +727,7 @@ import tcod
 ...
 
             context.present(root_console)
- 
+
 +           try:
 +               for event in tcod.event.wait():
 +                   context.convert_event(event)
@@ -749,7 +749,7 @@ import tcod
 ...
 
             context.present(root_console)
- 
+
             <span class="new-text">try:
                 for event in tcod.event.wait():
                     context.convert_event(event)
@@ -785,7 +785,7 @@ import tcod
 class EventHandler(tcod.event.EventDispatch[Action]):
     def __init__(self, engine: Engine):
         self.engine = engine
- 
+
 +   def handle_events(self, event: tcod.event.Event) -> None:
 +       self.handle_action(self.dispatch(event))
 
@@ -812,7 +812,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 -       for event in tcod.event.wait():
 -           context.convert_event(event)
 -           self.dispatch(event)
-    
+
     ...
 
 
@@ -876,7 +876,7 @@ import exceptions</span>
 class EventHandler(tcod.event.EventDispatch[Action]):
     def __init__(self, engine: Engine):
         self.engine = engine
- 
+
     <span class="new-text">def handle_events(self, event: tcod.event.Event) -> None:
         self.handle_action(self.dispatch(event))
 
@@ -903,7 +903,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
         <span class="crossed-out-text">for event in tcod.event.wait():</span>
             <span class="crossed-out-text">context.convert_event(event)</span>
             <span class="crossed-out-text">self.dispatch(event)</span>
-    
+
     ...
 
 
@@ -1037,7 +1037,7 @@ So what about when the enemies try doing something impossible? You might want to
 {{< highlight diff >}}
 ...
 from tcod.map import compute_fov
- 
+
 +import exceptions
 from input_handlers import MainGameEventHandler
 from message_log import MessageLog
@@ -1057,7 +1057,7 @@ from message_log import MessageLog
 {{< original-tab >}}
 <pre>...
 from tcod.map import compute_fov
- 
+
 <span class="new-text">import exceptions</span>
 from input_handlers import MainGameEventHandler
 from message_log import MessageLog
@@ -1141,7 +1141,7 @@ So what does this component get attached to? In order to create our health potio
 {{< diff-tab >}}
 {{< highlight diff >}}
 from render_order import RenderOrder
- 
+
 if TYPE_CHECKING:
     from components.ai import BaseAI
 +   from components.consumable import Consumable
@@ -1184,7 +1184,7 @@ if TYPE_CHECKING:
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from render_order import RenderOrder
- 
+
 if TYPE_CHECKING:
     from components.ai import BaseAI
     <span class="new-text">from components.consumable import Consumable</span>
@@ -1298,7 +1298,7 @@ class Action:
     def perform(self) -> None:
         """Invoke the items ability, this action will be given to provide context."""
         self.item.consumable.activate(self)</span>
-        
+
 
 class EscapeAction(Action):
     ...</pre>
@@ -1613,7 +1613,7 @@ class Actor(Entity):
         name: str = "<Unnamed>",
         ai_cls: Type[BaseAI],
         fighter: Fighter,
-+       inventory: Inventory,        
++       inventory: Inventory,
     ):
         super().__init__(
             x=x,
@@ -1927,7 +1927,7 @@ from actions import (
         ...
         elif key == tcod.event.K_v:
             self.engine.event_handler = HistoryViewer(self.engine)
- 
+
 +       elif key == tcod.event.K_g:
 +           action = PickupAction(player)
 
@@ -1948,7 +1948,7 @@ from actions import (
         ...
         elif key == tcod.event.K_v:
             self.engine.event_handler = HistoryViewer(self.engine)
- 
+
         <span class="new-text">elif key == tcod.event.K_g:
             action = PickupAction(player)</span>
 
@@ -2170,7 +2170,7 @@ class AskUserEventHandler(EventHandler):
             x = 40
         else:
             x = 0
-        
+
         y = 0
 
         width = len(self.TITLE) + 4
@@ -2247,7 +2247,7 @@ class WaitAction(Action):
 <span class="new-text">class DropItem(ItemAction):
     def perform(self) -> None:
         self.entity.inventory.drop(self.item)</span>
-    
+
 
 class WaitAction(Action):
     def perform(self) -> None:
@@ -2351,7 +2351,7 @@ All that's left now is to utilize these event handlers, based on the key we pres
         ...
         elif key == tcod.event.K_g:
             action = PickupAction(player)
- 
+
 +       elif key == tcod.event.K_i:
 +           self.engine.event_handler = InventoryActivateHandler(self.engine)
 +       elif key == tcod.event.K_d:
@@ -2365,7 +2365,7 @@ All that's left now is to utilize these event handlers, based on the key we pres
 <pre>        ...
         elif key == tcod.event.K_g:
             action = PickupAction(player)
- 
+
         <span class="new-text">elif key == tcod.event.K_i:
             self.engine.event_handler = InventoryActivateHandler(self.engine)
         elif key == tcod.event.K_d:
@@ -2414,7 +2414,7 @@ class Consumable(BaseComponent):
         `action` is the context for this activation.
         """
         raise NotImplementedError()
-    
+
 +   def consume(self) -> None:
 +       """Remove the consumed item from its containing inventory."""
 +       entity = self.parent
@@ -2469,7 +2469,7 @@ class Consumable(BaseComponent):
         `action` is the context for this activation.
         """
         raise NotImplementedError()
-    
+
     <span class="new-text">def consume(self) -> None:
         """Remove the consumed item from its containing inventory."""
         entity = self.parent

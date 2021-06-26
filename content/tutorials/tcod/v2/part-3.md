@@ -51,14 +51,14 @@ class RectangularRoom:
         self.y1 = y
         self.x2 = x + width
         self.y2 = y + height
-    
+
     @property
     def center(self) -> Tuple[int, int]:
         center_x = int((self.x1 + self.x2) / 2)
         center_y = int((self.y1 + self.y2) / 2)
 
         return center_x, center_y
-    
+
     @property
     def inner(self) -> Tuple[slice, slice]:
         """Return the inner area of this room as a 2D array index."""
@@ -76,7 +76,7 @@ We'll be adding more to this class shortly, but to get us started, that's all we
 
 What's with the + 1 on `self.x1` and `self.y1`? Think about what we're saying when we tell our program that we want a room at coordinates (1, 1) that goes to (6, 6). You might assume that would carve out a room like this one (remember that lists are 0-indexed, so (0, 0) is a wall in this case):
 
-``` 
+```
   0 1 2 3 4 5 6 7
 0 # # # # # # # #
 1 # . . . . . . #
@@ -90,7 +90,7 @@ What's with the + 1 on `self.x1` and `self.y1`? Think about what we're saying wh
 
 That's all fine and good, but what happens if we put a room right next to it? Let's say this room starts at (7, 1) and goes to (9, 6)
 
-``` 
+```
   0 1 2 3 4 5 6 7 8 9 10
 0 # # # # # # # # # # #
 1 # . . . . . . . . . #
@@ -104,7 +104,7 @@ That's all fine and good, but what happens if we put a room right next to it? Le
 
 There's no wall separating the two\! That means that if two rooms are one right next to the other, then there won't be a wall between them\! So long story short, our function needs to take the walls into account when digging out a room. So if we have a rectangle with coordinates x1 = 1, x2 = 6, y1 = 1, and y2 = 6, then the room should actually look like this:
 
-``` 
+```
   0 1 2 3 4 5 6 7
 0 # # # # # # # #
 1 # # # # # # # #
@@ -135,7 +135,7 @@ class RectangularRoom:
         self.y1 = y
         self.x2 = x + width
         self.y2 = y + height
-    
+
     @property
     def inner(self) -> Tuple[slice, slice]:
         """Return the inner area of this room as a 2D array index."""
@@ -167,7 +167,7 @@ class RectangularRoom:
         self.y1 = y
         self.x2 = x + width
         self.y2 = y + height
-    
+
     @property
     def inner(self) -> Tuple[slice, slice]:
         """Return the inner area of this room as a 2D array index."""
@@ -368,7 +368,7 @@ tcod includes a function in its line-of-sight module to draw [Bresenham lines](h
 
 What's with the `yield` lines though? [Yield expressions](https://docs.python.org/3.5/reference/expressions.html#yield-expressions) are an interesting part of Python, which allows you to return a "generator". Essentially, rather than returning the values and exiting the function altogether, we return the values, but keep the local state. This allows the function to pick up where it left off when called again, instead of starting from the beginning, as most functions do.
 
-Why is this helpful? In the next section, we're going to iterate the `x` and `y` values that we receive from the `tunnel_between` function to dig out our tunnel. 
+Why is this helpful? In the next section, we're going to iterate the `x` and `y` values that we receive from the `tunnel_between` function to dig out our tunnel.
 
 Let's put this code to use by drawing a tunnel between our two rooms.
 

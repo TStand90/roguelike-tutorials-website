@@ -67,7 +67,7 @@ def main() -> None:
         root_console = tcod.Console(screen_width, screen_height, order="F")
         while True:
             root_console.print(x=1, y=1, string="@")
-            
+
             context.present(root_console)
 
             for event in tcod.event.wait():
@@ -153,10 +153,10 @@ We need to keep track of the player's position at all times. Since this is a 2D 
 {{< highlight diff >}}
     ...
     screen_height = 50
-+   
++
 +   player_x = int(screen_width / 2)
 +   player_y = int(screen_height / 2)
-+   
++
     tileset = tcod.tileset.load_tilesheet(
         "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
     )
@@ -193,7 +193,7 @@ We also have to modify the command to put the '@' symbol to use these new coordi
         while True:
 -           root_console.print(x=1, y=1, string="@")
 +           root_console.print(x=player_x, y=player_y, string="@")
-        
+
             context.present(root_console)
             ...
 {{</ highlight >}}
@@ -203,7 +203,7 @@ We also have to modify the command to put the '@' symbol to use these new coordi
         while True:
             <span class="crossed-out-text">root_console.print(x=1, y=1, string="@")</span>
             <span class="new-text">root_console.print(x=player_x, y=player_y, string="@")</span>
-        
+
             context.present(root_console)
             ...</pre>
 {{</ original-tab >}}
@@ -378,7 +378,7 @@ def main() -> None:
         "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
     )
 
-+   event_handler = EventHandler()    
++   event_handler = EventHandler()
 
     with tcod.context.new_terminal(
         ...
@@ -389,7 +389,7 @@ def main() -> None:
 -                   raise SystemExit()
 
 +               action = event_handler.dispatch(event)
-                
+
 +               if action is None:
 +                   continue
 
@@ -425,7 +425,7 @@ def main() -> None:
     )
 
     <span class="new-text">event_handler = EventHandler()</span>
-    
+
     with tcod.context.new_terminal(
         ...
 
@@ -435,7 +435,7 @@ def main() -> None:
                     <span class="crossed-out-text">raise SystemExit()</span>
                 <span class="new-text">
                 action = event_handler.dispatch(event)
-                
+
                 if action is None:
                     continue
 

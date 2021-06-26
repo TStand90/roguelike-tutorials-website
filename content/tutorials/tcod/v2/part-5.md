@@ -281,7 +281,7 @@ In order to specify the maximum number of monsters that can be spawned into a ro
 {{< highlight diff >}}
     ...
     max_rooms = 30
-    
+
 +   max_monsters_per_room = 2
 
     tileset = tcod.tileset.load_tilesheet(
@@ -309,7 +309,7 @@ In order to specify the maximum number of monsters that can be spawned into a ro
 {{< original-tab >}}
 <pre>    ...
     max_rooms = 30
-    
+
     <span class="new-text">max_monsters_per_room = 2</span>
 
     tileset = tcod.tileset.load_tilesheet(
@@ -384,7 +384,7 @@ While we haven't written the function yet, let's place our call to it in `genera
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
-    
+
     return dungeon
 {{</ highlight >}}
 {{</ diff-tab >}}
@@ -396,7 +396,7 @@ While we haven't written the function yet, let's place our call to it in `genera
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
-    
+
     return dungeon</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
@@ -554,7 +554,7 @@ class Entity:
         self.color = color
         <span class="new-text">self.name = name
         self.blocks_movement = blocks_movement</span>
-    
+
     <span class="new-text">def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         """Spawn a copy of this instance at the given location."""
         clone = copy.deepcopy(self)
@@ -789,7 +789,7 @@ class EscapeAction(Action):
 
 +       self.dx = dx
 +       self.dy = dy
-    
+
 +   def perform(self, engine: Engine, entity: Entity) -> None:
 +       raise NotImplementedError()
 
@@ -829,7 +829,7 @@ class EscapeAction(Action):
 
         self.dx = dx
         self.dy = dy
-    
+
     def perform(self, engine: Engine, entity: Entity) -> None:
         raise NotImplementedError()</span>
 
@@ -872,7 +872,7 @@ class ActionWithDirection(Action):
 
         self.dx = dx
         self.dy = dy
-    
+
     def perform(self, engine: Engine, entity: Entity) -> None:
         raise NotImplementedError()
 
@@ -910,7 +910,7 @@ class MovementAction(ActionWithDirection):
 
         self.dx = dx
         self.dy = dy
-    
+
     def perform(self, engine: Engine, entity: Entity) -> None:
         raise NotImplementedError()
 

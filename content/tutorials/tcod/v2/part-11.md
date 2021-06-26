@@ -16,7 +16,7 @@ enemy_atk = (0xFF, 0xC0, 0xC0)
 needs_target = (0x3F, 0xFF, 0xFF)
 status_effect_applied = (0x3F, 0xFF, 0x3F)
 +descend = (0x9F, 0x3F, 0xFF)
- 
+
 player_die = (0xFF, 0x30, 0x30)
 enemy_die = (0xFF, 0xA0, 0x30)
 ...
@@ -28,7 +28,7 @@ enemy_atk = (0xFF, 0xC0, 0xC0)
 needs_target = (0x3F, 0xFF, 0xFF)
 status_effect_applied = (0x3F, 0xFF, 0x3F)
 <span class="new-text">descend = (0x9F, 0x3F, 0xFF)</span>
- 
+
 player_die = (0xFF, 0x30, 0x30)
 enemy_die = (0xFF, 0xA0, 0x30)
 ...</pre>
@@ -87,7 +87,7 @@ class GameMap:
         self.explored = np.full(
             (width, height), fill_value=False, order="F"
         )  # Tiles the player has seen before
- 
+
 +       self.downstairs_location = (0, 0)
 
     @property
@@ -104,7 +104,7 @@ class GameMap:
         self.explored = np.full(
             (width, height), fill_value=False, order="F"
         )  # Tiles the player has seen before
- 
+
         <span class="new-text">self.downstairs_location = (0, 0)</span>
 
     @property
@@ -120,7 +120,7 @@ Of course, `(0, 0)` won't be the actual location of the stairs. In order to actu
 {{< highlight diff >}}
     ...
     rooms: List[RectangularRoom] = []
- 
+
 +   center_of_last_room = (0, 0)
 
     for r in range(max_rooms):
@@ -128,24 +128,24 @@ Of course, `(0, 0)` won't be the actual location of the stairs. In order to actu
             ...
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
                 dungeon.tiles[x, y] = tile_types.floor
- 
+
 +           center_of_last_room = new_room.center
 
         place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
- 
+
 +       dungeon.tiles[center_of_last_room] = tile_types.down_stairs
 +       dungeon.downstairs_location = center_of_last_room
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
-    
+
     return dungeon
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>    ...
     rooms: List[RectangularRoom] = []
- 
+
     <span class="new-text">center_of_last_room = (0, 0)</span>
 
     for r in range(max_rooms):
@@ -153,17 +153,17 @@ Of course, `(0, 0)` won't be the actual location of the stairs. In order to actu
             ...
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
                 dungeon.tiles[x, y] = tile_types.floor
- 
+
             <span class="new-text">center_of_last_room = new_room.center</span>
 
         place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
- 
+
         <span class="new-text">dungeon.tiles[center_of_last_room] = tile_types.down_stairs
         dungeon.downstairs_location = center_of_last_room</span>
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
-    
+
     return dungeon</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
@@ -292,33 +292,33 @@ In order to utilize the new `GameWorld` class, we'll need to add it to the `Engi
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-... 
+...
 if TYPE_CHECKING:
     from entity import Actor
 -   from game_map import GameMap
 +   from game_map import GameMap, GameWorld
- 
- 
+
+
 class Engine:
     game_map: GameMap
 +   game_world: GameWorld
- 
+
     def __init__(self, player: Actor):
         ...
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>... 
+<pre>...
 if TYPE_CHECKING:
     from entity import Actor
     <span class="crossed-out-text">from game_map import GameMap</span>
     <span class="new-text">from game_map import GameMap, GameWorld</span>
- 
- 
+
+
 class Engine:
     game_map: GameMap
     <span class="new-text">game_world: GameWorld</span>
- 
+
     def __init__(self, player: Actor):
         ...</pre>
 {{</ original-tab >}}
@@ -336,11 +336,11 @@ import entity_factories
 +from game_map import GameWorld
 import input_handlers
 -from procgen import generate_dungeon
-... 
- 
+...
+
     ...
     engine = Engine(player=player)
- 
+
 -   engine.game_map = generate_dungeon(
 +   engine.game_world = GameWorld(
 +       engine=engine,
@@ -367,11 +367,11 @@ import entity_factories
 <span class="new-text">from game_map import GameWorld</span>
 import input_handlers
 <span class="crossed-out-text">from procgen import generate_dungeon</span>
-... 
- 
+...
+
     ...
     engine = Engine(player=player)
- 
+
     <span class="crossed-out-text">engine.game_map = generate_dungeon(</span>
     <span class="new-text">engine.game_world = GameWorld(
         engine=engine,</span>
@@ -400,8 +400,8 @@ In order to actually take the stairs, we'll need to add an action and a way for 
 {{< highlight diff >}}
 class WaitAction(Action):
     pass
- 
- 
+
+
 +class TakeStairsAction(Action):
 +   def perform(self) -> None:
 +       """
@@ -424,8 +424,8 @@ class ActionWithDirection(Action):
 {{< original-tab >}}
 <pre>class WaitAction(Action):
     pass
- 
- 
+
+
 <span class="new-text">class TakeStairsAction(Action):
     def perform(self) -> None:
         """
@@ -454,12 +454,12 @@ To call this action, the player should be able to press the `>` key. This can be
 class MainGameEventHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
- 
+
         key = event.sym
 +       modifier = event.mod
- 
+
         player = self.engine.player
- 
+
 +       if key == tcod.event.K_PERIOD and modifier & (
 +           tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
 +       ):
@@ -473,12 +473,12 @@ class MainGameEventHandler(EventHandler):
 <pre>class MainGameEventHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
- 
+
         key = event.sym
         <span class="new-text">modifier = event.mod</span>
- 
+
         player = self.engine.player
- 
+
         <span class="new-text">if key == tcod.event.K_PERIOD and modifier & (
             tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
         ):
@@ -504,10 +504,10 @@ Add this function to `render_functions.py`:
 {{< diff-tab >}}
 {{< highlight diff >}}
 from __future__ import annotations
- 
+
 -from typing import TYPE_CHECKING
 +from typing import Tuple, TYPE_CHECKING
- 
+
 import color
 ...
 
@@ -516,8 +516,8 @@ def render_bar(
     console: Console, current_value: int, maximum_value: int, total_width: int
 ) -> None:
     ...
- 
- 
+
+
 +def render_dungeon_level(
 +   console: Console, dungeon_level: int, location: Tuple[int, int]
 +) -> None:
@@ -537,10 +537,10 @@ def render_names_at_mouse_location(
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from __future__ import annotations
- 
+
 <span class="crossed-out-text">from typing import TYPE_CHECKING</span>
 <span class="new-text">from typing import Tuple, TYPE_CHECKING</span>
- 
+
 import color
 ...
 
@@ -549,8 +549,8 @@ def render_bar(
     console: Console, current_value: int, maximum_value: int, total_width: int
 ) -> None:
     ...
- 
- 
+
+
 <span class="new-text">def render_dungeon_level(
     console: Console, dungeon_level: int, location: Tuple[int, int]
 ) -> None:
@@ -576,7 +576,7 @@ To call this function, we can edit the `Engine`'s `render` function, like so:
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-... 
+...
 import exceptions
 from message_log import MessageLog
 -from render_functions import (
@@ -596,7 +596,7 @@ class Engine:
         self.game_map.render(console)
 
         self.message_log.render(console=console, x=21, y=45, width=40, height=5)
- 
+
 -       render_bar(
 +       render_functions.render_bar(
             console=console,
@@ -604,7 +604,7 @@ class Engine:
             maximum_value=self.player.fighter.max_hp,
             total_width=20,
         )
- 
+
 -       render_names_at_mouse_location(console=console, x=21, y=44, engine=self)
 +       render_functions.render_dungeon_level(
 +           console=console,
@@ -621,7 +621,7 @@ class Engine:
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>... 
+<pre>...
 import exceptions
 from message_log import MessageLog
 <span class="crossed-out-text">from render_functions import (</span>
@@ -641,7 +641,7 @@ class Engine:
         self.game_map.render(console)
 
         self.message_log.render(console=console, x=21, y=45, width=40, height=5)
- 
+
         <span class="crossed-out-text">render_bar(</span>
         <span class="new-text">render_functions.render_bar(</span>
             console=console,
@@ -649,7 +649,7 @@ class Engine:
             maximum_value=self.player.fighter.max_hp,
             total_width=20,
         )
- 
+
         <span class="crossed-out-text">render_names_at_mouse_location(console=console, x=21, y=44, engine=self)</span>
         <span class="new-text">render_functions.render_dungeon_level(
             console=console,
@@ -660,7 +660,7 @@ class Engine:
         render_functions.render_names_at_mouse_location(
             console=console, x=21, y=44, engine=self
         )</span>
- 
+
     def save_as(self, filename: str) -> None:
         ...</pre>
 {{</ original-tab >}}
@@ -848,7 +848,7 @@ if TYPE_CHECKING:
     from components.inventory import Inventory
 +   from components.level import Level
     from game_map import GameMap
- 
+
 T = TypeVar("T", bound="Entity")
 ...
 
@@ -900,7 +900,7 @@ class Actor(Entity):
     from components.inventory import Inventory
     <span class="new-text">from components.level import Level</span>
     from game_map import GameMap
- 
+
 T = TypeVar("T", bound="Entity")
 ...
 
@@ -1042,7 +1042,7 @@ class Fighter(BaseComponent):
         ...
 
         self.engine.message_log.add_message(death_message, death_message_color)
- 
+
 +       self.engine.player.level.add_xp(self.parent.level.xp_given)
 
     def heal(self, amount: int) -> int:
@@ -1055,7 +1055,7 @@ class Fighter(BaseComponent):
         ...
 
         self.engine.message_log.add_message(death_message, death_message_color)
- 
+
         <span class="new-text">self.engine.player.level.add_xp(self.parent.level.xp_given)</span>
 
     def heal(self, amount: int) -> int:
@@ -1211,7 +1211,7 @@ class InventoryEventHandler(AskUserEventHandler):
             return None
 
         return super().ev_keydown(event)
-        
+
     def ev_mousebuttondown(
         self, event: tcod.event.MouseButtonDown
     ) -> Optional[ActionOrHandler]:

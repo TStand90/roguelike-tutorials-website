@@ -123,7 +123,7 @@ max_monsters_by_floor = [
             current_value = value
 
     return current_value</span>
-    
+
 
 class RectangularRoom:
     ...</pre>
@@ -147,7 +147,7 @@ Using this function is quite simple: we simply remove the `maximum_monsters` and
 +   number_of_items = random.randint(
 +       0, get_max_value_for_floor(max_items_by_floor, floor_number)
 +   )
- 
+
     for i in range(number_of_monsters):
         ...
 
@@ -167,10 +167,10 @@ def generate_dungeon(
 
             ...
             center_of_last_room = new_room.center
- 
+
 -       place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
 +       place_entities(new_room, dungeon, engine.game_world.current_floor)
- 
+
         dungeon.tiles[center_of_last_room] = tile_types.down_stairs
         dungeon.downstairs_location = center_of_last_room
 {{</ highlight >}}
@@ -188,7 +188,7 @@ def generate_dungeon(
     number_of_items = random.randint(
         0, get_max_value_for_floor(max_items_by_floor, floor_number)
     )</span>
- 
+
     for i in range(number_of_monsters):
         ...
 
@@ -208,10 +208,10 @@ def generate_dungeon(
 
             ...
             center_of_last_room = new_room.center
- 
+
         <span class="crossed-out-text">place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)</span>
         <span class="new-text">place_entities(new_room, dungeon, engine.game_world.current_floor)</span>
- 
+
         dungeon.tiles[center_of_last_room] = tile_types.down_stairs
         dungeon.downstairs_location = center_of_last_room</pre>
 {{</ original-tab >}}
@@ -417,17 +417,17 @@ First, we need to define our weights for the entity types, along with the minimu
 {{< diff-tab >}}
 {{< highlight diff >}}
 from __future__ import annotations
- 
+
 import random
 -from typing import Iterator, List, Tuple, TYPE_CHECKING
 +from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
- 
+
 import tcod
 
 import entity_factories
 from game_map import GameMap
 import tile_types
- 
+
 if TYPE_CHECKING:
     from engine import Engine
 +   from entity import Entity
@@ -465,17 +465,17 @@ def get_max_value_for_floor(
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from __future__ import annotations
- 
+
 import random
 <span class="crossed-out-text">from typing import Iterator, List, Tuple, TYPE_CHECKING</span>
 <span class="new-text">from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING</span>
- 
+
 import tcod
 
 import entity_factories
 from game_map import GameMap
 import tile_types
- 
+
 if TYPE_CHECKING:
     from engine import Engine
     <span class="new-text">from entity import Entity</span>
@@ -613,7 +613,7 @@ def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) 
     number_of_items = random.randint(
         0, get_weight_for_floor(max_items_by_floor, floor_number)
     )
- 
+
 +   monsters: List[Entity] = get_entities_at_random(
 +       enemy_chances, number_of_monsters, floor_number
 +   )
@@ -624,18 +624,18 @@ def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) 
 -   for i in range(number_of_monsters):
 -       x = random.randint(room.x1 + 1, room.x2 - 1)
 -       y = random.randint(room.y1 + 1, room.y2 - 1)
- 
+
 -       if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
 -           if random.random() < 0.8:
 -               entity_factories.orc.spawn(dungeon, x, y)
 -           else:
 -               entity_factories.troll.spawn(dungeon, x, y)
- 
+
 -   for i in range(number_of_items):
 +   for entity in monsters + items:
         x = random.randint(room.x1 + 1, room.x2 - 1)
         y = random.randint(room.y1 + 1, room.y2 - 1)
- 
+
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
 -           item_chance = random.random()
 
@@ -667,11 +667,11 @@ def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) 
     items: List[Entity] = get_entities_at_random(
         item_chances, number_of_items, floor_number
     )</span>
- 
+
     <span class="crossed-out-text">for i in range(number_of_monsters):</span>
         <span class="crossed-out-text">x = random.randint(room.x1 + 1, room.x2 - 1)</span>
         <span class="crossed-out-text">y = random.randint(room.y1 + 1, room.y2 - 1)</span>
- 
+
         <span class="crossed-out-text">if not any(entity.x == x and entity.y == y for entity in dungeon.entities):</span>
             <span class="crossed-out-text">if random.random() < 0.8:</span>
                 <span class="crossed-out-text">entity_factories.orc.spawn(dungeon, x, y)</span>
@@ -682,7 +682,7 @@ def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) 
     <span class="new-text">for entity in monsters + items:</span>
         x = random.randint(room.x1 + 1, room.x2 - 1)
         y = random.randint(room.y1 + 1, room.y2 - 1)
- 
+
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             <span class="crossed-out-text">item_chance = random.random()</span>
 

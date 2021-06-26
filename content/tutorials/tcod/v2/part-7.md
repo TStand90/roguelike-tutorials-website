@@ -273,7 +273,7 @@ If we are allowing stacking, and the added message matches the previous message,
         the `console`.
         """
         self.render_messages(console, x, y, width, height, self.messages)
-    
+
     @staticmethod
     def render_messages(
         console: tcod.Console,
@@ -459,7 +459,7 @@ if TYPE_CHECKING:
 +       if self.entity is self.engine.player:
 +           attack_color = color.player_atk
 +       else:
-+           attack_color = color.enemy_atk        
++           attack_color = color.enemy_atk
 
         if damage > 0:
 -           print(f"{attack_desc} for {damage} hit points.")
@@ -592,7 +592,7 @@ Edit `main.py` like this:
 +           engine.event_handler.on_render(console=root_console)
 +           context.present(root_console)
 -           engine.render(console=root_console, context=context)
- 
+
 +           engine.event_handler.handle_events(context)
 -           engine.event_handler.handle_events()
 {{</ highlight >}}
@@ -604,7 +604,7 @@ Edit `main.py` like this:
             engine.event_handler.on_render(console=root_console)
             context.present(root_console)</span>
             <span class="crossed-out-text">engine.render(console=root_console, context=context)</span>
- 
+
             <span class="new-text">engine.event_handler.handle_events(context)</span>
             <span class="crossed-out-text">engine.event_handler.handle_events()</span></pre>
 {{</ original-tab >}}
@@ -987,7 +987,7 @@ from message_log import MessageLog
 
 if TYPE_CHECKING:
     ...
-    
+
     ...
     def render(self, console: Console) -> None:
         self.game_map.render(console)

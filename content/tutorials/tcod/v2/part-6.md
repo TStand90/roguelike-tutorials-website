@@ -65,7 +65,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 
     def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
         ...
-    
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
         action: Optional[Action] = None
 
@@ -124,7 +124,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 
     def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
         ...
-    
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
         action: Optional[Action] = None
 
@@ -241,7 +241,7 @@ class MovementAction(ActionWithDirection):
 -   def perform(self, engine: Engine, entity: Entity) -> None:
 -       dest_x = entity.x + self.dx
 -       dest_y = entity.y + self.dy
- 
+
 +       if not self.engine.game_map.in_bounds(dest_x, dest_y):
 -       if not engine.game_map.in_bounds(dest_x, dest_y):
             return  # Destination is out of bounds.
@@ -251,7 +251,7 @@ class MovementAction(ActionWithDirection):
 +       if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
 -       if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
             return  # Destination is blocked by an entity.
- 
+
 +       self.entity.move(self.dx, self.dy)
 -       entity.move(self.dx, self.dy)
 
@@ -266,7 +266,7 @@ class BumpAction(ActionWithDirection):
 
 -       if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
 -           return MeleeAction(self.dx, self.dy).perform(engine, entity)
- 
+
         else:
 +           return MovementAction(self.entity, self.dx, self.dy).perform()
 -           return MovementAction(self.dx, self.dy).perform(engine, entity)
@@ -358,7 +358,7 @@ class MovementAction(ActionWithDirection):
     <span class="crossed-out-text">def perform(self, engine: Engine, entity: Entity) -> None:</span>
         <span class="crossed-out-text">dest_x = entity.x + self.dx</span>
         <span class="crossed-out-text">dest_y = entity.y + self.dy</span>
- 
+
         <span class="new-text">if not self.engine.game_map.in_bounds(dest_x, dest_y):</span>
         <span class="crossed-out-text">if not engine.game_map.in_bounds(dest_x, dest_y):</span>
             return  # Destination is out of bounds.
@@ -368,7 +368,7 @@ class MovementAction(ActionWithDirection):
         <span class="new-text">if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):</span>
         <span class="crossed-out-text">if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):</span>
             return  # Destination is blocked by an entity.
- 
+
         <span class="new-text">self.entity.move(self.dx, self.dy)</span>
         <span class="crossed-out-text">entity.move(self.dx, self.dy)</span>
 
@@ -383,7 +383,7 @@ class BumpAction(ActionWithDirection):
 
         <span class="crossed-out-text">if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):</span>
             <span class="crossed-out-text">return MeleeAction(self.dx, self.dy).perform(engine, entity)</span>
- 
+
         else:
             <span class="new-text">return MovementAction(self.entity, self.dx, self.dy).perform()</span>
             <span class="crossed-out-text">return MovementAction(self.dx, self.dy).perform(engine, entity)</span></pre>
@@ -398,12 +398,12 @@ class BumpAction(ActionWithDirection):
 from __future__ import annotations
 
 from typing import Iterable, Optional, TYPE_CHECKING
- 
+
 import numpy as np  # type: ignore
 from tcod.console import Console
- 
+
 import tile_types
- 
+
 if TYPE_CHECKING:
 +   from engine import Engine
     from entity import Entity
@@ -418,7 +418,7 @@ class GameMap:
         self.width, self.height = width, height
         self.entities = set(entities)
         self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
- 
+
 -       self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
 +       self.visible = np.full(
 +           (width, height), fill_value=False, order="F"
@@ -427,7 +427,7 @@ class GameMap:
 +       self.explored = np.full(
 +           (width, height), fill_value=False, order="F"
 +       )  # Tiles the player has seen before
- 
+
 -   def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
 +   def get_blocking_entity_at_location(
 +       self, location_x: int, location_y: int,
@@ -440,7 +440,7 @@ class GameMap:
 +               and entity.y == location_y
 +           ):
                 return entity
- 
+
         return None
 
     def in_bounds(self, x: int, y: int) -> bool:
@@ -468,12 +468,12 @@ class GameMap:
 <pre>from __future__ import annotations
 
 from typing import Iterable, Optional, TYPE_CHECKING
- 
+
 import numpy as np  # type: ignore
 from tcod.console import Console
- 
+
 import tile_types
- 
+
 if TYPE_CHECKING:
     <span class="new-text">from engine import Engine</span>
     from entity import Entity
@@ -488,7 +488,7 @@ class GameMap:
         self.width, self.height = width, height
         self.entities = set(entities)
         self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
- 
+
         <span class="crossed-out-text">self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see</span>
         <span class="new-text">self.visible = np.full(
             (width, height), fill_value=False, order="F"
@@ -497,7 +497,7 @@ class GameMap:
         <span class="new-text">self.explored = np.full(
             (width, height), fill_value=False, order="F"
         )  # Tiles the player has seen before</span>
- 
+
     <span class="crossed-out-text">def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:</span>
     <span class="new-text">def get_blocking_entity_at_location(
         self, location_x: int, location_y: int,
@@ -510,7 +510,7 @@ class GameMap:
                 and entity.y == location_y
             ):</span>
                 return entity
- 
+
         return None
 
     def in_bounds(self, x: int, y: int) -> bool:
@@ -544,7 +544,7 @@ class GameMap:
 import copy
 
 import tcod
- 
+
 from engine import Engine
 import entity_factories
 -from input_handlers import EventHandler
@@ -553,10 +553,10 @@ from procgen import generate_dungeon
     ...
 +   player = copy.deepcopy(entity_factories.player)
 -   event_handler = EventHandler()
- 
+
 +   engine = Engine(player=player)
 -   player = copy.deepcopy(entity_factories.player)
- 
+
 +   engine.game_map = generate_dungeon(
 -   game_map = generate_dungeon(
         max_rooms=max_rooms,
@@ -571,12 +571,12 @@ from procgen import generate_dungeon
 +   engine.update_fov()
 
 -   engine = Engine(event_handler=event_handler, game_map=game_map, player=player)
- 
+
     with tcod.context.new_terminal(
         ...
         while True:
             engine.render(console=root_console, context=context)
- 
+
 +           engine.event_handler.handle_events()
 -           events = tcod.event.wait()
 
@@ -593,7 +593,7 @@ if __name__ == "__main__":
 import copy
 
 import tcod
- 
+
 from engine import Engine
 import entity_factories
 <span class="crossed-out-text">from input_handlers import EventHandler</span>
@@ -602,10 +602,10 @@ from procgen import generate_dungeon
     ...
     <span class="new-text">player = copy.deepcopy(entity_factories.player)</span>
     <span class="crossed-out-text">event_handler = EventHandler()</span>
- 
+
     <span class="new-text">engine = Engine(player=player)</span>
     <span class="crossed-out-text">player = copy.deepcopy(entity_factories.player)</span>
- 
+
     <span class="new-text">engine.game_map = generate_dungeon(</span>
     <span class="crossed-out-text">game_map = generate_dungeon(</span>
         max_rooms=max_rooms,
@@ -620,12 +620,12 @@ from procgen import generate_dungeon
     <span class="new-text">engine.update_fov()</span>
 
     <span class="crossed-out-text">engine = Engine(event_handler=event_handler, game_map=game_map, player=player)</span>
- 
+
     with tcod.context.new_terminal(
         ...
         while True:
             engine.render(console=root_console, context=context)
- 
+
             <span class="new-text">engine.event_handler.handle_events()</span>
             <span class="crossed-out-text">events = tcod.event.wait()</span>
 
@@ -658,7 +658,7 @@ class Entity:
     """
     A generic object to represent players, enemies, items, etc.
     """
- 
+
 +   gamemap: GameMap
 
     def __init__(
@@ -681,7 +681,7 @@ class Entity:
 +           # If gamemap isn't provided now then it will be set later.
 +           self.gamemap = gamemap
 +           gamemap.entities.add(self)
- 
+
     def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         """Spawn a copy of this instance at the given location."""
         clone = copy.deepcopy(self)
@@ -690,7 +690,7 @@ class Entity:
 +       clone.gamemap = gamemap
         gamemap.entities.add(clone)
         return clone
-    
+
 +   def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
 +       """Place this entity at a new location.  Handles moving across GameMaps."""
 +       self.x = x
@@ -719,7 +719,7 @@ class Entity:
     """
     A generic object to represent players, enemies, items, etc.
     """
- 
+
     <span class="new-text">gamemap: GameMap</span>
 
     def __init__(
@@ -742,7 +742,7 @@ class Entity:
             # If gamemap isn't provided now then it will be set later.
             self.gamemap = gamemap
             gamemap.entities.add(self)</span>
- 
+
     def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         """Spawn a copy of this instance at the given location."""
         clone = copy.deepcopy(self)
@@ -751,7 +751,7 @@ class Entity:
         <span class="new-text">clone.gamemap = gamemap</span>
         gamemap.entities.add(clone)
         return clone
-    
+
     <span class="new-text">def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
         """Place this entity at a new location.  Handles moving across GameMaps."""
         self.x = x
@@ -770,8 +770,8 @@ class Entity:
 {{< diff-tab >}}
 {{< highlight diff >}}
 import tile_types
- 
- 
+
+
 if TYPE_CHECKING:
 +   from engine import Engine
 -   from entity import Entity
@@ -791,10 +791,10 @@ def generate_dungeon(
 +   player = engine.player
 +   dungeon = GameMap(engine, map_width, map_height, entities=[player])
 -   dungeon = GameMap(map_width, map_height, entities=[player])
- 
+
     rooms: List[RectangularRoom] = []
     ...
- 
+
         ...
         if len(rooms) == 0:
             # The first room, where the player starts.
@@ -806,8 +806,8 @@ def generate_dungeon(
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>import tile_types
- 
- 
+
+
 if TYPE_CHECKING:
     <span class="new-text">from engine import Engine</span>
     <span class="crossed-out-text">from entity import Entity</span>
@@ -827,10 +827,10 @@ def generate_dungeon(
     <span class="new-text">player = engine.player</span>
     <span class="new-text">dungeon = GameMap(engine, map_width, map_height, entities=[player])</span>
     <span class="crossed-out-text">dungeon = GameMap(map_width, map_height, entities=[player])</span>
- 
+
     rooms: List[RectangularRoom] = []
     ...
- 
+
         ...
         if len(rooms) == 0:
             # The first room, where the player starts.
@@ -851,7 +851,7 @@ def generate_dungeon(
 
 +from typing import TYPE_CHECKING
 -from typing import Iterable, Any
- 
+
 from tcod.context import Context
 from tcod.console import Console
 from tcod.map import compute_fov
@@ -859,15 +859,15 @@ from tcod.map import compute_fov
 -from entity import Entity
 -from game_map import GameMap
 from input_handlers import EventHandler
- 
+
 +if TYPE_CHECKING:
 +   from entity import Entity
 +   from game_map import GameMap
- 
- 
+
+
 class Engine:
 +   game_map: GameMap
- 
+
 +   def __init__(self, player: Entity):
 +       self.event_handler: EventHandler = EventHandler(self)
 +       self.player = player
@@ -876,7 +876,7 @@ class Engine:
 -       self.game_map = game_map
 -       self.player = player
 -       self.update_fov()
- 
+
     def handle_enemy_turns(self) -> None:
         for entity in self.game_map.entities - {self.player}:
             print(f'The {entity.name} wonders when it will get to take a real turn.')
@@ -891,7 +891,7 @@ class Engine:
 -           action.perform(self, self.player)
 -           self.handle_enemy_turns()
 -           self.update_fov()  # Update the FOV before the players next action.
- 
+
     def update_fov(self) -> None:
         ...
 {{</ highlight >}}
@@ -901,7 +901,7 @@ class Engine:
 
 <span class="new-text">from typing import TYPE_CHECKING</span>
 <span class="crossed-out-text">from typing import Iterable, Any</span>
- 
+
 from tcod.context import Context
 from tcod.console import Console
 from tcod.map import compute_fov
@@ -909,15 +909,15 @@ from tcod.map import compute_fov
 <span class="crossed-out-text">from entity import Entity</span>
 <span class="crossed-out-text">from game_map import GameMap</span>
 from input_handlers import EventHandler
- 
+
 <span class="new-text">if TYPE_CHECKING:
     from entity import Entity
     from game_map import GameMap</span>
- 
- 
+
+
 class Engine:
     <span class="new-text">game_map: GameMap</span>
- 
+
     <span class="new-text">def __init__(self, player: Entity):
         self.event_handler: EventHandler = EventHandler(self)
         self.player = player</span>
@@ -926,7 +926,7 @@ class Engine:
         <span class="crossed-out-text">self.game_map = game_map</span>
         <span class="crossed-out-text">self.player = player</span>
         <span class="crossed-out-text">self.update_fov()</span>
- 
+
     def handle_enemy_turns(self) -> None:
         for entity in self.game_map.entities - {self.player}:
             print(f'The {entity.name} wonders when it will get to take a real turn.')
@@ -941,7 +941,7 @@ class Engine:
             <span class="crossed-out-text">action.perform(self, self.player)</span>
             <span class="crossed-out-text">self.handle_enemy_turns()</span>
             <span class="crossed-out-text">self.update_fov()  # Update the FOV before the players next action.</span>
- 
+
     def update_fov(self) -> None:
         ...</pre>
 {{</ original-tab >}}
@@ -1343,7 +1343,7 @@ With all that in place, we'll need to refactor our `entity_factories.py` file to
 +from components.fighter import Fighter
 +from entity import Actor
 -from entity import Entity
- 
+
 +player = Actor(
 +   char="@",
 +   color=(255, 255, 255),
@@ -1352,7 +1352,7 @@ With all that in place, we'll need to refactor our `entity_factories.py` file to
 +   fighter=Fighter(hp=30, defense=2, power=5),
 +)
 -player = Entity(char="@", color=(255, 255, 255), name="Player", blocks_movement=True)
- 
+
 +orc = Actor(
 +   char="o",
 +   color=(63, 127, 63),
@@ -1376,7 +1376,7 @@ With all that in place, we'll need to refactor our `entity_factories.py` file to
 from components.fighter import Fighter
 from entity import Actor</span>
 <span class="crossed-out-text">from entity import Entity</span>
- 
+
 <span class="new-text">player = Actor(
     char="@",
     color=(255, 255, 255),
@@ -1385,7 +1385,7 @@ from entity import Actor</span>
     fighter=Fighter(hp=30, defense=2, power=5),
 )</span>
 <span class="crossed-out-text">player = Entity(char="@", color=(255, 255, 255), name="Player", blocks_movement=True)</span>
- 
+
 <span class="new-text">orc = Actor(
     char="o",
     color=(63, 127, 63),
@@ -1455,7 +1455,7 @@ if TYPE_CHECKING:
 class GameMap:
     def __init__(
         ...
-    
+
 +   @property
 +   def actors(self) -> Iterator[Actor]:
 +       """Iterate over this maps living actors."""
@@ -1464,10 +1464,10 @@ class GameMap:
 +           for entity in self.entities
 +           if isinstance(entity, Actor) and entity.is_alive
 +       )
-    
+
     def get_blocking_entity_at_location(
         ...
-    
+
 +   def get_actor_at_location(self, x: int, y: int) -> Optional[Actor]:
 +       for actor in self.actors:
 +           if actor.x == x and actor.y == y:
@@ -1495,7 +1495,7 @@ if TYPE_CHECKING:
 class GameMap:
     def __init__(
         ...
-    
+
     <span class="new-text">@property
     def actors(self) -> Iterator[Actor]:
         """Iterate over this maps living actors."""
@@ -1504,10 +1504,10 @@ class GameMap:
             for entity in self.entities
             if isinstance(entity, Actor) and entity.is_alive
         )</span>
-    
+
     def get_blocking_entity_at_location(
         ...
-    
+
     <span class="new-text">def get_actor_at_location(self, x: int, y: int) -> Optional[Actor]:
         for actor in self.actors:
             if actor.x == x and actor.y == y:
@@ -1707,7 +1707,7 @@ class ActionWithDirection(Action):
 
         self.dx = dx
         self.dy = dy
-    
+
     @property
     def dest_xy(self) -> Tuple[int, int]:
         """Returns this actions destination."""
@@ -1717,7 +1717,7 @@ class ActionWithDirection(Action):
     def blocking_entity(self) -> Optional[Entity]:
         """Return the blocking entity at this actions destination.."""
         return self.engine.game_map.get_blocking_entity_at_location(*self.dest_xy)
-    
+
 +   @property
 +   def target_actor(self) -> Optional[Actor]:
 +       """Return the actor at this actions destination."""
@@ -1733,7 +1733,7 @@ class MeleeAction(ActionWithDirection):
 -       target = self.blocking_entity
         if not target:
             return  # No entity to attack.
- 
+
 +       damage = self.entity.fighter.power - target.fighter.defense
 
 +       attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
@@ -1786,7 +1786,7 @@ class ActionWithDirection(Action):
 
         self.dx = dx
         self.dy = dy
-    
+
     @property
     def dest_xy(self) -> Tuple[int, int]:
         """Returns this actions destination."""
@@ -1796,7 +1796,7 @@ class ActionWithDirection(Action):
     def blocking_entity(self) -> Optional[Entity]:
         """Return the blocking entity at this actions destination.."""
         return self.engine.game_map.get_blocking_entity_at_location(*self.dest_xy)
-    
+
     <span class="new-text">@property
     def target_actor(self) -> Optional[Actor]:
         """Return the actor at this actions destination."""
@@ -1812,7 +1812,7 @@ class MeleeAction(ActionWithDirection):
         <span class="crossed-out-text">target = self.blocking_entity</span>
         if not target:
             return  # No entity to attack.
- 
+
         <span class="new-text">damage = self.entity.fighter.power - target.fighter.defense
 
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
@@ -2279,7 +2279,7 @@ class Engine:
 
     def render(self, console: Console, context: Context) -> None:
         self.game_map.render(console)
- 
+
 +       console.print(
 +           x=1,
 +           y=47,
@@ -2304,10 +2304,10 @@ class Engine:
     <span class="crossed-out-text">def __init__(self, player: Entity):</span>
     <span class="new-text">def __init__(self, player: Actor):</span>
         ...
-    
+
     def render(self, console: Console, context: Context) -> None:
         self.game_map.render(console)
- 
+
         <span class="new-text">console.print(
             x=1,
             y=47,
@@ -2337,7 +2337,7 @@ Open up `input_handlers.py` and make the following adjustments:
 class EventHandler(tcod.event.EventDispatch[Action]):
     def __init__(self, engine: Engine):
         self.engine = engine
-    
+
 +   def handle_events(self) -> None:
 +       raise NotImplementedError()
 
@@ -2407,7 +2407,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 <pre>class EventHandler(tcod.event.EventDispatch[Action]):
     def __init__(self, engine: Engine):
         self.engine = engine
-    
+
     <span class="new-text">def handle_events(self) -> None:
         raise NotImplementedError()
 

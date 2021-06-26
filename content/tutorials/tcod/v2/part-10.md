@@ -66,14 +66,14 @@ To make the change, start by adding the following to `input_handlers.py`:
 {{< diff-tab >}}
 {{< highlight diff >}}
 from __future__ import annotations
- 
+
 -from typing import Callable, Optional, Tuple, TYPE_CHECKING
 +from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union
- 
+
 import tcod
 ...
 
-... 
+...
 CONFIRM_KEYS = {
     tcod.event.K_RETURN,
     tcod.event.K_KP_ENTER,
@@ -107,14 +107,14 @@ CONFIRM_KEYS = {
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from __future__ import annotations
- 
+
 <span class="crossed-out-text">from typing import Callable, Optional, Tuple, TYPE_CHECKING</span>
 <span class="new-text">from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union</span>
- 
+
 import tcod
 ...
 
-... 
+...
 CONFIRM_KEYS = {
     tcod.event.K_RETURN,
     tcod.event.K_KP_ENTER,
@@ -160,7 +160,7 @@ We also need to adjust `EventHandler`:
 +class EventHandler(BaseEventHandler):
     def __init__(self, engine: Engine):
         self.engine = engine
- 
+
 -   def handle_events(self, event: tcod.event.Event) -> None:
 -       self.handle_action(self.dispatch(event))
 +   def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
@@ -178,7 +178,7 @@ We also need to adjust `EventHandler`:
 
     def handle_action(self, action: Optional[Action]) -> bool:
         ...
- 
+
 -   def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
 -       raise SystemExit()
 
@@ -191,7 +191,7 @@ We also need to adjust `EventHandler`:
 <span class="new-text">class EventHandler(BaseEventHandler):</span>
     def __init__(self, engine: Engine):
         self.engine = engine
- 
+
     <span class="crossed-out-text">def handle_events(self, event: tcod.event.Event) -> None:</span>
         <span class="crossed-out-text">self.handle_action(self.dispatch(event))</span>
     <span class="new-text">def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
@@ -209,7 +209,7 @@ We also need to adjust `EventHandler`:
 
     def handle_action(self, action: Optional[Action]) -> bool:
         ...
- 
+
     <span class="crossed-out-text">def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:</span>
         <span class="crossed-out-text">raise SystemExit()</span>
 
@@ -227,7 +227,7 @@ To adjust our existing handlers, we'll need to continue editing `input_handlers`
 {{< highlight diff >}}
 class AskUserEventHandler(EventHandler):
     """Handles user input for actions which require special input."""
- 
+
 -   def handle_action(self, action: Optional[Action]) -> bool:
 -       """Return to the main event handler when a valid action was performed."""
 -       if super().handle_action(action):
@@ -248,28 +248,28 @@ class AskUserEventHandler(EventHandler):
         }:
             return None
         return self.on_exit()
- 
+
 -   def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:
 +   def ev_mousebuttondown(
 +       self, event: tcod.event.MouseButtonDown
 +   ) -> Optional[ActionOrHandler]:
         """By default any mouse click exits this input handler."""
         return self.on_exit()
- 
+
 -   def on_exit(self) -> Optional[Action]:
 +   def on_exit(self) -> Optional[ActionOrHandler]:
         """Called when the user is trying to exit or cancel an action.
- 
+
         By default this returns to the main event handler.
         """
 -       self.engine.event_handler = MainGameEventHandler(self.engine)
 -       return None
 +       return MainGameEventHandler(self.engine)
- 
- 
+
+
 class InventoryEventHandler(AskUserEventHandler):
     ...
- 
+
 -   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
 +   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         player = self.engine.player
@@ -284,7 +284,7 @@ class InventoryEventHandler(AskUserEventHandler):
                 return None
             return self.on_item_selected(selected_item)
         return super().ev_keydown(event)
- 
+
 -   def on_item_selected(self, item: Item) -> Optional[Action]:
 +   def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Called when the user selects a valid item."""
@@ -293,48 +293,48 @@ class InventoryEventHandler(AskUserEventHandler):
 
 class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
- 
+
     TITLE = "Select an item to use"
- 
+
 -   def on_item_selected(self, item: Item) -> Optional[Action]:
 +   def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Return the action for the selected item."""
         return item.consumable.get_action(self.engine.player)
- 
+
 
 class InventoryDropHandler(InventoryEventHandler):
     """Handle dropping an inventory item."""
- 
+
     TITLE = "Select an item to drop"
- 
+
 -   def on_item_selected(self, item: Item) -> Optional[Action]:
 +   def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Drop this item."""
         return actions.DropItem(self.engine.player, item)
- 
+
 
 class SelectIndexHandler(AskUserEventHandler):
     ...
- 
+
 -   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
 +   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         ...
- 
+
 -   def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:
 +   def ev_mousebuttondown(
 +       self, event: tcod.event.MouseButtonDown
 +   ) -> Optional[ActionOrHandler]:
         ...
- 
+
 -   def on_index_selected(self, x: int, y: int) -> Optional[Action]:
 +   def on_index_selected(self, x: int, y: int) -> Optional[ActionOrHandler]:
         """Called when an index is selected."""
         raise NotImplementedError()
- 
+
 
 class LookHandler(SelectIndexHandler):
     """Lets the player look around using the keyboard."""
- 
+
 -   def on_index_selected(self, x: int, y: int) -> None:
 +   def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
         """Return to main handler."""
@@ -363,10 +363,10 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_v:
 -           self.engine.event_handler = HistoryViewer(self.engine)
 +           return HistoryViewer(self.engine)
- 
+
         elif key == tcod.event.K_g:
             action = PickupAction(player)
- 
+
         elif key == tcod.event.K_i:
 -           self.engine.event_handler = InventoryActivateHandler(self.engine)
 +           return InventoryActivateHandler(self.engine)
@@ -376,15 +376,15 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_SLASH:
 -           self.engine.event_handler = LookHandler(self.engine)
 +           return LookHandler(self.engine)
- 
+
         # No valid key was pressed
         return action
- 
- 
-... 
+
+
+...
 class HistoryViewer(EventHandler):
     ...
- 
+
 -   def ev_keydown(self, event: tcod.event.KeyDown) -> None:
 +   def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
         # Fancy conditional movement to make it feel right.
@@ -412,7 +412,7 @@ class HistoryViewer(EventHandler):
 {{< original-tab >}}
 <pre>class AskUserEventHandler(EventHandler):
     """Handles user input for actions which require special input."""
- 
+
     <span class="crossed-out-text">def handle_action(self, action: Optional[Action]) -> bool:</span>
         <span class="crossed-out-text">"""Return to the main event handler when a valid action was performed."""</span>
         <span class="crossed-out-text">if super().handle_action(action):</span>
@@ -433,18 +433,18 @@ class HistoryViewer(EventHandler):
         }:
             return None
         return self.on_exit()
- 
+
     <span class="crossed-out-text">def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:</span>
     <span class="new-text">def ev_mousebuttondown(
         self, event: tcod.event.MouseButtonDown
     ) -> Optional[ActionOrHandler]:</span>
         """By default any mouse click exits this input handler."""
         return self.on_exit()
- 
+
     <span class="crossed-out-text">def on_exit(self) -> Optional[Action]:</span>
     <span class="new-text">def on_exit(self) -> Optional[ActionOrHandler]:</span>
         """Called when the user is trying to exit or cancel an action.
- 
+
         By default this returns to the main event handler.
         """
         <span class="crossed-out-text">self.engine.event_handler = MainGameEventHandler(self.engine)</span>
@@ -454,7 +454,7 @@ class HistoryViewer(EventHandler):
 
 class InventoryEventHandler(AskUserEventHandler):
     ...
- 
+
     <span class="crossed-out-text">def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:</span>
     <span class="new-text">def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:</span>
         player = self.engine.player
@@ -469,7 +469,7 @@ class InventoryEventHandler(AskUserEventHandler):
                 return None
             return self.on_item_selected(selected_item)
         return super().ev_keydown(event)
- 
+
     <span class="crossed-out-text">def on_item_selected(self, item: Item) -> Optional[Action]:</span>
     <span class="new-text">def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:</span>
         """Called when the user selects a valid item."""
@@ -478,48 +478,48 @@ class InventoryEventHandler(AskUserEventHandler):
 
 class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
- 
+
     TITLE = "Select an item to use"
- 
+
     <span class="crossed-out-text">def on_item_selected(self, item: Item) -> Optional[Action]:</span>
     <span class="new-text">def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:</span>
         """Return the action for the selected item."""
         return item.consumable.get_action(self.engine.player)
- 
+
 
 class InventoryDropHandler(InventoryEventHandler):
     """Handle dropping an inventory item."""
- 
+
     TITLE = "Select an item to drop"
- 
+
     <span class="crossed-out-text">def on_item_selected(self, item: Item) -> Optional[Action]:</span>
     <span class="new-text">def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:</span>
         """Drop this item."""
         return actions.DropItem(self.engine.player, item)
- 
+
 
 class SelectIndexHandler(AskUserEventHandler):
     ...
- 
+
     <span class="crossed-out-text">def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:</span>
     <span class="new-text">def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:</span>
         ...
- 
+
     <span class="crossed-out-text">def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:</span>
     <span class="new-text">def ev_mousebuttondown(
         self, event: tcod.event.MouseButtonDown
     ) -> Optional[ActionOrHandler]:</span>
         ...
- 
+
     <span class="crossed-out-text">def on_index_selected(self, x: int, y: int) -> Optional[Action]:</span>
     <span class="new-text">def on_index_selected(self, x: int, y: int) -> Optional[ActionOrHandler]:</span>
         """Called when an index is selected."""
         raise NotImplementedError()
- 
+
 
 class LookHandler(SelectIndexHandler):
     """Lets the player look around using the keyboard."""
- 
+
     <span class="crossed-out-text">def on_index_selected(self, x: int, y: int) -> None:</span>
     <span class="new-text">def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:</span>
         """Return to main handler."""
@@ -548,10 +548,10 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_v:
             <span class="crossed-out-text">self.engine.event_handler = HistoryViewer(self.engine)</span>
             <span class="new-text">return HistoryViewer(self.engine)</span>
- 
+
         elif key == tcod.event.K_g:
             action = PickupAction(player)
- 
+
         elif key == tcod.event.K_i:
             <span class="crossed-out-text">self.engine.event_handler = InventoryActivateHandler(self.engine)</span>
             <span class="new-text">return InventoryActivateHandler(self.engine)</span>
@@ -561,15 +561,15 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_SLASH:
             <span class="crossed-out-text">self.engine.event_handler = LookHandler(self.engine)</span>
             <span class="new-text">return LookHandler(self.engine)</span>
- 
+
         # No valid key was pressed
         return action
- 
- 
-... 
+
+
+...
 class HistoryViewer(EventHandler):
     ...
- 
+
     <span class="crossed-out-text">def ev_keydown(self, event: tcod.event.KeyDown) -> None:</span>
     <span class="new-text">def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:</span>
         # Fancy conditional movement to make it feel right.
@@ -611,25 +611,25 @@ from exceptions import Impossible
 +   AreaRangedAttackHandler,
 +   SingleRangedAttackHandler,
 +)
- 
+
 if TYPE_CHECKING:
     ...
 
 ...
 class Consumable(BaseComponent):
     parent: Item
- 
+
 -   def get_action(self, consumer: Actor) -> Optional[actions.Action]:
 +   def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:
         """Try to return the action for this item."""
         return actions.ItemAction(consumer, self.parent)
-    
+
     ...
 
 class ConfusionConsumable(Consumable):
     def __init__(self, number_of_turns: int):
         self.number_of_turns = number_of_turns
- 
+
 -   def get_action(self, consumer: Actor) -> Optional[actions.Action]:
 +   def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
         self.engine.message_log.add_message(
@@ -641,7 +641,7 @@ class ConfusionConsumable(Consumable):
             callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
         )
 -       return None
- 
+
     ...
 
 class FireballDamageConsumable(Consumable):
@@ -661,7 +661,7 @@ class FireballDamageConsumable(Consumable):
             callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
         )
 -       return None
- 
+
     def activate(self, action: actions.ItemAction) -> None:
         ...
 {{</ highlight >}}
@@ -678,25 +678,25 @@ from exceptions import Impossible
     AreaRangedAttackHandler,
     SingleRangedAttackHandler,
 )</span>
- 
+
 if TYPE_CHECKING:
     ...
 
 ...
 class Consumable(BaseComponent):
     parent: Item
- 
+
     <span class="crossed-out-text">def get_action(self, consumer: Actor) -> Optional[actions.Action]:</span>
     <span class="new-text">def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:</span>
         """Try to return the action for this item."""
         return actions.ItemAction(consumer, self.parent)
-    
+
     ...
 
 class ConfusionConsumable(Consumable):
     def __init__(self, number_of_turns: int):
         self.number_of_turns = number_of_turns
- 
+
     <span class="crossed-out-text">def get_action(self, consumer: Actor) -> Optional[actions.Action]:</span>
     <span class="new-text">def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:</span>
         self.engine.message_log.add_message(
@@ -708,7 +708,7 @@ class ConfusionConsumable(Consumable):
             callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
         )
         <span class="crossed-out-text">return None</span>
- 
+
     ...
 
 class FireballDamageConsumable(Consumable):
@@ -728,7 +728,7 @@ class FireballDamageConsumable(Consumable):
             callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
         )
         <span class="crossed-out-text">return None</span>
- 
+
     def activate(self, action: actions.ItemAction) -> None:
         ...</pre>
 {{</ original-tab >}}
@@ -740,12 +740,12 @@ We also need to make a small adjustmet to `fighter.py`:
 {{< diff-tab >}}
 {{< highlight diff >}}
 from typing import TYPE_CHECKING
- 
+
 import color
 from components.base_component import BaseComponent
 -from input_handlers import GameOverEventHandler
 from render_order import RenderOrder
- 
+
 ...
 
         ...
@@ -761,12 +761,12 @@ from render_order import RenderOrder
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from typing import TYPE_CHECKING
- 
+
 import color
 from components.base_component import BaseComponent
 <span class="crossed-out-text">from input_handlers import GameOverEventHandler</span>
 from render_order import RenderOrder
- 
+
 ...
 
         ...
@@ -940,12 +940,12 @@ Let's clean up the `Engine` class by removing the `event_handler` attribute, as 
 {{< diff-tab >}}
 {{< highlight diff >}}
 from __future__ import annotations
- 
+
 from typing import TYPE_CHECKING
- 
+
 from tcod.console import Console
 from tcod.map import compute_fov
- 
+
 import exceptions
 -from input_handlers import MainGameEventHandler
 from message_log import MessageLog
@@ -958,11 +958,11 @@ if TYPE_CHECKING:
     from entity import Actor
     from game_map import GameMap
 -   from input_handlers import EventHandler
- 
- 
+
+
 class Engine:
     game_map: GameMap
- 
+
     def __init__(self, player: Actor):
 -       self.event_handler: EventHandler = MainGameEventHandler(self)
         self.message_log = MessageLog()
@@ -973,12 +973,12 @@ class Engine:
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from __future__ import annotations
- 
+
 from typing import TYPE_CHECKING
- 
+
 from tcod.console import Console
 from tcod.map import compute_fov
- 
+
 import exceptions
 <span class="crossed-out-text">from input_handlers import MainGameEventHandler</span>
 from message_log import MessageLog
@@ -991,11 +991,11 @@ if TYPE_CHECKING:
     from entity import Actor
     from game_map import GameMap
     <span class="crossed-out-text">from input_handlers import EventHandler</span>
- 
- 
+
+
 class Engine:
     game_map: GameMap
- 
+
     def __init__(self, player: Actor):
         <span class="crossed-out-text">self.event_handler: EventHandler = MainGameEventHandler(self)</span>
         self.message_log = MessageLog()
@@ -1369,7 +1369,7 @@ At last, we've come to the part where we'll write the function that will save ou
 {{< diff-tab >}}
 {{< highlight diff >}}
 from __future__ import annotations
- 
+
 +import lzma
 +import pickle
 from typing import TYPE_CHECKING
@@ -1387,7 +1387,7 @@ class Engine:
 {{</ diff-tab >}}
 {{< original-tab >}}
 <pre>from __future__ import annotations
- 
+
 <span class="new-text">import lzma
 import pickle</span>
 from typing import TYPE_CHECKING
@@ -1415,7 +1415,7 @@ To save our game, we'll call `save_as` from our `main.py` function. We'll set up
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-... 
+...
 import color
 import exceptions
 import setup_game
@@ -1427,8 +1427,8 @@ import input_handlers
 +   if isinstance(handler, input_handlers.EventHandler):
 +       handler.engine.save_as(filename)
 +       print("Game saved.")
- 
- 
+
+
 def main() -> None:
     ...
 
@@ -1450,7 +1450,7 @@ if __name__ == "__main__":
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>... 
+<pre>...
 import color
 import exceptions
 import setup_game
@@ -1462,8 +1462,8 @@ import input_handlers
     if isinstance(handler, input_handlers.EventHandler):
         handler.engine.save_as(filename)
         print("Game saved.")</span>
- 
- 
+
+
 def main() -> None:
     ...
 

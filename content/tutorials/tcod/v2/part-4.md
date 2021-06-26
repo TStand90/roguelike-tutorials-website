@@ -226,7 +226,7 @@ class GameMap:
         <span class="crossed-out-text">console.tiles_rgb[0:self.width, 0:self.height] = self.tiles["dark"]</span>
         <span class="new-text">"""
         Renders the map.
- 
+
         If a tile is in the "visible" array, then draw it with the "light" colors.
         If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
         Otherwise, the default is "SHROUD".
@@ -274,7 +274,7 @@ class Engine:
             action.perform(self, self.player)
 
 +           self.update_fov()  # Update the FOV before the players next action.
-    
+
 +   def update_fov(self) -> None:
 +       """Recompute the visible area based on the players point of view."""
 +       self.game_map.visible[:] = compute_fov(
@@ -326,7 +326,7 @@ class Engine:
             action.perform(self, self.player)
 
             <span class="new-text">self.update_fov()  # Update the FOV before the players next action.</span>
-    
+
     <span class="new-text">def update_fov(self) -> None:
         """Recompute the visible area based on the players point of view."""
         self.game_map.visible[:] = compute_fov(

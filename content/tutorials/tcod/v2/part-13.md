@@ -521,15 +521,15 @@ class Actor(Entity):
             blocks_movement=True,
             render_order=RenderOrder.ACTOR,
         )
- 
+
         self.ai: Optional[BaseAI] = ai_cls(self)
- 
+
 +       self.equipment: Equipment = equipment
 +       self.equipment.parent = self
 
         self.fighter = fighter
         self.fighter.parent = self
-        
+
         ...
 {{</ highlight >}}
 {{</ diff-tab >}}
@@ -570,15 +570,15 @@ class Actor(Entity):
             blocks_movement=True,
             render_order=RenderOrder.ACTOR,
         )
- 
+
         self.ai: Optional[BaseAI] = ai_cls(self)
- 
+
         <span class="new-text">self.equipment: Equipment = equipment
         self.equipment.parent = self</span>
 
         self.fighter = fighter
         self.fighter.parent = self
-        
+
         ...</pre>
 {{</ original-tab >}}
 {{</ codetab >}}
@@ -683,7 +683,7 @@ This will require edits to several places, but we'll start first with the most o
 {{< highlight diff >}}
 class Fighter(BaseComponent):
     parent: Actor
- 
+
 -   def __init__(self, hp: int, defense: int, power: int):
 +   def __init__(self, hp: int, base_defense: int, base_power: int):
         self.max_hp = hp
@@ -702,7 +702,7 @@ class Fighter(BaseComponent):
         self._hp = max(0, min(value, self.max_hp))
         if self._hp == 0 and self.parent.ai:
             self.die()
- 
+
 +   @property
 +   def defense(self) -> int:
 +       return self.base_defense + self.defense_bonus
@@ -732,7 +732,7 @@ class Fighter(BaseComponent):
 {{< original-tab >}}
 <pre>class Fighter(BaseComponent):
     parent: Actor
- 
+
     <span class="crossed-out-text">def __init__(self, hp: int, defense: int, power: int):</span>
     <span class="new-text">def __init__(self, hp: int, base_defense: int, base_power: int):</span>
         self.max_hp = hp
@@ -751,7 +751,7 @@ class Fighter(BaseComponent):
         self._hp = max(0, min(value, self.max_hp))
         if self._hp == 0 and self.parent.ai:
             self.die()
- 
+
     <span class="new-text">@property
     def defense(self) -> int:
         return self.base_defense + self.defense_bonus
@@ -792,7 +792,7 @@ class Level(BaseComponent):
     def increase_power(self, amount: int = 1) -> None:
 -       self.parent.fighter.power += amount
 +       self.parent.fighter.base_power += amount
- 
+
         self.engine.message_log.add_message("You feel stronger!")
 
         self.increase_level()
@@ -811,7 +811,7 @@ class Level(BaseComponent):
     def increase_power(self, amount: int = 1) -> None:
         <span class="crossed-out-text">self.parent.fighter.power += amount</span>
         <span class="new-text">self.parent.fighter.base_power += amount</span>
- 
+
         self.engine.message_log.add_message("You feel stronger!")
 
         self.increase_level()
@@ -1007,9 +1007,9 @@ class InventoryEventHandler(AskUserEventHandler):
 +               console.print(x + 1, y + i + 1, item_string)
         else:
             console.print(x + 1, y + 1, "(Empty)")
-    
+
     ...
- 
+
 class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
 
@@ -1051,9 +1051,9 @@ class InventoryDropHandler(InventoryEventHandler):
                 console.print(x + 1, y + i + 1, item_string)</span>
         else:
             console.print(x + 1, y + 1, "(Empty)")
-    
+
     ...
- 
+
 class InventoryActivateHandler(InventoryEventHandler):
     """Handle using an inventory item."""
 
@@ -1162,7 +1162,7 @@ As mentioned earlier, we pass `add_message=False` to signify not to add a messag
 
 With that, we've reached the end of the tutorial! Thank you so much for following along, and be sure to check out the [extras section](/tutorials/tcod/v2). More will be added there over time. If you have a suggestion for an extra, let me know!
 
-Be sure to check out the [Roguelike Development Subreddit](https://www.reddit.com/r/roguelikedev) for help, for inspiration, or to share your progress. 
+Be sure to check out the [Roguelike Development Subreddit](https://www.reddit.com/r/roguelikedev) for help, for inspiration, or to share your progress.
 
 Best of luck on your roguelike development journey!
 

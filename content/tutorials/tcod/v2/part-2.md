@@ -97,7 +97,7 @@ def main() -> None:
 
     <span class="crossed-out-text">player_x = int(screen_width / 2)</span>
     <span class="crossed-out-text">player_y = int(screen_height / 2)</span>
-    
+
     tileset = tcod.tileset.load_tilesheet(
         "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
     )
@@ -523,7 +523,7 @@ class GameMap:
         self.tiles = np.full((width, height), fill_value=tile_types.floor, order="F")
 
         self.tiles[30:33, 22] = tile_types.wall
-    
+
     def in_bounds(self, x: int, y: int) -> bool:
         """Return True if x and y are inside of the bounds of this map."""
         return 0 <= x < self.width and 0 <= y < self.height
@@ -593,7 +593,7 @@ def main() -> None:
     player = Entity(int(screen_width / 2), int(screen_height / 2), "@", (255, 255, 255))
     npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), "@", (255, 255, 0))
     entities = {npc, player}
-    
+
 +   game_map = GameMap(map_width, map_height)
 
 -   engine = Engine(entities=entities, event_handler=event_handler, player=player)
@@ -634,7 +634,7 @@ def main() -> None:
     player = Entity(int(screen_width / 2), int(screen_height / 2), "@", (255, 255, 255))
     npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), "@", (255, 255, 0))
     entities = {npc, player}
-    
+
     <span class="new-text">game_map = GameMap(map_width, map_height)</span>
 
     <span class="crossed-out-text">engine = Engine(entities=entities, event_handler=event_handler, player=player)</span>
@@ -925,7 +925,7 @@ class Engine:
 {{</ codetab >}}
 
 Much simpler! Run the project again, and it should function the same as before.
-    
+
 With that, Part 2 is now complete! We've managed to lay the groundwork for generating dungeons and moving through them, which, as it happens, is what the next part is all about.
 
 If you want to see the code so far in its entirety, [click
