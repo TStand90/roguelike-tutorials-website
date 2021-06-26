@@ -539,13 +539,19 @@ part where the player's move function gets called to look like this:
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-            if not game_map.is_blocked(player.x + dx, player.y + dy):
-                player.move(dx, dy)
+        if move:
+            dx, dy = move
+
++           if not game_map.is_blocked(player.x + dx, player.y + dy):
++               player.move(dx, dy)
 -           player.move(dx, dy)
 {{</ highlight >}}
 {{</ diff-tab >}}
 {{< original-tab >}}
-<pre>            <span class="new-text">if not game_map.is_blocked(player.x + dx, player.y + dy):
+<pre>        if move:
+            dx, dy = move
+<span class="new-text">
+            if not game_map.is_blocked(player.x + dx, player.y + dy):
                 player.move(dx, dy)</span>
             <span class="crossed-out-text">player.move(dx, dy)</span></pre>
 {{</ original-tab >}}
