@@ -233,7 +233,7 @@ Whatever you decide, put your fov recomputation in `engine.py` like so:
 <pre>        ...
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
 
-        <span style="color:green">if fov_recompute:
+        <span class="new-text">if fov_recompute:
             recompute_fov(fov_map, player.x, player.y, fov_radius, fov_light_walls, fov_algorithm)</span>
 
         render_all(con, entities, game_map, screen_width, screen_height, colors)
@@ -255,7 +255,7 @@ from input_handlers import handle_keys
 {{< original-tab >}}
 <pre>...
 from entity import Entity
-from fov_functions import initialize_fov<span style="color: green;">, recompute_fov</span>
+from fov_functions import initialize_fov<span class="new-text">, recompute_fov</span>
 from input_handlers import handle_keys
 ...</pre>
 {{</ original-tab >}}
