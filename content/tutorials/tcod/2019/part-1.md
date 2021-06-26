@@ -555,6 +555,9 @@ Modify the `engine.py` file like this:
 {{</ original-tab >}}
 {{</ codetab >}}
 
+`libtcod.console_blit` is used to copy `con` to libtcod's root console
+which is then presented by `libtcod.console_flush`.
+
 That wraps up part one of this tutorial\! If you're using git or some
 other form of version control (and I recommend you do), commit your
 changes now.
