@@ -301,6 +301,7 @@ def main() -> None:
 -           root_console.print(x=player_x, y=player_y, string="@")
 +           engine.render(console=root_console, context=context)
 
+-           context.present(root_console)
 +           events = tcod.event.wait()
 
 +           engine.handle_events(events)
@@ -362,6 +363,7 @@ def main() -> None:
             <span class="crossed-out-text">root_console.print(x=player_x, y=player_y, string="@")</span>
             <span class="new-text">engine.render(console=root_console, context=context)</span>
 
+            <span class="crossed-out-text">context.present(root_console)</span>
             <span class="new-text">events = tcod.event.wait()</span>
 
             <span class="new-text">engine.handle_events(events)</span>
