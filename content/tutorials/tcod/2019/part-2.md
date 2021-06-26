@@ -128,15 +128,10 @@ Lastly, update the drawing functions to use the new player object:
 -       libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)
 +       libtcod.console_put_char(con, player.x, player.y, '@', libtcod.BKGND_NONE)
         libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
-        libtcod.console_set_default_foreground(0, libtcod.white)
--       libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)
-+       libtcod.console_put_char(0, player.x, player.y, '@', libtcod.BKGND_NONE)
         libtcod.console_flush()
 
 -       libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)
--       libtcod.console_put_char(0, player_x, player_y, ' ', libtcod.BKGND_NONE)
 +       libtcod.console_put_char(con, player.x, player.y, ' ', libtcod.BKGND_NONE)
-+       libtcod.console_put_char(0, player.x, player.y, ' ', libtcod.BKGND_NONE)
 
         action = handle_keys(key)
 
@@ -150,15 +145,10 @@ Lastly, update the drawing functions to use the new player object:
         <span class="crossed-out-text">libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)</span>
         <span class="new-text">libtcod.console_put_char(con, player.x, player.y, '@', libtcod.BKGND_NONE)</span>
         libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
-        libtcod.console_set_default_foreground(0, libtcod.white)
-        <span class="crossed-out-text">libtcod.console_put_char(0, player_x, player_y, '@', libtcod.BKGND_NONE)</span>
-        <span class="new-text">libtcod.console_put_char(0, player.x, player.y, '@', libtcod.BKGND_NONE)</span>
         libtcod.console_flush()
 
         <span class="crossed-out-text">libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)</span>
-        <span class="crossed-out-text">libtcod.console_put_char(0, player_x, player_y, ' ', libtcod.BKGND_NONE)</span>
         <span class="new-text">libtcod.console_put_char(con, player.x, player.y, ' ', libtcod.BKGND_NONE)</span>
-        <span class="new-text">libtcod.console_put_char(0, player.x, player.y, ' ', libtcod.BKGND_NONE)</span>
 
         action = handle_keys(key)
     </pre>
