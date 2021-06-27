@@ -109,7 +109,7 @@ For this tutorial, we'll need an image file. The default one is provided below.
 
 Right click the image and save it to the same directory that you're planning on
 placing your code in. If the above image is not displaying for some reason,
-it is also [available for download here.](https://raw.githubusercontent.com/TStand90/tcod_tutorial_v2/master/dejavu10x10_gs_tc.png)
+it is also [available for download here.](https://raw.githubusercontent.com/TStand90/tcod_tutorial_v2/1667c8995fb0d0fd6df98bd84c0be46cb8b78dac/dejavu10x10_gs_tc.png)
 
 
 ### About this site
