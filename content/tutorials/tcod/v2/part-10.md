@@ -1121,7 +1121,7 @@ Let's break this code down a bit.
 background_image = tcod.image.load("menu_background.png")[:, :, :3]
 ```
 
-This line loads the image file we'll use for our background in the main menu. If you haven't already, be sure to download that file. You can find it [here](https://github.com/TStand90/tcod_tutorial_v2/blob/part-10/menu_background.png), or download it by right-clicking and saving it from here:
+This line loads the image file we'll use for our background in the main menu. If you haven't already, be sure to download that file. You can find it [here](https://github.com/TStand90/tcod_tutorial_v2/blob/bff29c352d76068845730ff61e62cd382e5e2adc/menu_background.png), or download it by right-clicking and saving it from here:
 
 ![Main Menu Background Image](/images/menu_background.png)
 
