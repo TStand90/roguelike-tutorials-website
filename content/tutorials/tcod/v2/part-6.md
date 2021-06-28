@@ -1405,7 +1405,9 @@ troll = Actor(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-We've changed each entity to make use of the `Actor` class, and used the `HostileEnemy` AI class for the Orc and the Troll types, while using the `BaseAI` for our player. Also, we defined the `Fighter` component for each, giving a few different values to make the Trolls stronger than the Orcs. Feel free to modify these values to your liking.
+We've changed each entity to make use of the `Actor` class, and used the `HostileEnemy` AI class for the Orc and the Troll types.
+The player doesn't use the AI, so the AI given to it doesn't matter other than that an AI must be specified for all `Actor`'s.
+Also, we defined the `Fighter` component for each, giving a few different values to make the Trolls stronger than the Orcs. Feel free to modify these values to your liking.
 
 How do enemies actually take their turns, though? It's actually pretty simple: rather than printing the message we were before, we just check if the entity has an AI, and if it does, we call the `perform` method from that AI component. Modify `engine.py` to do this:
 
