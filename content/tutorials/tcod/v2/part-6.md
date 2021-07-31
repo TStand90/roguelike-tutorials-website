@@ -1339,7 +1339,7 @@ With all that in place, we'll need to refactor our `entity_factories.py` file to
 {{< codetab >}}
 {{< diff-tab >}}
 {{< highlight diff >}}
-+from components.ai import HostileEnemy
++from components.ai import BaseAI, HostileEnemy
 +from components.fighter import Fighter
 +from entity import Actor
 -from entity import Entity
@@ -1348,7 +1348,7 @@ With all that in place, we'll need to refactor our `entity_factories.py` file to
 +   char="@",
 +   color=(255, 255, 255),
 +   name="Player",
-+   ai_cls=HostileEnemy,
++   ai_cls=BaseAI,
 +   fighter=Fighter(hp=30, defense=2, power=5),
 +)
 -player = Entity(char="@", color=(255, 255, 255), name="Player", blocks_movement=True)
