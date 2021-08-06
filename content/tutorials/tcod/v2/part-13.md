@@ -74,9 +74,9 @@ class ChainMail(Equippable):
         super().__init__(equipment_type=EquipmentType.ARMOR, defense_bonus=3)
 ```
 
-Aside from creating the `Equippable` class, as described earlier, we've also created a few types of equppable components, for each equippable entity that we'll end up creating, similar to what we did with the `Consumable` classes. You don't have to do it this way, you could just define these when creating the entities, but you might want to add additional functionality to weapons and armor at some point, and defining the `Equippable` classes this way might make that easier. You might also want to move these classes to their own file, but that's outside the scope of this tutorial.
+Aside from creating the `Equippable` class, as described earlier, we've also created a few types of equippable components, for each equippable entity that we'll end up creating, similar to what we did with the `Consumable` classes. You don't have to do it this way, you could just define these when creating the entities, but you might want to add additional functionality to weapons and armor at some point, and defining the `Equippable` classes this way might make that easier. You might also want to move these classes to their own file, but that's outside the scope of this tutorial.
 
-To create the actual equppable entities, we'll want to adjust our `Item` class. We can use the same class that we used for our consumables, and just handle them slightly differently. Another approach would be to create another subclass of `Entity`, but for the sake of keeping the number of `Entity` subclasses in this tutorial short, we'll adjust `Item`. Make the following adjustments to `entity.py`:
+To create the actual equippable entities, we'll want to adjust our `Item` class. We can use the same class that we used for our consumables, and just handle them slightly differently. Another approach would be to create another subclass of `Entity`, but for the sake of keeping the number of `Entity` subclasses in this tutorial short, we'll adjust `Item`. Make the following adjustments to `entity.py`:
 
 {{< codetab >}}
 {{< diff-tab >}}
