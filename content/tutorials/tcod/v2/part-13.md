@@ -476,7 +476,7 @@ What's with the `add_message` part? Normally, we'll want to add a message to the
             self.equip_to_slot(slot, equippable_item, add_message)
 ```
 
-Finally, we have `toggle_equip`, which is the method that will actually get called when the player selects an equippable item. If checks the equipment's type (to know which slot to put it in), and then check to see if the same item is already equipped to that slot. If it is, the player presumably wants to remove it. If not, the player wants to equip it.
+Finally, we have `toggle_equip`, which is the method that will actually get called when the player selects an equippable item. It checks the equipment's type (to know which slot to put it in), and then checks to see if the same item is already equipped to that slot. If it is, the player presumably wants to remove it. If not, the player wants to equip it.
 
 To sum up, this component holds references to equippable entities, calculates the bonuses the player gets from them (which will get added to the player's power and defense values), and gives a way to equip or remove the items.
 
