@@ -391,7 +391,7 @@ import input_handlers
 {{</ original-tab >}}
 {{</ codetab >}}
 
-Now, instead of calling `generate_dungeon` directly, we create a new `GameWorld` and allow it to call its `generate_floor` method. While this doesn't change anything for the first floor that's created, it will allows us to more easily create new floors on the fly.
+Now, instead of calling `generate_dungeon` directly, we create a new `GameWorld` and allow it to call its `generate_floor` method. While this doesn't change anything for the first floor that's created, it will allow us to more easily create new floors on the fly.
 
 In order to actually take the stairs, we'll need to add an action and a way for the player to trigger it. Adding the action is pretty simple. Add the following to `actions.py`:
 

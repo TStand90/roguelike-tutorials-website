@@ -1734,7 +1734,7 @@ class GameOverEventHandler(EventHandler):
 
 We use the `os` module to find the save file, and if it exists, we remove it. We then raise `QuitWithoutSaving`, so that the game won't be saved on exiting. Now when the player meets his or her tragic end (it's a roguelike, it's inevitable!), the save file will be deleted.
 
-Last thing before we wrap up: We're creating the `.sav` files to represent our saved games, but we don't want to include these in out Git repository, since that should be reserved for just the code. The fix for this is to add this to our `.gitignore` file:
+Last thing before we wrap up: We're creating the `.sav` files to represent our saved games, but we don't want to include these in our Git repository, since that should be reserved for just the code. The fix for this is to add this to our `.gitignore` file:
 
 {{< codetab >}}
 {{< diff-tab >}}
