@@ -1,4 +1,4 @@
-baseURL = "http://rogueliketutorials.com/"
+baseURL = "https://rogueliketutorials.com/"
 languageCode = "en-us"
 title = "Roguelike Tutorials"
 
