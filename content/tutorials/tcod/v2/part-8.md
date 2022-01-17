@@ -642,7 +642,7 @@ bar_empty = (0x40, 0x10, 0x10)</pre>
 
 These will become useful shortly.
 
-There's another thing we can knock out right now that we'll use later: The ability for a `Fighter` component to recover health, and the ability for it to take damage directly, and the ability to take damage directly (without the defense modifier). We won't use the damage function this chapter, but since the two functions are effectively opposites, we can get writing it over with now.
+There's another thing we can knock out right now that we'll use later: The ability for a `Fighter` component to recover health, and the ability to take damage directly (without the defense modifier). We won't use the damage function this chapter, but since the two functions are effectively opposites, we can get writing it over with now.
 
 Open up `fighter.py` and add these two functions:
 
