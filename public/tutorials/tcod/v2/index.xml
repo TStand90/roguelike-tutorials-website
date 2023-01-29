@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Yet Another Roguelike Tutorial - Written in Python 3 and TCOD on Roguelike Tutorials</title>
+    <link>https://rogueliketutorials.com/tutorials/tcod/v2/</link>
+    <description>Recent content in Yet Another Roguelike Tutorial - Written in Python 3 and TCOD on Roguelike Tutorials</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>Last updated July 7th, 2020</copyright>
+    <lastBuildDate>Sun, 14 Jun 2020 11:35:22 -0700</lastBuildDate><atom:link href="https://rogueliketutorials.com/tutorials/tcod/v2/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Extra - A more &#34;Traditional&#34; Look</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/extras/traditional-look/</link>
+      <pubDate>Fri, 18 Sep 2020 16:39:01 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/extras/traditional-look/</guid>
+      <description>Prerequisites: Completion of part 4
+The tutorial itself goes in a much different visual direction than most roguelikes. If you like this look, great! If you want to make your game look a bit more like other roguelikes you might be more familiar with, this section is for you.
+Most roguelikes define the floor tiles as a period (.) and the wall tiles as a pound sign (#). This is simple enough to implement, by adjusting our tile types like this:</description>
+    </item>
+    
+    <item>
+      <title>Part 12 - Increasing Difficulty</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-12/</link>
+      <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-12/</guid>
+      <description>Despite the fact that we can go down floors now, the dungeon doesn&amp;rsquo;t get progressively more difficult as the player descends. This is because the method in which we place monsters and items is the same on each floor. In this chapter, we&amp;rsquo;ll adjust how we place things in the dungeon, so things get more difficult with each floor.
+Currently, we pass maximum_monsters and maximum_items into the place_entities function, and this number does not change.</description>
+    </item>
+    
+    <item>
+      <title>Part 13 - Gearing up</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-13/</link>
+      <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-13/</guid>
+      <description>For the final part of this tutorial, we&amp;rsquo;ll implement something that most roguelikes have: equipment. Our implementation will be extremely simple: equipping a weapon increases attack power, and equipping armor increases defense. Many roguelikes have more equipment types than just these two, and the effects of equipment can go much further than this, but this should be enough to get you started.
+First, we&amp;rsquo;ll want to define the types of equipment that can be found in the dungeon.</description>
+    </item>
+    
+    <item>
+      <title>Part 10 - Saving and loading</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-10/</link>
+      <pubDate>Tue, 21 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-10/</guid>
+      <description>Saving and loading is essential to almost every roguelike, but it can be a pain to manage if you don&amp;rsquo;t start early. By the end of this chapter, our game will be able to save and load one file to the disk, which you could easily expand to multiple saves if you wanted to.
+Let&amp;rsquo;s start by defining the colors we&amp;rsquo;ll need this chapter, by opening color.py and entering the following:</description>
+    </item>
+    
+    <item>
+      <title>Part 11 - Delving into the Dungeon</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-11/</link>
+      <pubDate>Tue, 21 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-11/</guid>
+      <description>Our game isn&amp;rsquo;t much of a &amp;ldquo;dungeon crawler&amp;rdquo; if there’s only one floor to our dungeon. In this chapter, we&amp;rsquo;ll allow the player to go down a level, and we&amp;rsquo;ll put a very basic leveling up system in place, to make the dive all the more rewarding.
+Before diving into the code for this section, let&amp;rsquo;s add the color we&amp;rsquo;ll need this chapter, for when the player descends down a level in the dungeon.</description>
+    </item>
+    
+    <item>
+      <title>Part 8 - Items and Inventory</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-8/</link>
+      <pubDate>Tue, 14 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-8/</guid>
+      <description>Quick refactors Once again, apologies to everyone reading this right now. After publishing the last two parts, there were once again a few refactors on code written in those parts, like at the beginning of part 6. Luckily, the changes are much less extensive this time.
+ai.py
+DiffOriginal... import numpy as np # type: ignore import tcod from actions import Action, MeleeAction, MovementAction, WaitAction -from components.</description>
+    </item>
+    
+    <item>
+      <title>Part 9 - Ranged Scrolls and Targeting</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-9/</link>
+      <pubDate>Tue, 14 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-9/</guid>
+      <description>Adding health potions was a big step, but we won&amp;rsquo;t stop there. Let&amp;rsquo;s continue adding a few items, this time with a focus on offense. We&amp;rsquo;ll add a few scrolls, which will give the player a one-time ranged attack. This gives the player a lot more tactical options to work with, and is definitely something you&amp;rsquo;ll want to expand upon in your own game.
+Before we get to that, let&amp;rsquo;s start by adding the colors we&amp;rsquo;ll need for this chapter:</description>
+    </item>
+    
+    <item>
+      <title>Part 6 - Doing (and taking) some damage</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-6/</link>
+      <pubDate>Tue, 07 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-6/</guid>
+      <description>Check your TCOD installation Before proceeding any further, you&amp;rsquo;ll want to upgrade to TCOD version 11.15, if you don&amp;rsquo;t already have it. This version of TCOD was released during the tutorial event, so if you&amp;rsquo;re following along on a weekly basis, you probably don&amp;rsquo;t have this version installed!
+Refactoring previous code After parts 1-5 for this tutorial were written, we decided to change a few things around, to hopefully make the codebase a bit cleaner and easier to extend in the future.</description>
+    </item>
+    
+    <item>
+      <title>Part 7 - Creating the Interface</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-7/</link>
+      <pubDate>Tue, 07 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-7/</guid>
+      <description>Our game is looking more and more playable by the chapter, but before we move forward with the gameplay, we ought to take a moment to focus on how the project looks. Despite what some roguelike traditionalists may tell you, a good UI goes a long way.
+One of the first things we can do is define a file that will hold our RGB colors. We&amp;rsquo;ve just been hard-coding them up until now, but it would be nice if they were all in one place and then imported when needed, so that we could easily update them if need be.</description>
+    </item>
+    
+    <item>
+      <title>Part 4 - Field of View</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-4/</link>
+      <pubDate>Mon, 29 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-4/</guid>
+      <description>We have a dungeon now, and we can move about it freely. But are we really exploring the dungeon if we can just see it all from the beginning?
+Most roguelikes (not all!) only let you see within a certain range of your character, and ours will be no different. We need to implement a way to calculate the &amp;ldquo;Field of View&amp;rdquo; for our adventurer, and fortunately, tcod makes that easy!</description>
+    </item>
+    
+    <item>
+      <title>Part 5 - Placing Enemies and kicking them (harmlessly)</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-5/</link>
+      <pubDate>Mon, 29 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-5/</guid>
+      <description>What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&amp;rsquo;ll save for next time).
+When we&amp;rsquo;re building our dungeon, we&amp;rsquo;ll need to place the enemies in the rooms. In order to do that, we will need to make a change to the way entities are stored in our game.</description>
+    </item>
+    
+    <item>
+      <title>Part 2 - The generic Entity, the render functions, and the map</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-2/</link>
+      <pubDate>Tue, 23 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-2/</guid>
+      <description>Now that we can move our little &amp;lsquo;@&amp;rsquo; symbol around, we need to give it something to move around in. But before that, let&amp;rsquo;s stop for a moment and think about the player object itself.
+Right now, we just represent the player with the &amp;lsquo;@&amp;rsquo; symbol, and its x and y coordinates. Shouldn&amp;rsquo;t we tie those things together in an object, along with some other data and functions that pertain to it?</description>
+    </item>
+    
+    <item>
+      <title>Part 3 - Generating a dungeon</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-3/</link>
+      <pubDate>Tue, 23 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-3/</guid>
+      <description>Note: This part of the tutorial relies on TCOD version 11.14 or higher. You might need to upgrade the library (and your requirements.txt file, if you&amp;rsquo;re using one).
+Remember how we created a wall in the last part? We won&amp;rsquo;t need that anymore. Additionally, our dungeon generator will start by filling the entire map with &amp;ldquo;wall&amp;rdquo; tiles and &amp;ldquo;carving&amp;rdquo; out rooms, so we can modify our GameMap class to fill in walls instead of floors.</description>
+    </item>
+    
+    <item>
+      <title>Part 1 - Drawing the &#39;@&#39; symbol and moving it around</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-1/</link>
+      <pubDate>Sun, 14 Jun 2020 11:35:26 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-1/</guid>
+      <description>Welcome to part 1 of this tutorial! This series will help you create your very first roguelike game, written in Python!
+This tutorial is largely based off the one found on Roguebasin. Many of the design decisions were mainly to keep this tutorial in lockstep with that one (at least in terms of chapter composition and general direction). This tutorial would not have been possible without the guidance of those who wrote that tutorial, along with all the wonderful contributors to tcod and python-tcod over the years.</description>
+    </item>
+    
+    <item>
+      <title>Part 0 - Setting Up</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/v2/part-0/</link>
+      <pubDate>Sun, 14 Jun 2020 11:25:36 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/v2/part-0/</guid>
+      <description>Prior knowledge This tutorial assumes some basic familiarity with programming in general, and with Python. If you&amp;rsquo;ve never used Python before, this tutorial could be a little confusing. There are many free resources online about learning programming and Python (too many to list here), and I&amp;rsquo;d recommend learning about objects and functions in Python at the very least before attempting to read this tutorial.
+&amp;hellip; Of course, there are those who have ignored this advice and done well with this tutorial anyway, so feel free to ignore that last paragraph if you&amp;rsquo;re feeling bold!</description>
+    </item>
+    
+  </channel>
+</rss>

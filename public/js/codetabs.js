@@ -8,15 +8,15 @@ var allPanes = document.querySelectorAll("[data-pane]");
 
 function toggleTabs(event) {
 
-	if (event.target) {
+	if(event.target){
 		event.preventDefault();
 		var clickedTab = event.currentTarget;
 		var targetKey = clickedTab.getAttribute("data-toggle-tab")
-	} else {
+	}else {
 		var targetKey = event
 	}
 	// We store the config language selected in users' localStorage
-	if (window.localStorage) {
+	if(window.localStorage){
 		window.localStorage.setItem("configLangPref", targetKey)
 	}
 	var selectedTabs = document.querySelectorAll("[data-toggle-tab='" + targetKey + "']");

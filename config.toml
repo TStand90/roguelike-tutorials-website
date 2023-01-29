@@ -2,9 +2,9 @@ baseURL = "https://rogueliketutorials.com/"
 languageCode = "en-us"
 title = "Roguelike Tutorials"
 
-theme = "bootstrap"
-pygmentsCodeFences = true
-pygmentsCodeFencesGuessSyntax = true
+theme = "hugo-coder"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
 
 [languages.en]
   languageName = "English"
@@ -22,14 +22,22 @@ pygmentsCodeFencesGuessSyntax = true
   [[languages.en.menu.main]]
     url = "/tutorials/tcod/2019/"
     name = "TCOD Tutorial (2019)"
-    weight = 2
+    weight = 3
   [[languages.en.menu.main]]
     url = "/about/"
     name = "About"
-    weight = 3
+    weight = 4
 
 [params]
   mainSections = ["post"]
+  colorScheme = "dark"
+  hidecolorschemetoggle = false
+
+  hidecredits = true
+  hidecopyright = true
+
+  custom_css = ["css/style.css"]
+  custom_js = ["js/codetabs.js"]
 
   [params.sidebar]
     showRecent = false

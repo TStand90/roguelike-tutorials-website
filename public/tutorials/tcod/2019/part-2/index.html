@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 2 - The generic Entity, the render functions, and the map" />
+<meta property="og:description" content="Now that we can move our little &lsquo;@&rsquo; symbol around, we need to give it something to move around in. But before that, let&rsquo;s stop for a moment and think about the player object itself.
+Right now, we just represent the player with the &lsquo;@&rsquo; symbol, and its x and y coordinates. Shouldn&rsquo;t we tie those things together in an object, along with some other data and functions that pertain to it?" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/2019/part-2/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2019-03-30T08:39:20-07:00" />
+<meta property="article:modified_time" content="2019-03-30T08:39:20-07:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 2 - The generic Entity, the render functions, and the map"/>
+<meta name="twitter:description" content="Now that we can move our little &lsquo;@&rsquo; symbol around, we need to give it something to move around in. But before that, let&rsquo;s stop for a moment and think about the player object itself.
+Right now, we just represent the player with the &lsquo;@&rsquo; symbol, and its x and y coordinates. Shouldn&rsquo;t we tie those things together in an object, along with some other data and functions that pertain to it?"/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/2019/part-2/">
+
+    <title>
+      
+        Part 2 - The generic Entity, the render functions, and the map | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/2019/part-2/">Part 2 - The generic Entity, the render functions, and the map</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2019-03-30">Mar 30, 2019</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <p>Now that we can move our little &lsquo;@&rsquo; symbol around, we need to give it
+something to move around <em>in</em>. But before that, let&rsquo;s stop for a moment
+and think about the player object itself.</p>
+<p>Right now, we just represent the player with the &lsquo;@&rsquo; symbol, and its x
+and y coordinates. Shouldn&rsquo;t we tie those things together in an object,
+along with some other data and functions that pertain to it?</p>
+<p>Let&rsquo;s create a generic class to represent not just the player, but just
+about <em>everything</em> in our game world. Enemies, items, and whatever other
+foreign entities we can dream of will be part of this class, which we&rsquo;ll
+call <code>Entity</code>.</p>
+<p>Create a new file, and call it <code>entity.py</code>. In that file, put the
+following class:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Entity</span>:
+    <span style="color:#e6db74">&#34;&#34;&#34;
+</span><span style="color:#e6db74">    A generic object to represent players, enemies, items, etc.
+</span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+    <span style="color:#66d9ef">def</span> __init__(self, x, y, char, color):
+        self<span style="color:#f92672">.</span>x <span style="color:#f92672">=</span> x
+        self<span style="color:#f92672">.</span>y <span style="color:#f92672">=</span> y
+        self<span style="color:#f92672">.</span>char <span style="color:#f92672">=</span> char
+        self<span style="color:#f92672">.</span>color <span style="color:#f92672">=</span> color
+
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">move</span>(self, dx, dy):
+        <span style="color:#75715e"># Move the entity by a given amount</span>
+        self<span style="color:#f92672">.</span>x <span style="color:#f92672">+=</span> dx
+        self<span style="color:#f92672">.</span>y <span style="color:#f92672">+=</span> dy</code></pre></div>
+<p>This is pretty self explanatory. The <code>Entity</code> class holds the x and y
+coordinates, along with the character (the &lsquo;@&rsquo; symbol in the player&rsquo;s
+case) and the color (white for the player by default). We also have a
+method called <code>move</code>, which will allow the entity to be moved around by
+a given x and y.</p>
+<p>Let&rsquo;s put our fancy new class into action! Modify the first part of
+<code>engine.py</code> to look like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+<span style="color:#a6e22e">+from entity import Entity
+</span><span style="color:#a6e22e"></span>from input_handlers import handle_keys
+
+
+def main():
+    screen_width = 80
+    screen_height = 50
+
+<span style="color:#f92672">-   player_x = int(screen_width / 2)
+</span><span style="color:#f92672">-   player_y = int(screen_height / 2)
+</span><span style="color:#f92672"></span>
+<span style="color:#a6e22e">+   player = Entity(int(screen_width / 2), int(screen_height / 2), &#39;@&#39;, libtcod.white)
+</span><span style="color:#a6e22e">+   npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), &#39;@&#39;, libtcod.yellow)
+</span><span style="color:#a6e22e">+   entities = [npc, player]
+</span><span style="color:#a6e22e"></span>    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+<span class="new-text">from entity import Entity</span>
+from input_handlers import handle_keys
+
+
+def main():
+    screen_width = 80
+    screen_height = 50
+
+    <span class="crossed-out-text">player_x = int(screen_width / 2)</span>
+    <span class="crossed-out-text">player_y = int(screen_height / 2)</span>
+
+    <span class="new-text">player = Entity(int(screen_width / 2), int(screen_height / 2), '@', libtcod.white)
+    npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), '@', libtcod.yellow)
+    entities = [npc, player]</span>
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;re importing the <code>Entity</code> class into <code>engine.py</code>, and using it to
+initialize the player and a new NPC. We store these two in a list, that
+will eventually hold all our entities on the map.</p>
+<p>Also modify the part where we handle movement so that the Entity class
+handles the actual movement.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        if move:
+            dx, dy = move
+<span style="color:#f92672">-           player_x += dx
+</span><span style="color:#f92672">-           player_x += dy
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           player.move(dx, dy)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        if move:
+            dx, dy = move
+            <span class="crossed-out-text">player_x += dx</span>
+            <span class="crossed-out-text">player_x += dy</span>
+            <span class="new-text">player.move(dx, dy)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Lastly, update the drawing functions to use the new player object:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    while not libtcod.console_is_window_closed():
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
+
+        libtcod.console_set_default_foreground(con, libtcod.white)
+<span style="color:#f92672">-       libtcod.console_put_char(con, player_x, player_y, &#39;@&#39;, libtcod.BKGND_NONE)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       libtcod.console_put_char(con, player.x, player.y, &#39;@&#39;, libtcod.BKGND_NONE)
+</span><span style="color:#a6e22e"></span>        libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+        libtcod.console_flush()
+
+<span style="color:#f92672">-       libtcod.console_put_char(con, player_x, player_y, &#39; &#39;, libtcod.BKGND_NONE)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       libtcod.console_put_char(con, player.x, player.y, &#39; &#39;, libtcod.BKGND_NONE)
+</span><span style="color:#a6e22e"></span>
+        action = handle_keys(key)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    while not libtcod.console_is_window_closed():
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
+
+        libtcod.console_set_default_foreground(con, libtcod.white)
+        <span class="crossed-out-text">libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)</span>
+        <span class="new-text">libtcod.console_put_char(con, player.x, player.y, '@', libtcod.BKGND_NONE)</span>
+        libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+        libtcod.console_flush()
+
+        <span class="crossed-out-text">libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)</span>
+        <span class="new-text">libtcod.console_put_char(con, player.x, player.y, ' ', libtcod.BKGND_NONE)</span>
+
+        action = handle_keys(key)
+    </pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now we need to alter the way that the entities are drawn to the screen.
+If you run the code right now, only the player gets drawn. Let&rsquo;s write
+some functions to draw not only the player, but any entity currently in
+our entities list.</p>
+<p>Create a new file called <code>render_functions.py</code>. This will hold our
+functions for drawing and clearing from the screen. Put the following
+code in that file.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">import</span> tcod <span style="color:#66d9ef">as</span> libtcod
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">render_all</span>(con, entities, screen_width, screen_height):
+    <span style="color:#75715e"># Draw all entities in the list</span>
+    <span style="color:#66d9ef">for</span> entity <span style="color:#f92672">in</span> entities:
+        draw_entity(con, entity)
+
+    libtcod<span style="color:#f92672">.</span>console_blit(con, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, screen_width, screen_height, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>)
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">clear_all</span>(con, entities):
+    <span style="color:#66d9ef">for</span> entity <span style="color:#f92672">in</span> entities:
+        clear_entity(con, entity)
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">draw_entity</span>(con, entity):
+    libtcod<span style="color:#f92672">.</span>console_set_default_foreground(con, entity<span style="color:#f92672">.</span>color)
+    libtcod<span style="color:#f92672">.</span>console_put_char(con, entity<span style="color:#f92672">.</span>x, entity<span style="color:#f92672">.</span>y, entity<span style="color:#f92672">.</span>char, libtcod<span style="color:#f92672">.</span>BKGND_NONE)
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">clear_entity</span>(con, entity):
+    <span style="color:#75715e"># erase the character that represents this object</span>
+    libtcod<span style="color:#f92672">.</span>console_put_char(con, entity<span style="color:#f92672">.</span>x, entity<span style="color:#f92672">.</span>y, <span style="color:#e6db74">&#39; &#39;</span>, libtcod<span style="color:#f92672">.</span>BKGND_NONE)</code></pre></div>
+<p>Here&rsquo;s a quick breakdown of what these functions do:</p>
+<ul>
+<li>The <code>render_all</code> function is what we&rsquo;ll call from our game loop to
+draw entities and, shortly, the map. For now, it takes the console
+(con), a list of entities, and the screen width/height as
+parameters, and calls the <code>draw_entity</code> function on each. It then
+blits the changes to the screen.</li>
+<li><code>draw_entity</code> is what does the actual drawing. The code should look
+very similar to what&rsquo;s in our game loop right now, except it&rsquo;s using
+the entity&rsquo;s variables (x, y, char, and color) to do the drawing.
+This makes it flexible enough to, theoretically, draw any entity we
+pass to it.</li>
+<li><code>clear_all</code> is what we&rsquo;ll use to clear all the entities after
+drawing them to the screen. It&rsquo;s just a loop that calls another
+function.</li>
+<li><code>clear_entity</code> just does what our previous line did, and clears the
+entity from the screen (so that when it moves, it doesn&rsquo;t leave a
+trail behind).</li>
+</ul>
+<p>Now that we&rsquo;ve gotten a few functions to assist drawing the entities,
+let&rsquo;s put them to use. Make the following modifications to the section
+where we drew the player (in <code>engine.py</code>).</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+    libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
+
+<span style="color:#f92672">-   libtcod.console_set_default_foreground(con, libtcod.white)
+</span><span style="color:#f92672">-   libtcod.console_put_char(con, player.x, player.y, &#39;@&#39;, libtcod.BKGND_NONE)
+</span><span style="color:#f92672">-   libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   render_all(con, entities, screen_width, screen_height)
+</span><span style="color:#a6e22e"></span>
+    libtcod.console_flush()
+
+<span style="color:#f92672">-   libtcod.console_put_char(con, player.x, player.y, &#39; &#39;, libtcod.BKGND_NONE)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   clear_all(con, entities)
+</span><span style="color:#a6e22e"></span>
+    action = handle_keys(key)
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+    libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
+
+    <span class="crossed-out-text">libtcod.console_set_default_foreground(con, libtcod.white)</span>
+    <span class="crossed-out-text">libtcod.console_put_char(con, player.x, player.y, '@', libtcod.BKGND_NONE)</span>
+    <span class="crossed-out-text">libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)</span>
+    <span class="new-text">render_all(con, entities, screen_width, screen_height)</span>
+
+    libtcod.console_flush()
+
+    <span class="crossed-out-text">libtcod.console_put_char(con, player.x, player.y, ' ', libtcod.BKGND_NONE)</span>
+    <span class="new-text">clear_all(con, entities)</span>
+
+    action = handle_keys(key)
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Don&rsquo;t forget to import <code>render_all</code> and <code>clear_all</code> at the top of your
+file. Your imports section should now look something like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+from entity import Entity
+from input_handlers import handle_keys
+<span style="color:#a6e22e">+from render_functions import clear_all, render_all
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+from entity import Entity
+from input_handlers import handle_keys
+<span class="new-text">from render_functions import clear_all, render_all</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>If you run the project now, you should see your &lsquo;@&rsquo; symbol, along with a
+yellow one representing our NPC. It doesn&rsquo;t do anything, yet, but now we
+have a method for drawing more than one character to the screen.</p>
+<p>It&rsquo;s time to shift gears a bit and get our map in place. The map will
+consist of a 2d array of Tile objects. Tiles will have a few properties
+that define whether we can move through them, or see through them.</p>
+<p>We&rsquo;d better start by defining the size of our map. Add these variables
+right below where you defined the screen width and height:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    screen_height = 50
+<span style="color:#a6e22e">+   map_width = 80
+</span><span style="color:#a6e22e">+   map_height = 45
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    screen_height = 50
+    <span class="new-text">map_width = 80
+    map_height = 45</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Simple enough. Now we need a place for our Tile class, along with a few
+other map classes, to live. I prefer to keep similar classes in the same
+folder, so create a new Python package (that&rsquo;s a directory with a file
+called <code>__init__.py</code> in it, __init__.py is empty in this case)
+called <code>map_objects</code>. In there, create a file called <code>tile.py</code> and put
+the following code in it.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Tile</span>:
+    <span style="color:#e6db74">&#34;&#34;&#34;
+</span><span style="color:#e6db74">    A tile on a map. It may or may not be blocked, and may or may not block sight.
+</span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+    <span style="color:#66d9ef">def</span> __init__(self, blocked, block_sight<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+        self<span style="color:#f92672">.</span>blocked <span style="color:#f92672">=</span> blocked
+
+        <span style="color:#75715e"># By default, if a tile is blocked, it also blocks sight</span>
+        <span style="color:#66d9ef">if</span> block_sight <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span>:
+            block_sight <span style="color:#f92672">=</span> blocked
+
+        self<span style="color:#f92672">.</span>block_sight <span style="color:#f92672">=</span> block_sight</code></pre></div>
+<p>Nothing too complicated here. The <code>Tile</code> class holds whether or not the
+tile is blocked (if it&rsquo;s blocked, you can&rsquo;t move through it), and
+whether or not it blocks sight (for our FOV algorithm later). Notice
+that you don&rsquo;t have to pass <code>block_sight</code> every time; it&rsquo;s assumed to be
+the same as <code>blocked</code>. By keeping the two separate, we can have a tile
+that can be seen-through, but not crossed (a lava pit maybe?), or vice
+versa (a dark room perhaps).</p>
+<p>Now that we have the tile class, we need some sort of container to hold
+our tiles. Let&rsquo;s call this class <code>GameMap</code>, which will hold the 2d array
+of tiles and some methods for setting up and interacting with it. Create
+a file (in the map_objects folder) and call it <code>game_map.py</code>, and put
+the following in it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">from</span> map_objects.tile <span style="color:#f92672">import</span> Tile
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">GameMap</span>:
+    <span style="color:#66d9ef">def</span> __init__(self, width, height):
+        self<span style="color:#f92672">.</span>width <span style="color:#f92672">=</span> width
+        self<span style="color:#f92672">.</span>height <span style="color:#f92672">=</span> height
+        self<span style="color:#f92672">.</span>tiles <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>initialize_tiles()
+
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">initialize_tiles</span>(self):
+        tiles <span style="color:#f92672">=</span> [[Tile(<span style="color:#66d9ef">False</span>) <span style="color:#66d9ef">for</span> y <span style="color:#f92672">in</span> range(self<span style="color:#f92672">.</span>height)] <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> range(self<span style="color:#f92672">.</span>width)]
+
+        tiles[<span style="color:#ae81ff">30</span>][<span style="color:#ae81ff">22</span>]<span style="color:#f92672">.</span>blocked <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+        tiles[<span style="color:#ae81ff">30</span>][<span style="color:#ae81ff">22</span>]<span style="color:#f92672">.</span>block_sight <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+        tiles[<span style="color:#ae81ff">31</span>][<span style="color:#ae81ff">22</span>]<span style="color:#f92672">.</span>blocked <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+        tiles[<span style="color:#ae81ff">31</span>][<span style="color:#ae81ff">22</span>]<span style="color:#f92672">.</span>block_sight <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+        tiles[<span style="color:#ae81ff">32</span>][<span style="color:#ae81ff">22</span>]<span style="color:#f92672">.</span>blocked <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+        tiles[<span style="color:#ae81ff">32</span>][<span style="color:#ae81ff">22</span>]<span style="color:#f92672">.</span>block_sight <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+
+        <span style="color:#66d9ef">return</span> tiles</code></pre></div>
+<p>We&rsquo;re passing in the width and height of the map (which we&rsquo;ve defined in
+our engine), and initializing a 2d array of Tiles, set to non-blocking
+by default. We&rsquo;re setting a few tiles as blocked, just for demonstration
+purposes. I&rsquo;ve kept the code setting the tiles up out of the <code>__init__</code>
+function, for two reasons. One, it may get called outside the
+initialization, and two, because I prefer keeping <code>__init__</code> functions
+as simple as possible.</p>
+<p>Go back to <code>engine.py</code>, where we&rsquo;ll make a few changes so that our map
+get initialized and then drawn to the screen.</p>
+<p>Firstly, we need to define what colors to draw for blocked and
+non-blocked tiles. Let&rsquo;s set up a dictionary that holds the colors we&rsquo;ll
+be using for now (it will expand as this tutorial goes on).</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    map_height = 45
+
+<span style="color:#a6e22e">+   colors = {
+</span><span style="color:#a6e22e">+       &#39;dark_wall&#39;: libtcod.Color(0, 0, 100),
+</span><span style="color:#a6e22e">+       &#39;dark_ground&#39;: libtcod.Color(50, 50, 150)
+</span><span style="color:#a6e22e">+   }
+</span><span style="color:#a6e22e"></span>
+    player = Entity(int(screen_width / 2), int(screen_height / 2), &#39;@&#39;, libtcod.white)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    map_height = 45
+
+    <span class="new-text">colors = {
+        'dark_wall': libtcod.Color(0, 0, 100),
+        'dark_ground': libtcod.Color(50, 50, 150)
+    }</span>
+
+    player = Entity(int(screen_width / 2), int(screen_height / 2), '@', libtcod.white)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>These colors will serve as our wall and ground outside the FOV, when we
+get there (hence the &lsquo;dark&rsquo; in the names).</p>
+<p>Now let&rsquo;s initialize the game map itself. This can go anywhere before
+the main loop; I put mine right below the console initialization.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    con = libtcod.console_new(screen_width, screen_height)
+
+<span style="color:#a6e22e">+   game_map = GameMap(map_width, map_height)
+</span><span style="color:#a6e22e"></span>
+    key = libtcod.Key()
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    con = libtcod.console_new(screen_width, screen_height)
+
+    <span class="new-text">game_map = GameMap(map_width, map_height)</span>
+
+    key = libtcod.Key()</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Don&rsquo;t forget to import the actual GameMap object so that we can use it
+in the engine.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">from entity import Entity
+from input_handlers import handle_keys
+<span style="color:#a6e22e">+from map_objects.game_map import GameMap
+</span><span style="color:#a6e22e"></span>from render_functions import clear_all, render_all
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from entity import Entity
+from input_handlers import handle_keys
+<span class="new-text">from map_objects.game_map import GameMap</span>
+from render_functions import clear_all, render_all</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now that our map object is ready to go, let&rsquo;s pass it to <code>render_all</code> so
+that we can draw it. We&rsquo;ll also pass the <code>colors</code> dictionary, because
+<code>render_all</code> will need to know what colors to draw the various parts of
+the map. Note that the order in which you pass these arguments doesn&rsquo;t
+matter, it just has to match in the function definition and when you
+call it.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-       render_all(con, entities, screen_width, screen_height)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       render_all(con, entities, game_map, screen_width, screen_height, colors)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        <span class="crossed-out-text">render_all(con, entities, screen_width, screen_height)</span>
+        <span class="new-text">render_all(con, entities, game_map, screen_width, screen_height, colors)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Open up <code>render_functions.py</code> and modify <code>render_all</code> like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-def render_all(con, entities, screen_width, screen_height):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+def render_all(con, entities, game_map, screen_width, screen_height, colors):
+</span><span style="color:#a6e22e">+   # Draw all the tiles in the game map
+</span><span style="color:#a6e22e">+   for y in range(game_map.height):
+</span><span style="color:#a6e22e">+       for x in range(game_map.width):
+</span><span style="color:#a6e22e">+           wall = game_map.tiles[x][y].block_sight
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           if wall:
+</span><span style="color:#a6e22e">+               libtcod.console_set_char_background(con, x, y, colors.get(&#39;dark_wall&#39;), libtcod.BKGND_SET)
+</span><span style="color:#a6e22e">+           else:
+</span><span style="color:#a6e22e">+               libtcod.console_set_char_background(con, x, y, colors.get(&#39;dark_ground&#39;), libtcod.BKGND_SET)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e"></span>    # Draw all entities in the list
+    for entity in entities:
+        draw_entity(con, entity)
+
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="crossed-out-text">def render_all(con, entities, screen_width, screen_height):</span>
+<span class="new-text">def render_all(con, entities, game_map, screen_width, screen_height, colors):
+    # Draw all the tiles in the game map
+    for y in range(game_map.height):
+        for x in range(game_map.width):
+            wall = game_map.tiles[x][y].block_sight
+
+            if wall:
+                libtcod.console_set_char_background(con, x, y, colors.get('dark_wall'), libtcod.BKGND_SET)
+            else:
+                libtcod.console_set_char_background(con, x, y, colors.get('dark_ground'), libtcod.BKGND_SET)
+    </span>
+    # Draw all entities in the list
+    for entity in entities:
+        draw_entity(con, entity)
+
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p><code>render_all</code> now loops through each tile in the game map, and checks if
+it blocks sight or not. If it does, then it draws it as a wall, and if
+not, it draws a floor.</p>
+<p>Run the project now, and you should see the &lsquo;map&rsquo; drawn with some color
+to it. You&rsquo;ll see our three block wall as well, but there&rsquo;s one problem:
+We can move through the wall!</p>
+<p>We need to add two more things before we can call it a day. Modify the
+part where the player&rsquo;s move function gets called to look like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        if move:
+            dx, dy = move
+
+<span style="color:#a6e22e">+           if not game_map.is_blocked(player.x + dx, player.y + dy):
+</span><span style="color:#a6e22e">+               player.move(dx, dy)
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-           player.move(dx, dy)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        if move:
+            dx, dy = move
+<span class="new-text">
+            if not game_map.is_blocked(player.x + dx, player.y + dy):
+                player.move(dx, dy)</span>
+            <span class="crossed-out-text">player.move(dx, dy)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p><em>* Note the indentation change for player.move(dx, dy). This is Python,
+so indentation matters!</em></p>
+<p>Now we just have to create the <code>is_blocked</code> method in the game map. Open
+up the <code>game_map.py</code> file and add this method to the class:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3">    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">is_blocked</span>(self, x, y):
+        <span style="color:#66d9ef">if</span> self<span style="color:#f92672">.</span>tiles[x][y]<span style="color:#f92672">.</span>blocked:
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">True</span>
+
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">False</span></code></pre></div>
+<p><em>* Note: You could shorten the is_blocked function, by simply writing</em>
+<code>return self.tiles[x][y].blocked</code>. <em>But we&rsquo;ll be modifying this function
+to do more checks soon, hence we&rsquo;re taking the more explicit route.</em></p>
+<p>Run the project again, and you will get stuck on the walls.</p>
+<p>That&rsquo;s going to do it for this tutorial. It may not look like much, but
+we&rsquo;ve set ourselves up to create some real looking dungeons in the next
+tutorial.</p>
+<p>If you want to see the code so far in its entirety, <a href="https://github.com/TStand90/roguelike_tutorial_revised/tree/part2">click
+here</a>.</p>
+<p><a href="/tutorials/tcod/2019/part-3">Click here to move on to the next part of this
+tutorial.</a></p>
+<!-- raw HTML omitted -->
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

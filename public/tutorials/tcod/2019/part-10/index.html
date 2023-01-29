@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 10 - Saving and loading" />
+<meta property="og:description" content="Saving and loading is essential to almost every roguelike, but it can be a pain to manage if you don&rsquo;t start early. By the end of this chapter, our game will be able to save and load one file to the disk, which you could easily expand to multiple saves if you wanted to. But before we get into that, let&rsquo;s focus on our main game loop.
+The engine.py file is about 250 lines long right now." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/2019/part-10/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2019-03-30T09:34:04-07:00" />
+<meta property="article:modified_time" content="2019-03-30T09:34:04-07:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 10 - Saving and loading"/>
+<meta name="twitter:description" content="Saving and loading is essential to almost every roguelike, but it can be a pain to manage if you don&rsquo;t start early. By the end of this chapter, our game will be able to save and load one file to the disk, which you could easily expand to multiple saves if you wanted to. But before we get into that, let&rsquo;s focus on our main game loop.
+The engine.py file is about 250 lines long right now."/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/2019/part-10/">
+
+    <title>
+      
+        Part 10 - Saving and loading | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/2019/part-10/">Part 10 - Saving and loading</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2019-03-30">Mar 30, 2019</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <p>Saving and loading is essential to almost every roguelike, but it can be
+a pain to manage if you don&rsquo;t start early. By the end of this chapter,
+our game will be able to save and load one file to the disk, which you
+could easily expand to multiple saves if you wanted to. But before we
+get into that, let&rsquo;s focus on our main game loop.</p>
+<p>The <code>engine.py</code> file is about 250 lines long right now. In the grand
+scheme of things, that really isn&rsquo;t that bad (I&rsquo;ve worked on files that
+are 10,000 lines long), but let&rsquo;s face it: a lot of what&rsquo;s in there
+doesn&rsquo;t need to be. Furthermore, the <code>main</code> function could be broken up
+into initialization and the main game loop, which will make saving and
+loading that much easier.</p>
+<p>The first step is to move the initialization of the variables outside
+the main game loop as much as we can. We&rsquo;ll create a few functions that
+will do things like create the player, create the map, and load
+variables like <code>map_width</code> and <code>fov_algorithm</code>. Let&rsquo;s create a new
+folder called <code>loader_functions</code>, and put a new file in it called
+<code>initialize_new_game.py</code>.</p>
+<p>Our first function in this new file will return the variables that are
+currently at the top of the <code>main</code> function. It looks like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">import</span> tcod <span style="color:#66d9ef">as</span> libtcod
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_constants</span>():
+    window_title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Roguelike Tutorial Revised&#39;</span>
+
+    screen_width <span style="color:#f92672">=</span> <span style="color:#ae81ff">80</span>
+    screen_height <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>
+
+    bar_width <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>
+    panel_height <span style="color:#f92672">=</span> <span style="color:#ae81ff">7</span>
+    panel_y <span style="color:#f92672">=</span> screen_height <span style="color:#f92672">-</span> panel_height
+
+    message_x <span style="color:#f92672">=</span> bar_width <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>
+    message_width <span style="color:#f92672">=</span> screen_width <span style="color:#f92672">-</span> bar_width <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span>
+    message_height <span style="color:#f92672">=</span> panel_height <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+
+    map_width <span style="color:#f92672">=</span> <span style="color:#ae81ff">80</span>
+    map_height <span style="color:#f92672">=</span> <span style="color:#ae81ff">43</span>
+
+    room_max_size <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+    room_min_size <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>
+    max_rooms <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>
+
+    fov_algorithm <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+    fov_light_walls <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+    fov_radius <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+
+    max_monsters_per_room <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>
+    max_items_per_room <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>
+
+    colors <span style="color:#f92672">=</span> {
+        <span style="color:#e6db74">&#39;dark_wall&#39;</span>: libtcod<span style="color:#f92672">.</span>Color(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">100</span>),
+        <span style="color:#e6db74">&#39;dark_ground&#39;</span>: libtcod<span style="color:#f92672">.</span>Color(<span style="color:#ae81ff">50</span>, <span style="color:#ae81ff">50</span>, <span style="color:#ae81ff">150</span>),
+        <span style="color:#e6db74">&#39;light_wall&#39;</span>: libtcod<span style="color:#f92672">.</span>Color(<span style="color:#ae81ff">130</span>, <span style="color:#ae81ff">110</span>, <span style="color:#ae81ff">50</span>),
+        <span style="color:#e6db74">&#39;light_ground&#39;</span>: libtcod<span style="color:#f92672">.</span>Color(<span style="color:#ae81ff">200</span>, <span style="color:#ae81ff">180</span>, <span style="color:#ae81ff">50</span>)
+    }
+
+    constants <span style="color:#f92672">=</span> {
+        <span style="color:#e6db74">&#39;window_title&#39;</span>: window_title,
+        <span style="color:#e6db74">&#39;screen_width&#39;</span>: screen_width,
+        <span style="color:#e6db74">&#39;screen_height&#39;</span>: screen_height,
+        <span style="color:#e6db74">&#39;bar_width&#39;</span>: bar_width,
+        <span style="color:#e6db74">&#39;panel_height&#39;</span>: panel_height,
+        <span style="color:#e6db74">&#39;panel_y&#39;</span>: panel_y,
+        <span style="color:#e6db74">&#39;message_x&#39;</span>: message_x,
+        <span style="color:#e6db74">&#39;message_width&#39;</span>: message_width,
+        <span style="color:#e6db74">&#39;message_height&#39;</span>: message_height,
+        <span style="color:#e6db74">&#39;map_width&#39;</span>: map_width,
+        <span style="color:#e6db74">&#39;map_height&#39;</span>: map_height,
+        <span style="color:#e6db74">&#39;room_max_size&#39;</span>: room_max_size,
+        <span style="color:#e6db74">&#39;room_min_size&#39;</span>: room_min_size,
+        <span style="color:#e6db74">&#39;max_rooms&#39;</span>: max_rooms,
+        <span style="color:#e6db74">&#39;fov_algorithm&#39;</span>: fov_algorithm,
+        <span style="color:#e6db74">&#39;fov_light_walls&#39;</span>: fov_light_walls,
+        <span style="color:#e6db74">&#39;fov_radius&#39;</span>: fov_radius,
+        <span style="color:#e6db74">&#39;max_monsters_per_room&#39;</span>: max_monsters_per_room,
+        <span style="color:#e6db74">&#39;max_items_per_room&#39;</span>: max_items_per_room,
+        <span style="color:#e6db74">&#39;colors&#39;</span>: colors
+    }
+
+    <span style="color:#66d9ef">return</span> constants</code></pre></div>
+<p><em>*Note: <code>window_title</code> is new. Before, we were just passing the title
+of the window as a string, but we might as well define it as part of
+this dictionary.</em></p>
+<p>Why the name &ldquo;constants&rdquo;? Python doesn&rsquo;t have a way to declare a
+variable that never changes (Java has &ldquo;final&rdquo;, C# has &ldquo;readonly&rdquo;,
+etc.), so I wanted a name that conveys the fact that these variable&rsquo;s
+<em>shouldn&rsquo;t</em> change. The program <em>could, theoretically</em> alter them during
+the course of the game, but for now, we won&rsquo;t do that. You can use
+another name if you prefer, like &ldquo;game_variables&rdquo; or something to that
+effect.</p>
+<p>Let&rsquo;s put this function to work in our <code>engine.py</code> file. Import the
+function first:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+from input_handlers import handle_keys, handle_mouse
+<span style="color:#a6e22e">+from loader_functions.initialize_new_game import get_constants
+</span><span style="color:#a6e22e"></span>from map_objects.game_map import GameMap
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+from input_handlers import handle_keys, handle_mouse
+<span class="new-text">from loader_functions.initialize_new_game import get_constants</span>
+from map_objects.game_map import GameMap
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, call it in the first line of <code>main</code>. Let&rsquo;s also remove those same
+variables :</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def main():
+<span style="color:#a6e22e">+   constants = get_constants()
+</span><span style="color:#a6e22e"></span>
+<span style="color:#f92672">-   screen_width = 80
+</span><span style="color:#f92672">-   screen_height = 50
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   bar_width = 20
+</span><span style="color:#f92672">-   panel_height = 7
+</span><span style="color:#f92672">-   panel_y = screen_height - panel_height
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   message_x = bar_width + 2
+</span><span style="color:#f92672">-   message_width = screen_width - bar_width - 2
+</span><span style="color:#f92672">-   message_height = panel_height - 1
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   map_width = 80
+</span><span style="color:#f92672">-   map_height = 43
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   room_max_size = 10
+</span><span style="color:#f92672">-   room_min_size = 6
+</span><span style="color:#f92672">-   max_rooms = 30
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   fov_algorithm = 0
+</span><span style="color:#f92672">-   fov_light_walls = True
+</span><span style="color:#f92672">-   fov_radius = 10
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   max_monsters_per_room = 3
+</span><span style="color:#f92672">-   max_items_per_room = 2
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-   colors = {
+</span><span style="color:#f92672">-       &#39;dark_wall&#39;: (0, 0, 100),
+</span><span style="color:#f92672">-       &#39;dark_ground&#39;: (50, 50, 150),
+</span><span style="color:#f92672">-       &#39;light_wall&#39;: (130, 110, 50),
+</span><span style="color:#f92672">-       &#39;light_ground&#39;: (200, 180, 50)
+</span><span style="color:#f92672">-   }
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def main():
+    <span class="new-text">constants = get_constants()</span>
+
+    <span class="crossed-out-text">screen_width = 80</span>
+    <span class="crossed-out-text">screen_height = 50</span>
+
+    <span class="crossed-out-text">bar_width = 20</span>
+    <span class="crossed-out-text">panel_height = 7</span>
+    <span class="crossed-out-text">panel_y = screen_height - panel_height</span>
+
+    <span class="crossed-out-text">message_x = bar_width + 2</span>
+    <span class="crossed-out-text">message_width = screen_width - bar_width - 2</span>
+    <span class="crossed-out-text">message_height = panel_height - 1</span>
+
+    <span class="crossed-out-text">map_width = 80</span>
+    <span class="crossed-out-text">map_height = 43</span>
+
+    <span class="crossed-out-text">room_max_size = 10</span>
+    <span class="crossed-out-text">room_min_size = 6</span>
+    <span class="crossed-out-text">max_rooms = 30</span>
+
+    <span class="crossed-out-text">fov_algorithm = 0</span>
+    <span class="crossed-out-text">fov_light_walls = True</span>
+    <span class="crossed-out-text">fov_radius = 10</span>
+
+    <span class="crossed-out-text">max_monsters_per_room = 3</span>
+    <span class="crossed-out-text">max_items_per_room = 2</span>
+
+    <span class="crossed-out-text">colors = {</span>
+        <span class="crossed-out-text">'dark_wall': (0, 0, 100),</span>
+        <span class="crossed-out-text">'dark_ground': (50, 50, 150),</span>
+        <span class="crossed-out-text">'light_wall': (130, 110, 50),</span>
+        <span class="crossed-out-text">'light_ground': (200, 180, 50)</span>
+    <span class="crossed-out-text">}</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Okay, so if you&rsquo;re using an IDE (like PyCharm), then it&rsquo;s probably going
+crazy right now. Obviously we can&rsquo;t just remove that many variables and
+expect everything to be just fine. We have to modify all the times we
+used those &ldquo;constant&rdquo; variables directly, and replace then with a lookup
+to the <code>constants</code> dictionary.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    libtcod.console_set_custom_font(&#39;arial10x10.png&#39;, libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+<span style="color:#f92672">-   libtcod.console_init_root(screen_width, screen_height, &#39;libtcod tutorial revised&#39;, False)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   libtcod.console_init_root(constants[&#39;screen_width&#39;], constants[&#39;screen_height&#39;], constants[&#39;window_title&#39;], False)
+</span><span style="color:#a6e22e"></span>
+<span style="color:#f92672">-   con = libtcod.console_new(screen_width, screen_height)
+</span><span style="color:#f92672">-   panel = libtcod.console_new(screen_width, panel_height)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   con = libtcod.console_new(constants[&#39;screen_width&#39;], constants[&#39;screen_height&#39;])
+</span><span style="color:#a6e22e">+   panel = libtcod.console_new(constants[&#39;screen_width&#39;], constants[&#39;panel_height&#39;])
+</span><span style="color:#a6e22e"></span>
+<span style="color:#f92672">-   game_map = GameMap(map_width, map_height)
+</span><span style="color:#f92672">-   game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+</span><span style="color:#f92672">-                     max_monsters_per_room, max_items_per_room)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   game_map = GameMap(constants[&#39;map_width&#39;], constants[&#39;map_height&#39;])
+</span><span style="color:#a6e22e">+   game_map.make_map(constants[&#39;max_rooms&#39;], constants[&#39;room_min_size&#39;], constants[&#39;room_max_size&#39;],
+</span><span style="color:#a6e22e">+                     constants[&#39;map_width&#39;], constants[&#39;map_height&#39;], player, entities,
+</span><span style="color:#a6e22e">+                     constants[&#39;max_monsters_per_room&#39;], constants[&#39;max_items_per_room&#39;])
+</span><span style="color:#a6e22e"></span>
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+<span style="color:#f92672">-   message_log = MessageLog(message_x, message_width, message_height)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   message_log = MessageLog(constants[&#39;message_x&#39;], constants[&#39;message_width&#39;], constants[&#39;message_height&#39;])
+</span><span style="color:#a6e22e"></span>
+    key = libtcod.Key()
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    <span class="crossed-out-text">libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)</span>
+    <span class="new-text">libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)</span>
+
+    <span class="crossed-out-text">con = libtcod.console_new(screen_width, screen_height)</span>
+    <span class="crossed-out-text">panel = libtcod.console_new(screen_width, panel_height)</span>
+    <span class="new-text">con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])</span>
+
+    <span class="crossed-out-text">game_map = GameMap(map_width, map_height)</span>
+    <span class="crossed-out-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,</span>
+                      <span class="crossed-out-text">max_monsters_per_room, max_items_per_room)</span>
+    <span class="new-text">game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])</span>
+
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    <span class="crossed-out-text">message_log = MessageLog(message_x, message_width, message_height)</span>
+    <span class="new-text">message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])</span>
+
+    key = libtcod.Key()</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if fov_recompute:
+<span style="color:#f92672">-           recompute_fov(fov_map, player.x, player.y, fov_radius, fov_light_walls, fov_algorithm)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           recompute_fov(fov_map, player.x, player.y, constants[&#39;fov_radius&#39;], constants[&#39;fov_light_walls&#39;],
+</span><span style="color:#a6e22e">+                         constants[&#39;fov_algorithm&#39;])
+</span><span style="color:#a6e22e"></span>
+<span style="color:#f92672">-       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+</span><span style="color:#f92672">-                  screen_height, bar_width, panel_height, panel_y, mouse, colors, game_state)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+</span><span style="color:#a6e22e">+                  constants[&#39;screen_width&#39;], constants[&#39;screen_height&#39;], constants[&#39;bar_width&#39;],
+</span><span style="color:#a6e22e">+                  constants[&#39;panel_height&#39;], constants[&#39;panel_y&#39;], mouse, constants[&#39;colors&#39;], game_state)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if fov_recompute:
+            <span class="crossed-out-text">recompute_fov(fov_map, player.x, player.y, fov_radius, fov_light_walls, fov_algorithm)</span>
+            <span class="new-text">recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
+                          constants['fov_algorithm'])</span>
+
+        <span class="crossed-out-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,</span>
+                   <span class="crossed-out-text">screen_height, bar_width, panel_height, panel_y, mouse, colors, game_state)</span>
+        <span class="new-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                   constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                   constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p><em>*Note: Why are we using the square bracket notation instead of the
+<code>get()</code> method? In most other spots, we&rsquo;ve used the &lsquo;get&rsquo; notation, but
+here I would argue it makes more sense to use the square brackets.
+Square brackets will outright crash our game if the variable isn&rsquo;t
+found, which in this case, is probably what we&rsquo;d want. The game can&rsquo;t
+possibly proceed without these variables, so there&rsquo;s no reason to try to
+continue the program without them.</em></p>
+<p>That&rsquo;s a lot of changes, but we&rsquo;ve successfully removed the constant
+variables out of the main loop! Note that if you wanted to, you could
+shorten a <em>lot</em> of those function definitions by just passing the
+<code>constants</code> dictionary instead of passing only what the functions need.
+It doesn&rsquo;t make a huge difference and is really a matter of preference.
+I&rsquo;ll leave it as is in this tutorial, since changing the functions right
+now would be a ton of work.</p>
+<p>What&rsquo;s next? Another thing we could do is move the initialization of the
+player, entities list, and game&rsquo;s map to a separate function. Put the
+following function in <code>initialize_new_game.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def get_constants():
+    ...
+
+<span style="color:#a6e22e">+def get_game_variables(constants):
+</span><span style="color:#a6e22e">+   fighter_component = Fighter(hp=30, defense=2, power=5)
+</span><span style="color:#a6e22e">+   inventory_component = Inventory(26)
+</span><span style="color:#a6e22e">+   player = Entity(0, 0, &#39;@&#39;, libtcod.white, &#39;Player&#39;, blocks=True, render_order=RenderOrder.ACTOR,
+</span><span style="color:#a6e22e">+                   fighter=fighter_component, inventory=inventory_component)
+</span><span style="color:#a6e22e">+   entities = [player]
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   game_map = GameMap(constants[&#39;map_width&#39;], constants[&#39;map_height&#39;])
+</span><span style="color:#a6e22e">+   game_map.make_map(constants[&#39;max_rooms&#39;], constants[&#39;room_min_size&#39;], constants[&#39;room_max_size&#39;],
+</span><span style="color:#a6e22e">+                     constants[&#39;map_width&#39;], constants[&#39;map_height&#39;], player, entities,
+</span><span style="color:#a6e22e">+                     constants[&#39;max_monsters_per_room&#39;], constants[&#39;max_items_per_room&#39;])
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   message_log = MessageLog(constants[&#39;message_x&#39;], constants[&#39;message_width&#39;], constants[&#39;message_height&#39;])
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   game_state = GameStates.PLAYERS_TURN
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return player, entities, game_map, message_log, game_state
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def get_constants():
+    ...
+
+<span class="new-text">def get_game_variables(constants):
+    fighter_component = Fighter(hp=30, defense=2, power=5)
+    inventory_component = Inventory(26)
+    player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
+                    fighter=fighter_component, inventory=inventory_component)
+    entities = [player]
+
+    game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])
+
+    message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
+
+    game_state = GameStates.PLAYERS_TURN
+
+    return player, entities, game_map, message_log, game_state</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;ll need to include a few imports in <code>initialize_new_game.py</code> for
+this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+<span style="color:#a6e22e">+from components.fighter import Fighter
+</span><span style="color:#a6e22e">+from components.inventory import Inventory
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+from entity import Entity
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+from game_messages import MessageLog
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+from game_states import GameStates
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+from map_objects.game_map import GameMap
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+from render_functions import RenderOrder
+</span><span style="color:#a6e22e"></span>
+
+def get_constants():
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+<span class="new-text">from components.fighter import Fighter
+from components.inventory import Inventory
+
+from entity import Entity
+
+from game_messages import MessageLog
+
+from game_states import GameStates
+
+from map_objects.game_map import GameMap
+
+from render_functions import RenderOrder</span>
+
+
+def get_constants():
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Nothing has changed about the way we&rsquo;re initializing these variables.
+All we&rsquo;re doing is putting it in one function, which we&rsquo;ll call once in
+our main game loop. Let&rsquo;s do that now. Start by importing the
+<code>get_game_variables</code> function:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+from input_handlers import handle_keys, handle_mouse
+<span style="color:#f92672">-from loader_functions.initialize_new_game import get_constants
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from loader_functions.initialize_new_game import get_constants, get_game_variables
+</span><span style="color:#a6e22e"></span>from map_objects.game_map import GameMap
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, <span class="new-text">get_game_variables</span>
+from map_objects.game_map import GameMap
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then modify the <code>main</code> function like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+<span style="color:#f92672">-   fighter_component = Fighter(hp=30, defense=2, power=5)
+</span><span style="color:#f92672">-   inventory_component = Inventory(26)
+</span><span style="color:#f92672">-   player = Entity(0, 0, &#39;@&#39;, libtcod.white, &#39;Player&#39;, blocks=True, render_order=RenderOrder.ACTOR,
+</span><span style="color:#f92672">-                   fighter=fighter_component, inventory=inventory_component)
+</span><span style="color:#f92672">-   entities = [player]
+</span><span style="color:#f92672"></span>
+    libtcod.console_set_custom_font(&#39;arial10x10.png&#39;, libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(constants[&#39;screen_width&#39;], constants[&#39;screen_height&#39;], constants[&#39;window_title&#39;], False)
+
+    con = libtcod.console_new(constants[&#39;screen_width&#39;], constants[&#39;screen_height&#39;])
+    panel = libtcod.console_new(constants[&#39;screen_width&#39;], constants[&#39;panel_height&#39;])
+
+<span style="color:#f92672">-   game_map = GameMap(constants[&#39;map_width&#39;], constants[&#39;map_height&#39;])
+</span><span style="color:#f92672">-   game_map.make_map(constants[&#39;max_rooms&#39;], constants[&#39;room_min_size&#39;], constants[&#39;room_max_size&#39;],
+</span><span style="color:#f92672">-                     constants[&#39;map_width&#39;], constants[&#39;map_height&#39;], player, entities,
+</span><span style="color:#f92672">-                     constants[&#39;max_monsters_per_room&#39;], constants[&#39;max_items_per_room&#39;])
+</span><span style="color:#f92672"></span>
+<span style="color:#a6e22e">+   player, entities, game_map, message_log, game_state = get_game_variables(constants)
+</span><span style="color:#a6e22e"></span>
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+<span style="color:#f92672">-   message_log = MessageLog(constants[&#39;message_x&#39;], constants[&#39;message_width&#39;], constants[&#39;message_height&#39;])
+</span><span style="color:#f92672"></span>
+    key = libtcod.Key()
+    mouse = libtcod.Mouse()
+
+<span style="color:#f92672">-   game_state = GameStates.PLAYERS_TURN
+</span><span style="color:#f92672"></span>    previous_game_state = game_state
+
+    targeting_item = None
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    <span class="crossed-out-text">fighter_component = Fighter(hp=30, defense=2, power=5)</span>
+    <span class="crossed-out-text">inventory_component = Inventory(26)</span>
+    <span class="crossed-out-text">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,</span>
+                    <span class="crossed-out-text">fighter=fighter_component, inventory=inventory_component)</span>
+    <span class="crossed-out-text">entities = [player]</span>
+
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False)
+
+    con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
+
+    <span class="crossed-out-text">game_map = GameMap(constants['map_width'], constants['map_height'])</span>
+    <span class="crossed-out-text">game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],</span>
+                      <span class="crossed-out-text">constants['map_width'], constants['map_height'], player, entities,</span>
+                      <span class="crossed-out-text">constants['max_monsters_per_room'], constants['max_items_per_room'])</span>
+
+    <span class="new-text">player, entities, game_map, message_log, game_state = get_game_variables(constants)</span>
+
+    fov_recompute = True
+
+    fov_map = initialize_fov(game_map)
+
+    <span class="crossed-out-text">message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])</span>
+
+    key = libtcod.Key()
+    mouse = libtcod.Mouse()
+
+    <span class="crossed-out-text">game_state = GameStates.PLAYERS_TURN</span>
+    previous_game_state = game_state
+
+    targeting_item = None
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>One interesting effect of removing these lines is that we don&rsquo;t need all
+the imports we did before. Modify your import section at the top of
+<code>engine.py</code> to look like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+<span style="color:#f92672">-from components.fighter import Fighter
+</span><span style="color:#f92672">-from components.inventory import Inventory
+</span><span style="color:#f92672"></span>from death_functions import kill_monster, kill_player
+<span style="color:#f92672">-from entity import Entity, get_blocking_entities_at_location
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from entity get_blocking_entities_at_location
+</span><span style="color:#a6e22e"></span>from fov_functions import initialize_fov, recompute_fov
+<span style="color:#f92672">-from game_messages import Message, MessageLog
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from game_messages import Message
+</span><span style="color:#a6e22e"></span>from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span style="color:#f92672">-from map_objects.game_map import GameMap
+</span><span style="color:#f92672">-from render_functions import clear_all, render_all, RenderOrder
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from render_functions import clear_all, render_all
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+<span class="crossed-out-text">from components.fighter import Fighter</span>
+<span class="crossed-out-text">from components.inventory import Inventory</span>
+from death_functions import kill_monster, kill_player
+from entity import <span class="crossed-out-text">Entity</span>, get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message, <span class="crossed-out-text">MessageLog</span>
+from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span class="crossed-out-text">from map_objects.game_map import GameMap</span>
+from render_functions import clear_all, render_all<span class="crossed-out-text">, RenderOrder</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>It&rsquo;s time to think about how we&rsquo;re going to save and load our game. In
+order for this to happen, we&rsquo;ll need to save some (not necessarily all)
+of our data to some sort of persistent external location. In many
+applications, this would be a SQL or NoSQL database, but that&rsquo;s probably
+overkill for our little project. Instead, we&rsquo;ll just save to a data
+file.</p>
+<p>So what exactly do we need to save? The key things are the entities list
+(including the player), the game&rsquo;s map, the message log, and the game&rsquo;s
+state. These are the same variables we got from the game&rsquo;s
+initialization function too, so we&rsquo;ll be able to start a new game or
+load an old one by just swapping our the respective functions. More on
+that later.</p>
+<p>Unfortunately, plain JSON isn&rsquo;t quite enough to save and load our data.
+Our objects are too complex to just save to straight JSON. There are a
+few solutions to this. The first would be to write serializers for our
+classes and objects ourselves, which isn&rsquo;t a bad idea. But in the
+interest of keeping things simple for this tutorial, we&rsquo;ll just use a
+library; specifically: <code>shelve</code>. This library allows you to save and
+load complex Python objects, without needing to write custom
+serializers.</p>
+<p>Create a new file in <code>loader_functions</code>, called <code>data_loaders.py</code>.
+We&rsquo;ll start by writing our save function.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">import</span> shelve
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">save_game</span>(player, entities, game_map, message_log, game_state):
+    <span style="color:#66d9ef">with</span> shelve<span style="color:#f92672">.</span>open(<span style="color:#e6db74">&#39;savegame.dat&#39;</span>, <span style="color:#e6db74">&#39;n&#39;</span>) <span style="color:#66d9ef">as</span> data_file:
+        data_file[<span style="color:#e6db74">&#39;player_index&#39;</span>] <span style="color:#f92672">=</span> entities<span style="color:#f92672">.</span>index(player)
+        data_file[<span style="color:#e6db74">&#39;entities&#39;</span>] <span style="color:#f92672">=</span> entities
+        data_file[<span style="color:#e6db74">&#39;game_map&#39;</span>] <span style="color:#f92672">=</span> game_map
+        data_file[<span style="color:#e6db74">&#39;message_log&#39;</span>] <span style="color:#f92672">=</span> message_log
+        data_file[<span style="color:#e6db74">&#39;game_state&#39;</span>] <span style="color:#f92672">=</span> game_state</code></pre></div>
+<p>Using <code>shelve</code>, we&rsquo;re encoding the data into a dictionary which we&rsquo;ll
+save to the file later. Note that we&rsquo;re not actually saving the
+<code>player</code>, because the player is already part of the <code>entities</code> list. We
+just need the index in the list, so that we can load the player from
+that list later.</p>
+<p>And that&rsquo;s all we need to save the game! Without the <code>shelve</code> module,
+it would have taken far more effort to be able to save our game.
+Luckily, it also makes loading our game easy too; let&rsquo;s implement that
+now. In the same file (<code>data_loaders.py</code>), create a new function called
+<code>load_game</code>. You&rsquo;ll need to import <code>GameMap</code> in order for this to work.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+import os
+</span><span style="color:#a6e22e"></span>
+import shelve
+
+
+def save_game(player, entities, game_map, message_log, game_state):
+    ...
+
+<span style="color:#a6e22e">+def load_game():
+</span><span style="color:#a6e22e">+   if not os.path.isfile(&#39;savegame.dat&#39;):
+</span><span style="color:#a6e22e">+       raise FileNotFoundError
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   with shelve.open(&#39;savegame.dat&#39;, &#39;r&#39;) as data_file:
+</span><span style="color:#a6e22e">+       player_index = data_file[&#39;player_index&#39;]
+</span><span style="color:#a6e22e">+       entities = data_file[&#39;entities&#39;]
+</span><span style="color:#a6e22e">+       game_map = data_file[&#39;game_map&#39;]
+</span><span style="color:#a6e22e">+       message_log = data_file[&#39;message_log&#39;]
+</span><span style="color:#a6e22e">+       game_state = data_file[&#39;game_state&#39;]
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   player = entities[player_index]
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return player, entities, game_map, message_log, game_state
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">import os</span>
+
+import shelve
+
+
+def save_game(player, entities, game_map, message_log, game_state):
+    ...
+
+<span class="new-text">def load_game():
+    if not os.path.isfile('savegame.dat'):
+        raise FileNotFoundError
+
+    with shelve.open('savegame.dat', 'r') as data_file:
+        player_index = data_file['player_index']
+        entities = data_file['entities']
+        game_map = data_file['game_map']
+        message_log = data_file['message_log']
+        game_state = data_file['game_state']
+
+    player = entities[player_index]
+
+    return player, entities, game_map, message_log, game_state</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>This is just the reverse of the save function. We pull the data out of
+the data file, and return all the variables needed to the engine.</p>
+<p>The functions for saving and loading are done, but now we need a way to
+use them. Before we do that, it&rsquo;s probably a good time to think about
+how our game starts up in the first place. Right now, the game just
+starts, throwing the player straight into a new game. But that&rsquo;s not how
+games typically work. Almost every game in existence has some sort of
+starting screen, which lets the player start a new game, load an
+existing one, exit, or maybe edit some options. Let&rsquo;s implement
+something similar for ours; we should let the player start a new game,
+load an existing one, or quit.</p>
+<p>We&rsquo;ll need a new menu function to display our main menu. Open up
+<code>menus.py</code> and add the following function to
+it:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
+    ...
+
+
+<span style="color:#a6e22e">+def main_menu(con, background_image, screen_width, screen_height):
+</span><span style="color:#a6e22e">+   libtcod.image_blit_2x(background_image, 0, 0, 0)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   libtcod.console_set_default_foreground(0, libtcod.light_yellow)
+</span><span style="color:#a6e22e">+   libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
+</span><span style="color:#a6e22e">+                            &#39;TOMBS OF THE ANCIENT KINGS&#39;)
+</span><span style="color:#a6e22e">+   libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
+</span><span style="color:#a6e22e">+                            &#39;By (Your name here)&#39;)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   menu(con, &#39;&#39;, [&#39;Play a new game&#39;, &#39;Continue last game&#39;, &#39;Quit&#39;], 24, screen_width, screen_height)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
+    ...
+
+
+<span class="new-text">def main_menu(con, background_image, screen_width, screen_height):
+    libtcod.image_blit_2x(background_image, 0, 0, 0)
+
+    libtcod.console_set_default_foreground(0, libtcod.light_yellow)
+    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height / 2) - 4, libtcod.BKGND_NONE, libtcod.CENTER,
+                             'TOMBS OF THE ANCIENT KINGS')
+    libtcod.console_print_ex(0, int(screen_width / 2), int(screen_height - 2), libtcod.BKGND_NONE, libtcod.CENTER,
+                             'By (Your name here)')
+
+    menu(con, '', ['Play a new game', 'Continue last game', 'Quit'], 24, screen_width, screen_height)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Our &ldquo;main&rdquo; function right now operates off the assumption that we&rsquo;re
+going straight into the game. A better method of handling this would be
+to have the &ldquo;main&rdquo; function open the main menu, and, if the player
+chooses to either start a new game or continue an old one, the main game
+starts. We can move the logic of the main game to a separate function,
+which we&rsquo;ll call <code>play_game</code>. This function will live in our <code>engine.py</code>
+file (it doesn&rsquo;t have to, but it doesn&rsquo;t make much sense to put it
+elsewhere right now).</p>
+<p><em>*Note: I won&rsquo;t bother with code highlighting here, there&rsquo;s just too
+much to
+cover.</em></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">play_game</span>(player, entities, game_map, message_log, game_state, con, panel, constants):
+    fov_recompute <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+
+    fov_map <span style="color:#f92672">=</span> initialize_fov(game_map)
+
+    key <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>Key()
+    mouse <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>Mouse()
+
+    game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>PLAYERS_TURN
+    previous_game_state <span style="color:#f92672">=</span> game_state
+
+    targeting_item <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+
+    <span style="color:#66d9ef">while</span> <span style="color:#f92672">not</span> libtcod<span style="color:#f92672">.</span>console_is_window_closed():
+        libtcod<span style="color:#f92672">.</span>sys_check_for_event(libtcod<span style="color:#f92672">.</span>EVENT_KEY_PRESS <span style="color:#f92672">|</span> libtcod<span style="color:#f92672">.</span>EVENT_MOUSE, key, mouse)
+
+        <span style="color:#66d9ef">if</span> fov_recompute:
+            recompute_fov(fov_map, player<span style="color:#f92672">.</span>x, player<span style="color:#f92672">.</span>y, constants[<span style="color:#e6db74">&#39;fov_radius&#39;</span>], constants[<span style="color:#e6db74">&#39;fov_light_walls&#39;</span>],
+                          constants[<span style="color:#e6db74">&#39;fov_algorithm&#39;</span>])
+
+        render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                   constants[<span style="color:#e6db74">&#39;screen_width&#39;</span>], constants[<span style="color:#e6db74">&#39;screen_height&#39;</span>], constants[<span style="color:#e6db74">&#39;bar_width&#39;</span>],
+                   constants[<span style="color:#e6db74">&#39;panel_height&#39;</span>], constants[<span style="color:#e6db74">&#39;panel_y&#39;</span>], mouse, constants[<span style="color:#e6db74">&#39;colors&#39;</span>], game_state)
+
+        fov_recompute <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+
+        libtcod<span style="color:#f92672">.</span>console_flush()
+
+        clear_all(con, entities)
+
+        action <span style="color:#f92672">=</span> handle_keys(key, game_state)
+        mouse_action <span style="color:#f92672">=</span> handle_mouse(mouse)
+
+        move <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;move&#39;</span>)
+        pickup <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;pickup&#39;</span>)
+        show_inventory <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;show_inventory&#39;</span>)
+        drop_inventory <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;drop_inventory&#39;</span>)
+        inventory_index <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;inventory_index&#39;</span>)
+        exit <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;exit&#39;</span>)
+        fullscreen <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;fullscreen&#39;</span>)
+
+        left_click <span style="color:#f92672">=</span> mouse_action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;left_click&#39;</span>)
+        right_click <span style="color:#f92672">=</span> mouse_action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;right_click&#39;</span>)
+
+        player_turn_results <span style="color:#f92672">=</span> []
+
+        <span style="color:#66d9ef">if</span> move <span style="color:#f92672">and</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>PLAYERS_TURN:
+            dx, dy <span style="color:#f92672">=</span> move
+            destination_x <span style="color:#f92672">=</span> player<span style="color:#f92672">.</span>x <span style="color:#f92672">+</span> dx
+            destination_y <span style="color:#f92672">=</span> player<span style="color:#f92672">.</span>y <span style="color:#f92672">+</span> dy
+
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> game_map<span style="color:#f92672">.</span>is_blocked(destination_x, destination_y):
+                target <span style="color:#f92672">=</span> get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                <span style="color:#66d9ef">if</span> target:
+                    attack_results <span style="color:#f92672">=</span> player<span style="color:#f92672">.</span>fighter<span style="color:#f92672">.</span>attack(target)
+                    player_turn_results<span style="color:#f92672">.</span>extend(attack_results)
+                <span style="color:#66d9ef">else</span>:
+                    player<span style="color:#f92672">.</span>move(dx, dy)
+
+                    fov_recompute <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>ENEMY_TURN
+
+        <span style="color:#66d9ef">elif</span> pickup <span style="color:#f92672">and</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>PLAYERS_TURN:
+            <span style="color:#66d9ef">for</span> entity <span style="color:#f92672">in</span> entities:
+                <span style="color:#66d9ef">if</span> entity<span style="color:#f92672">.</span>item <span style="color:#f92672">and</span> entity<span style="color:#f92672">.</span>x <span style="color:#f92672">==</span> player<span style="color:#f92672">.</span>x <span style="color:#f92672">and</span> entity<span style="color:#f92672">.</span>y <span style="color:#f92672">==</span> player<span style="color:#f92672">.</span>y:
+                    pickup_results <span style="color:#f92672">=</span> player<span style="color:#f92672">.</span>inventory<span style="color:#f92672">.</span>add_item(entity)
+                    player_turn_results<span style="color:#f92672">.</span>extend(pickup_results)
+
+                    <span style="color:#66d9ef">break</span>
+            <span style="color:#66d9ef">else</span>:
+                message_log<span style="color:#f92672">.</span>add_message(Message(<span style="color:#e6db74">&#39;There is nothing here to pick up.&#39;</span>, libtcod<span style="color:#f92672">.</span>yellow))
+
+        <span style="color:#66d9ef">if</span> show_inventory:
+            previous_game_state <span style="color:#f92672">=</span> game_state
+            game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>SHOW_INVENTORY
+
+        <span style="color:#66d9ef">if</span> drop_inventory:
+            previous_game_state <span style="color:#f92672">=</span> game_state
+            game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>DROP_INVENTORY
+
+        <span style="color:#66d9ef">if</span> inventory_index <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> <span style="color:#66d9ef">None</span> <span style="color:#f92672">and</span> previous_game_state <span style="color:#f92672">!=</span> GameStates<span style="color:#f92672">.</span>PLAYER_DEAD <span style="color:#f92672">and</span> inventory_index <span style="color:#f92672">&lt;</span> len(
+                player<span style="color:#f92672">.</span>inventory<span style="color:#f92672">.</span>items):
+            item <span style="color:#f92672">=</span> player<span style="color:#f92672">.</span>inventory<span style="color:#f92672">.</span>items[inventory_index]
+
+            <span style="color:#66d9ef">if</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>SHOW_INVENTORY:
+                player_turn_results<span style="color:#f92672">.</span>extend(player<span style="color:#f92672">.</span>inventory<span style="color:#f92672">.</span>use(item, entities<span style="color:#f92672">=</span>entities, fov_map<span style="color:#f92672">=</span>fov_map))
+            <span style="color:#66d9ef">elif</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>DROP_INVENTORY:
+                player_turn_results<span style="color:#f92672">.</span>extend(player<span style="color:#f92672">.</span>inventory<span style="color:#f92672">.</span>drop_item(item))
+
+        <span style="color:#66d9ef">if</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>TARGETING:
+            <span style="color:#66d9ef">if</span> left_click:
+                target_x, target_y <span style="color:#f92672">=</span> left_click
+
+                item_use_results <span style="color:#f92672">=</span> player<span style="color:#f92672">.</span>inventory<span style="color:#f92672">.</span>use(targeting_item, entities<span style="color:#f92672">=</span>entities, fov_map<span style="color:#f92672">=</span>fov_map,
+                                                        target_x<span style="color:#f92672">=</span>target_x, target_y<span style="color:#f92672">=</span>target_y)
+                player_turn_results<span style="color:#f92672">.</span>extend(item_use_results)
+            <span style="color:#66d9ef">elif</span> right_click:
+                player_turn_results<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#39;targeting_cancelled&#39;</span>: <span style="color:#66d9ef">True</span>})
+
+        <span style="color:#66d9ef">if</span> exit:
+            <span style="color:#66d9ef">if</span> game_state <span style="color:#f92672">in</span> (GameStates<span style="color:#f92672">.</span>SHOW_INVENTORY, GameStates<span style="color:#f92672">.</span>DROP_INVENTORY):
+                game_state <span style="color:#f92672">=</span> previous_game_state
+            <span style="color:#66d9ef">elif</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>TARGETING:
+                player_turn_results<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#39;targeting_cancelled&#39;</span>: <span style="color:#66d9ef">True</span>})
+            <span style="color:#66d9ef">else</span>:
+                save_game(player, entities, game_map, message_log, game_state)
+
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">True</span>
+
+        <span style="color:#66d9ef">if</span> fullscreen:
+            libtcod<span style="color:#f92672">.</span>console_set_fullscreen(<span style="color:#f92672">not</span> libtcod<span style="color:#f92672">.</span>console_is_fullscreen())
+
+        <span style="color:#66d9ef">for</span> player_turn_result <span style="color:#f92672">in</span> player_turn_results:
+            message <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;message&#39;</span>)
+            dead_entity <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;dead&#39;</span>)
+            item_added <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;item_added&#39;</span>)
+            item_consumed <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;consumed&#39;</span>)
+            item_dropped <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;item_dropped&#39;</span>)
+            targeting <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;targeting&#39;</span>)
+            targeting_cancelled <span style="color:#f92672">=</span> player_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;targeting_cancelled&#39;</span>)
+
+            <span style="color:#66d9ef">if</span> message:
+                message_log<span style="color:#f92672">.</span>add_message(message)
+
+            <span style="color:#66d9ef">if</span> dead_entity:
+                <span style="color:#66d9ef">if</span> dead_entity <span style="color:#f92672">==</span> player:
+                    message, game_state <span style="color:#f92672">=</span> kill_player(dead_entity)
+                <span style="color:#66d9ef">else</span>:
+                    message <span style="color:#f92672">=</span> kill_monster(dead_entity)
+
+                message_log<span style="color:#f92672">.</span>add_message(message)
+
+            <span style="color:#66d9ef">if</span> item_added:
+                entities<span style="color:#f92672">.</span>remove(item_added)
+
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>ENEMY_TURN
+
+            <span style="color:#66d9ef">if</span> item_consumed:
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>ENEMY_TURN
+
+            <span style="color:#66d9ef">if</span> item_dropped:
+                entities<span style="color:#f92672">.</span>append(item_dropped)
+
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>ENEMY_TURN
+
+            <span style="color:#66d9ef">if</span> targeting:
+                previous_game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>PLAYERS_TURN
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>TARGETING
+
+                targeting_item <span style="color:#f92672">=</span> targeting
+
+                message_log<span style="color:#f92672">.</span>add_message(targeting_item<span style="color:#f92672">.</span>item<span style="color:#f92672">.</span>targeting_message)
+
+            <span style="color:#66d9ef">if</span> targeting_cancelled:
+                game_state <span style="color:#f92672">=</span> previous_game_state
+
+                message_log<span style="color:#f92672">.</span>add_message(Message(<span style="color:#e6db74">&#39;Targeting cancelled&#39;</span>))
+
+        <span style="color:#66d9ef">if</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>ENEMY_TURN:
+            <span style="color:#66d9ef">for</span> entity <span style="color:#f92672">in</span> entities:
+                <span style="color:#66d9ef">if</span> entity<span style="color:#f92672">.</span>ai:
+                    enemy_turn_results <span style="color:#f92672">=</span> entity<span style="color:#f92672">.</span>ai<span style="color:#f92672">.</span>take_turn(player, fov_map, game_map, entities)
+
+                    <span style="color:#66d9ef">for</span> enemy_turn_result <span style="color:#f92672">in</span> enemy_turn_results:
+                        message <span style="color:#f92672">=</span> enemy_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;message&#39;</span>)
+                        dead_entity <span style="color:#f92672">=</span> enemy_turn_result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;dead&#39;</span>)
+
+                        <span style="color:#66d9ef">if</span> message:
+                            message_log<span style="color:#f92672">.</span>add_message(message)
+
+                        <span style="color:#66d9ef">if</span> dead_entity:
+                            <span style="color:#66d9ef">if</span> dead_entity <span style="color:#f92672">==</span> player:
+                                message, game_state <span style="color:#f92672">=</span> kill_player(dead_entity)
+                            <span style="color:#66d9ef">else</span>:
+                                message <span style="color:#f92672">=</span> kill_monster(dead_entity)
+
+                            message_log<span style="color:#f92672">.</span>add_message(message)
+
+                            <span style="color:#66d9ef">if</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>PLAYER_DEAD:
+                                <span style="color:#66d9ef">break</span>
+
+                    <span style="color:#66d9ef">if</span> game_state <span style="color:#f92672">==</span> GameStates<span style="color:#f92672">.</span>PLAYER_DEAD:
+                        <span style="color:#66d9ef">break</span>
+            <span style="color:#66d9ef">else</span>:
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>PLAYERS_TURN</code></pre></div>
+<p>This is the same as our game code from before, just put into a function.
+We&rsquo;ll pass all the needed variables in our <code>main</code> function. If the
+player presses escape during the game, we&rsquo;ll return to the main loop,
+which displays the main menu. The one thing that is different here is
+that we&rsquo;re calling <code>save_game</code> before exiting the loop.</p>
+<p>Now let&rsquo;s change our main loop. It&rsquo;ll display the main menu, and
+depending on the player&rsquo;s choice, it will either start a new game, load
+an existing one, or exit the program.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    constants <span style="color:#f92672">=</span> get_constants()
+
+    libtcod<span style="color:#f92672">.</span>console_set_custom_font(<span style="color:#e6db74">&#39;arial10x10.png&#39;</span>, libtcod<span style="color:#f92672">.</span>FONT_TYPE_GREYSCALE <span style="color:#f92672">|</span> libtcod<span style="color:#f92672">.</span>FONT_LAYOUT_TCOD)
+
+    libtcod<span style="color:#f92672">.</span>console_init_root(constants[<span style="color:#e6db74">&#39;screen_width&#39;</span>], constants[<span style="color:#e6db74">&#39;screen_height&#39;</span>], constants[<span style="color:#e6db74">&#39;window_title&#39;</span>], <span style="color:#66d9ef">False</span>)
+
+    con <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>console_new(constants[<span style="color:#e6db74">&#39;screen_width&#39;</span>], constants[<span style="color:#e6db74">&#39;screen_height&#39;</span>])
+    panel <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>console_new(constants[<span style="color:#e6db74">&#39;screen_width&#39;</span>], constants[<span style="color:#e6db74">&#39;panel_height&#39;</span>])
+
+    player <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+    entities <span style="color:#f92672">=</span> []
+    game_map <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+    message_log <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+    game_state <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+
+    show_main_menu <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+    show_load_error_message <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+
+    main_menu_background_image <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>image_load(<span style="color:#e6db74">&#39;menu_background.png&#39;</span>)
+
+    key <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>Key()
+    mouse <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>Mouse()
+
+    <span style="color:#66d9ef">while</span> <span style="color:#f92672">not</span> libtcod<span style="color:#f92672">.</span>console_is_window_closed():
+        libtcod<span style="color:#f92672">.</span>sys_check_for_event(libtcod<span style="color:#f92672">.</span>EVENT_KEY_PRESS <span style="color:#f92672">|</span> libtcod<span style="color:#f92672">.</span>EVENT_MOUSE, key, mouse)
+
+        <span style="color:#66d9ef">if</span> show_main_menu:
+            main_menu(con, main_menu_background_image, constants[<span style="color:#e6db74">&#39;screen_width&#39;</span>],
+                      constants[<span style="color:#e6db74">&#39;screen_height&#39;</span>])
+
+            <span style="color:#66d9ef">if</span> show_load_error_message:
+                message_box(con, <span style="color:#e6db74">&#39;No save game to load&#39;</span>, <span style="color:#ae81ff">50</span>, constants[<span style="color:#e6db74">&#39;screen_width&#39;</span>], constants[<span style="color:#e6db74">&#39;screen_height&#39;</span>])
+
+            libtcod<span style="color:#f92672">.</span>console_flush()
+
+            action <span style="color:#f92672">=</span> handle_main_menu(key)
+
+            new_game <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;new_game&#39;</span>)
+            load_saved_game <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;load_game&#39;</span>)
+            exit_game <span style="color:#f92672">=</span> action<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;exit&#39;</span>)
+
+            <span style="color:#66d9ef">if</span> show_load_error_message <span style="color:#f92672">and</span> (new_game <span style="color:#f92672">or</span> load_saved_game <span style="color:#f92672">or</span> exit_game):
+                show_load_error_message <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+            <span style="color:#66d9ef">elif</span> new_game:
+                player, entities, game_map, message_log, game_state <span style="color:#f92672">=</span> get_game_variables(constants)
+                game_state <span style="color:#f92672">=</span> GameStates<span style="color:#f92672">.</span>PLAYERS_TURN
+
+                show_main_menu <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+            <span style="color:#66d9ef">elif</span> load_saved_game:
+                <span style="color:#66d9ef">try</span>:
+                    player, entities, game_map, message_log, game_state <span style="color:#f92672">=</span> load_game()
+                    show_main_menu <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+                <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">FileNotFoundError</span>:
+                    show_load_error_message <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+            <span style="color:#66d9ef">elif</span> exit_game:
+                <span style="color:#66d9ef">break</span>
+
+        <span style="color:#66d9ef">else</span>:
+            libtcod<span style="color:#f92672">.</span>console_clear(con)
+            play_game(player, entities, game_map, message_log, game_state, con, panel, constants)
+
+            show_main_menu <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span></code></pre></div>
+<p>We&rsquo;re loading a background image with <code>image_load</code> to display in our
+main menu. The sample image used for this tutorial can be <a href="http://roguecentral.org/doryen/files/menu_background1.png">found
+here</a>.
+Download it and put in in your project&rsquo;s directory.</p>
+<p>Other than that, a lot of this should look familiar. We&rsquo;re displaying
+the main menu with three options, and accepting keyboard input to
+determine which option to go with. If the user starts a new game, we use
+our <code>get_game_variables</code> function from earlier, and if an old game is
+being loaded, we use the <code>load_game</code> function. Either way, we get the
+same variables. Assuming one of those options was chosen, we pass the
+variables off to the <code>play_game</code> function, and the game proceeds as it
+has been until now.</p>
+<p>We haven&rsquo;t implemented the <code>message_box</code> or <code>handle_main_menu</code> functions
+yet, so let&rsquo;s do so now. We&rsquo;ll start with <code>message_box</code> and we&rsquo;ll put it
+in <code>menus.py</code>, at the bottom of the file:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+def message_box(con, header, width, screen_width, screen_height):
+</span><span style="color:#a6e22e">+   menu(con, header, [], width, screen_width, screen_height)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">def message_box(con, header, width, screen_width, screen_height):
+    menu(con, header, [], width, screen_width, screen_height)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Pretty straightforward. The message box is just an empty menu,
+basically.</p>
+<p>Now on to <code>handle_main_menu</code>, which goes in <code>input_handlers.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def handle_inventory_keys(key):
+    ...
+
+<span style="color:#a6e22e">+def handle_main_menu(key):
+</span><span style="color:#a6e22e">+   key_char = chr(key.c)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   if key_char == &#39;a&#39;:
+</span><span style="color:#a6e22e">+       return {&#39;new_game&#39;: True}
+</span><span style="color:#a6e22e">+   elif key_char == &#39;b&#39;:
+</span><span style="color:#a6e22e">+       return {&#39;load_game&#39;: True}
+</span><span style="color:#a6e22e">+   elif key_char == &#39;c&#39; or  key.vk == libtcod.KEY_ESCAPE:
+</span><span style="color:#a6e22e">+       return {&#39;exit&#39;: True}
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return {}
+</span><span style="color:#a6e22e"></span>
+
+def handle_mouse(mouse):
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def handle_inventory_keys(key):
+    ...
+
+<span class="new-text">def handle_main_menu(key):
+    key_char = chr(key.c)
+
+    if key_char == 'a':
+        return {'new_game': True}
+    elif key_char == 'b':
+        return {'load_game': True}
+    elif key_char == 'c' or  key.vk == libtcod.KEY_ESCAPE:
+        return {'exit': True}
+
+    return {}</span>
+
+
+def handle_mouse(mouse):
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Nothing too complicated here: Our main menu will have 3 options, so just
+return the result of which option was selected. Note that the &lsquo;Quit&rsquo;
+option can be done through the &lsquo;c&rsquo; key or &lsquo;Escape&rsquo;.</p>
+<p>Remember to import these new functions into <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+from death_functions import kill_monster, kill_player
+from entity import get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message
+from game_states import GameStates
+<span style="color:#f92672">-from input_handlers import handle_keys, handle_mouse
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from input_handlers import handle_keys, handle_mouse, handle_main_menu
+</span><span style="color:#a6e22e"></span>from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span style="color:#a6e22e">+from loader_functions.data_loaders import load_game, save_game
+</span><span style="color:#a6e22e">+from menus import main_menu, message_box
+</span><span style="color:#a6e22e"></span>from render_functions import clear_all, render_all
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+from death_functions import kill_monster, kill_player
+from entity import get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from game_messages import Message
+from game_states import GameStates
+from input_handlers import handle_keys, handle_mouse<span class="new-text">, handle_main_menu</span>
+from loader_functions.initialize_new_game import get_constants, get_game_variables
+<span class="new-text">from loader_functions.data_loaders import load_game, save_game</span>
+<span class="new-text">from menus import main_menu, message_box</span>
+from render_functions import clear_all, render_all
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>That&rsquo;s all for this chapter. The gameplay itself hasn&rsquo;t changed, but
+saving and loading is no small feat. Be proud!</p>
+<p>If you want to see the code so far in its entirety, <a href="https://github.com/TStand90/roguelike_tutorial_revised/tree/part10">click
+here</a>.</p>
+<p><a href="/tutorials/tcod/2019/part-11">Click here to move on to the next part of this
+tutorial.</a></p>
+<!-- raw HTML omitted -->
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

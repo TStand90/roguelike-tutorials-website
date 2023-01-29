@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 7 - Creating the Interface" />
+<meta property="og:description" content="Our game is looking more and more playable by the chapter, but before we move forward with the gameplay, we ought to take a moment to focus on how the project looks. Despite what roguelike traditionalists may tell you, a good UI goes a long way.
+Let&rsquo;s start by fixing up our HP section. With not all that much code, we can add a neat little health bar, that will tell the player how much health is remaining before death." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/2019/part-7/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2019-03-30T09:33:53-07:00" />
+<meta property="article:modified_time" content="2019-03-30T09:33:53-07:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 7 - Creating the Interface"/>
+<meta name="twitter:description" content="Our game is looking more and more playable by the chapter, but before we move forward with the gameplay, we ought to take a moment to focus on how the project looks. Despite what roguelike traditionalists may tell you, a good UI goes a long way.
+Let&rsquo;s start by fixing up our HP section. With not all that much code, we can add a neat little health bar, that will tell the player how much health is remaining before death."/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/2019/part-7/">
+
+    <title>
+      
+        Part 7 - Creating the Interface | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/2019/part-7/">Part 7 - Creating the Interface</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2019-03-30">Mar 30, 2019</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <p>Our game is looking more and more playable by the chapter, but before we
+move forward with the gameplay, we ought to take a moment to focus on
+how the project <em>looks</em>. Despite what roguelike traditionalists may tell
+you, a good UI goes a long way.</p>
+<p>Let&rsquo;s start by fixing up our HP section. With not all that much code, we
+can add a neat little health bar, that will tell the player how much
+health is remaining before death. We&rsquo;ll start by adding some needed
+variables in <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    screen_height = 50
+
+<span style="color:#a6e22e">+   bar_width = 20
+</span><span style="color:#a6e22e">+   panel_height = 7
+</span><span style="color:#a6e22e">+   panel_y = screen_height - panel_height
+</span><span style="color:#a6e22e"></span>
+    map_width = 80
+<span style="color:#f92672">-   map_height = 45
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   map_height = 43
+</span><span style="color:#a6e22e"></span>    ...
+    con = libtcod.console_new(screen_width, screen_height)
+<span style="color:#a6e22e">+   panel = libtcod.console_new(screen_width, panel_height)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    screen_height = 50
+
+    <span class="new-text">bar_width = 20
+    panel_height = 7
+    panel_y = screen_height - panel_height</span>
+
+    map_width = 80
+    <span class="crossed-out-text">map_height = 45</span>
+    <span class="new-text">map_height = 43</span>
+    ...
+    con = libtcod.console_new(screen_width, screen_height)
+    <span class="new-text">panel = libtcod.console_new(screen_width, panel_height)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;re creating a new console, called <code>panel</code>, which will hold our HP bar
+and message log. We also modified the map height while we were at it, to
+give the HP bar and (soon to come) message log more room.</p>
+<p>Now we&rsquo;ll want a function that draws the health bar, or any other bar we
+desire. You might want to add a Mana or Stamina bar later on, so it&rsquo;s
+best that we make this function as reusable as possible. Put the
+following in <code>render_functions.py</code>, right under the <code>RenderOrder</code> enum,
+but above
+<code>render_all</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">render_bar</span>(panel, x, y, total_width, name, value, maximum, bar_color, back_color):
+    bar_width <span style="color:#f92672">=</span> int(float(value) <span style="color:#f92672">/</span> maximum <span style="color:#f92672">*</span> total_width)
+
+    libtcod<span style="color:#f92672">.</span>console_set_default_background(panel, back_color)
+    libtcod<span style="color:#f92672">.</span>console_rect(panel, x, y, total_width, <span style="color:#ae81ff">1</span>, <span style="color:#66d9ef">False</span>, libtcod<span style="color:#f92672">.</span>BKGND_SCREEN)
+
+    libtcod<span style="color:#f92672">.</span>console_set_default_background(panel, bar_color)
+    <span style="color:#66d9ef">if</span> bar_width <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>:
+        libtcod<span style="color:#f92672">.</span>console_rect(panel, x, y, bar_width, <span style="color:#ae81ff">1</span>, <span style="color:#66d9ef">False</span>, libtcod<span style="color:#f92672">.</span>BKGND_SCREEN)
+
+    libtcod<span style="color:#f92672">.</span>console_set_default_foreground(panel, libtcod<span style="color:#f92672">.</span>white)
+    libtcod<span style="color:#f92672">.</span>console_print_ex(panel, int(x <span style="color:#f92672">+</span> total_width <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>), y, libtcod<span style="color:#f92672">.</span>BKGND_NONE, libtcod<span style="color:#f92672">.</span>CENTER,
+                             <span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{0}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{1}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">{2}</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">.</span>format(name, value, maximum))</code></pre></div>
+<p>Now let&rsquo;s use this function in <code>render_all</code>. Remove the HP indicator we
+had put in before, and put the code for the stats panel at the end of
+the
+function.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-def render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, bar_width,
+</span><span style="color:#a6e22e">+              panel_height, panel_y, colors):
+</span><span style="color:#a6e22e"></span>            ...
+<span style="color:#f92672">-   libtcod.console_set_default_foreground(con, libtcod.white)
+</span><span style="color:#f92672">-   libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,
+</span><span style="color:#f92672">-                            &#39;HP: {0:02}/{1:02}&#39;.format(player.fighter.hp, player.fighter.max_hp))
+</span><span style="color:#f92672"></span>
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+
+<span style="color:#a6e22e">+   libtcod.console_set_default_background(panel, libtcod.black)
+</span><span style="color:#a6e22e">+   libtcod.console_clear(panel)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   render_bar(panel, 1, 1, bar_width, &#39;HP&#39;, player.fighter.hp, player.fighter.max_hp,
+</span><span style="color:#a6e22e">+              libtcod.light_red, libtcod.darker_red)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="crossed-out-text">def render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors):</span>
+<span class="new-text">def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, bar_width,
+               panel_height, panel_y, colors):</span>
+            ...
+    <span class="crossed-out-text">libtcod.console_set_default_foreground(con, libtcod.white)</span>
+    <span class="crossed-out-text">libtcod.console_print_ex(con, 1, screen_height - 2, libtcod.BKGND_NONE, libtcod.LEFT,</span>
+                             <span class="crossed-out-text">'HP: {0:02}/{1:02}'.format(player.fighter.hp, player.fighter.max_hp))</span>
+
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
+
+    <span class="new-text">libtcod.console_set_default_background(panel, libtcod.black)
+    libtcod.console_clear(panel)
+
+    render_bar(panel, 1, 1, bar_width, 'HP', player.fighter.hp, player.fighter.max_hp,
+               libtcod.light_red, libtcod.darker_red)
+
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Be sure to update the call to <code>render_all</code> in
+<code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-       render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height,
+</span><span style="color:#a6e22e">+                  bar_width, panel_height, panel_y, colors)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        <span class="crossed-out-text">render_all(con, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, colors)</span>
+        <span class="new-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height,
+                   bar_width, panel_height, panel_y, colors)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now we&rsquo;ve got a nice looking HP bar at the bottom of the screen. It&rsquo;ll
+decrease when the player takes damage, and increase when we heal (that&rsquo;s
+coming next chapter).</p>
+<p>Let&rsquo;s keep things going, and create our message log. Add the following
+variables to <code>engine.py</code> to start:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    panel_y = screen_height - panel_height
+
+<span style="color:#a6e22e">+   message_x = bar_width + 2
+</span><span style="color:#a6e22e">+   message_width = screen_width - bar_width - 2
+</span><span style="color:#a6e22e">+   message_height = panel_height - 1
+</span><span style="color:#a6e22e"></span>
+    map_width = 80
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    panel_y = screen_height - panel_height
+
+    <span class="new-text">message_x = bar_width + 2
+    message_width = screen_width - bar_width - 2
+    message_height = panel_height - 1</span>
+
+    map_width = 80
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>To implement the message log, we&rsquo;ll need two classes: one for the log,
+and one for the messages inside it. Start by creating a new file, called
+<code>game_messages.py</code>. Put the following code inside it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">import</span> tcod <span style="color:#66d9ef">as</span> libtcod
+
+<span style="color:#f92672">import</span> textwrap
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Message</span>:
+    <span style="color:#66d9ef">def</span> __init__(self, text, color<span style="color:#f92672">=</span>libtcod<span style="color:#f92672">.</span>white):
+        self<span style="color:#f92672">.</span>text <span style="color:#f92672">=</span> text
+        self<span style="color:#f92672">.</span>color <span style="color:#f92672">=</span> color
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MessageLog</span>:
+    <span style="color:#66d9ef">def</span> __init__(self, x, width, height):
+        self<span style="color:#f92672">.</span>messages <span style="color:#f92672">=</span> []
+        self<span style="color:#f92672">.</span>x <span style="color:#f92672">=</span> x
+        self<span style="color:#f92672">.</span>width <span style="color:#f92672">=</span> width
+        self<span style="color:#f92672">.</span>height <span style="color:#f92672">=</span> height
+
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add_message</span>(self, message):
+        <span style="color:#75715e"># Split the message if necessary, among multiple lines</span>
+        new_msg_lines <span style="color:#f92672">=</span> textwrap<span style="color:#f92672">.</span>wrap(message<span style="color:#f92672">.</span>text, self<span style="color:#f92672">.</span>width)
+
+        <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> new_msg_lines:
+            <span style="color:#75715e"># If the buffer is full, remove the first line to make room for the new one</span>
+            <span style="color:#66d9ef">if</span> len(self<span style="color:#f92672">.</span>messages) <span style="color:#f92672">==</span> self<span style="color:#f92672">.</span>height:
+                <span style="color:#66d9ef">del</span> self<span style="color:#f92672">.</span>messages[<span style="color:#ae81ff">0</span>]
+
+            <span style="color:#75715e"># Add the new line as a Message object, with the text and the color</span>
+            self<span style="color:#f92672">.</span>messages<span style="color:#f92672">.</span>append(Message(line, message<span style="color:#f92672">.</span>color))</code></pre></div>
+<p>That&rsquo;s a lot to take in at once, so let&rsquo;s go through it.</p>
+<p><code>Message</code> is pretty simple. We store the message text and the color to
+draw it with. You can opt to not pass a color, in which case, white is
+used by default.</p>
+<p>The <code>MessageLog</code> is the more interesting class. It holds a list of
+messages (the <code>Message</code> class), holds its x coordinate (for
+convenience), and its width and height. Width and height are useful so
+that we&rsquo;ll know when we need to cut off the top messages (the message
+log will &ldquo;scroll&rdquo; as new messages come up).</p>
+<p>In the <code>add_message</code> method, we&rsquo;re splitting up the message text into
+multiple lines if needed, using the <code>textwrap.wrap</code> function. We then
+check if the message log is at its capacity, and if so, we delete the
+top lines. Finally, we append the new message.</p>
+<p>Let&rsquo;s start putting this new message log into place. Add a new message
+log to <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    fov_map = initialize_fov(game_map)
+
+<span style="color:#a6e22e">+   message_log = MessageLog(message_x, message_width, message_height)
+</span><span style="color:#a6e22e"></span>
+    key = libtcod.Key()
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    fov_map = initialize_fov(game_map)
+
+    <span class="new-text">message_log = MessageLog(message_x, message_width, message_height)</span>
+
+    key = libtcod.Key()</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Remember to import the <code>MessageLog</code> at the top as well:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">from fov_functions import initialize_fov, recompute_fov
+<span style="color:#a6e22e">+from game_messages import MessageLog
+</span><span style="color:#a6e22e"></span>from game_states import GameStates
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from fov_functions import initialize_fov, recompute_fov
+<span class="new-text">from game_messages import MessageLog</span>
+from game_states import GameStates</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>With our message log in place, let&rsquo;s go through the project and remove
+all the <code>print</code> statements, replacing them with the message log.</p>
+<p>Let&rsquo;s start with the death functions. In <code>death_functions.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+<span style="color:#a6e22e">+from game_messages import Message
+</span><span style="color:#a6e22e"></span>
+from game_states import GameStates
+
+from render_functions import RenderOrder
+
+
+def kill_player(player):
+    player.char = &#39;%&#39;
+    player.color = libtcod.dark_red
+
+<span style="color:#f92672">-   return &#39;You died!&#39;, GameStates.PLAYER_DEAD
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   return Message(&#39;You died!&#39;, libtcod.red), GameStates.PLAYER_DEAD
+</span><span style="color:#a6e22e"></span>
+
+def kill_monster(monster):
+<span style="color:#f92672">-   death_message = &#39;{0} is dead!&#39;.format(monster.name.capitalize())
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   death_message = Message(&#39;{0} is dead!&#39;.format(monster.name.capitalize()), libtcod.orange)
+</span><span style="color:#a6e22e"></span>    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+<span class="new-text">from game_messages import Message</span>
+
+from game_states import GameStates
+
+from render_functions import RenderOrder
+
+
+def kill_player(player):
+    player.char = '%'
+    player.color = libtcod.dark_red
+
+    <span class="crossed-out-text">return 'You died!', GameStates.PLAYER_DEAD</span>
+    <span class="new-text">return Message('You died!', libtcod.red), GameStates.PLAYER_DEAD</span>
+
+
+def kill_monster(monster):
+    <span class="crossed-out-text">death_message = '{0} is dead!'.format(monster.name.capitalize())</span>
+    <span class="new-text">death_message = Message('{0} is dead!'.format(monster.name.capitalize()), libtcod.orange)</span>
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, back in <code>engine.py</code>, replace the corresponding <code>print</code> statements
+like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">             ...
+            (In the player&#39;s results loop)
+            ...
+            if dead_entity:
+                if dead_entity == player:
+                    message, game_state = kill_player(dead_entity)
+                else:
+                    message = kill_monster(dead_entity)
+
+<span style="color:#f92672">-               print(message)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               message_log.add_message(message)
+</span><span style="color:#a6e22e"></span>            ...
+            (In the enemy results loop)
+            ...
+                        if dead_entity:
+                            if dead_entity == player:
+                                message, game_state = kill_player(dead_entity)
+                            else:
+                                message = kill_monster(dead_entity)
+
+<span style="color:#f92672">-                           print(message)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+                           message_log.add_message(message)
+</span><span style="color:#a6e22e"></span>                            ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>             ...
+            (In the player's results loop)
+            ...
+            if dead_entity:
+                if dead_entity == player:
+                    message, game_state = kill_player(dead_entity)
+                else:
+                    message = kill_monster(dead_entity)
+
+                <span class="crossed-out-text">print(message)</span>
+                <span class="new-text">message_log.add_message(message)</span>
+            ...
+            (In the enemy results loop)
+            ...
+                        if dead_entity:
+                            if dead_entity == player:
+                                message, game_state = kill_player(dead_entity)
+                            else:
+                                message = kill_monster(dead_entity)
+
+                            <span class="crossed-out-text">print(message)</span>
+                            <span class="new-text">message_log.add_message(message)</span>
+                            ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now for our action messages. In <code>fighter.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if damage &gt; 0:
+<span style="color:#f92672">-           results.append({&#39;message&#39;: &#39;{0} attacks {1} for {2} hit points.&#39;.format(self.owner.name.capitalize(),
+</span><span style="color:#f92672">-                                                                                   target.name, str(damage))})
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           results.append({&#39;message&#39;: Message(&#39;{0} attacks {1} for {2} hit points.&#39;.format(
+</span><span style="color:#a6e22e">+               self.owner.name.capitalize(), target.name, str(damage)), libtcod.white)})
+</span><span style="color:#a6e22e"></span>            results.extend(target.fighter.take_damage(damage))
+        else:
+<span style="color:#f92672">-           results.append({&#39;message&#39;: &#39;{0} attacks {1} but does no damage.&#39;.format(self.owner.name.capitalize(),
+</span><span style="color:#f92672">-                                                                                   target.name)})
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           results.append({&#39;message&#39;: Message(&#39;{0} attacks {1} but does no damage.&#39;.format(
+</span><span style="color:#a6e22e">+               self.owner.name.capitalize(), target.name), libtcod.white)})
+</span><span style="color:#a6e22e"></span>
+        return results
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if damage > 0:
+            <span class="crossed-out-text">results.append({'message': '{0} attacks {1} for {2} hit points.'.format(self.owner.name.capitalize(),</span>
+                                                                                    <span class="crossed-out-text">target.name, str(damage))})</span>
+            <span class="new-text">results.append({'message': Message('{0} attacks {1} for {2} hit points.'.format(
+                self.owner.name.capitalize(), target.name, str(damage)), libtcod.white)})</span>
+            results.extend(target.fighter.take_damage(damage))
+        else:
+            <span class="crossed-out-text">results.append({'message': '{0} attacks {1} but does no damage.'.format(self.owner.name.capitalize(),</span>
+                                                                                    <span class="crossed-out-text">target.name)})</span>
+            <span class="new-text">results.append({'message': Message('{0} attacks {1} but does no damage.'.format(
+                self.owner.name.capitalize(), target.name), libtcod.white)})</span>
+
+        return results</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>You&rsquo;ll need to import both libtcod and Message for this to work:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+import tcod as libtcod
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+from game_messages import Message
+</span><span style="color:#a6e22e"></span>
+
+class Fighter:
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">import tcod as libtcod
+
+from game_messages import Message</span>
+
+
+class Fighter:
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>And in <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">            ...
+            (In the player&#39;s results loop)
+            ...
+            if message:
+<span style="color:#f92672">-               print(message)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               message_log.add_message(message)
+</span><span style="color:#a6e22e"></span>            ...
+            (In the enemy results loop)
+            ...
+                        if message:
+<span style="color:#f92672">-                           print(message)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+                           message_log.add_message(message)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>            ...
+            (In the player's results loop)
+            ...
+            if message:
+                <span class="crossed-out-text">print(message)</span>
+                <span class="new-text">message_log.add_message(message)</span>
+            ...
+            (In the enemy results loop)
+            ...
+                        if message:
+                            <span class="crossed-out-text">print(message)</span>
+                            <span class="new-text">message_log.add_message(message)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Great, now we&rsquo;re adding all the messages to the log. However, nothing
+shows up yet. Let&rsquo;s modify <code>render_all</code> to display the message log we&rsquo;ve
+created.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, bar_width,
+</span><span style="color:#f92672">-              panel_height, panel_y, colors):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+</span><span style="color:#a6e22e">+              bar_width, panel_height, panel_y, colors):
+</span><span style="color:#a6e22e"></span>    ...
+    libtcod.console_clear(panel)
+
+<span style="color:#a6e22e">+   # Print the game messages, one line at a time
+</span><span style="color:#a6e22e">+   y = 1
+</span><span style="color:#a6e22e">+   for message in message_log.messages:
+</span><span style="color:#a6e22e">+       libtcod.console_set_default_foreground(panel, message.color)
+</span><span style="color:#a6e22e">+       libtcod.console_print_ex(panel, message_log.x, y, libtcod.BKGND_NONE, libtcod.LEFT, message.text)
+</span><span style="color:#a6e22e">+       y += 1
+</span><span style="color:#a6e22e"></span>    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="crossed-out-text">def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height, bar_width,</span>
+               <span class="crossed-out-text">panel_height, panel_y, colors):</span>
+<span class="new-text">def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+               bar_width, panel_height, panel_y, colors):</span>
+    ...
+    libtcod.console_clear(panel)
+
+    <span class="new-text"># Print the game messages, one line at a time
+    y = 1
+    for message in message_log.messages:
+        libtcod.console_set_default_foreground(panel, message.color)
+        libtcod.console_print_ex(panel, message_log.x, y, libtcod.BKGND_NONE, libtcod.LEFT, message.text)
+        y += 1</span>
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then modify the call to <code>render_all</code> in <code>engine.py</code> to include the
+message
+log:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height,
+</span><span style="color:#f92672">-                  bar_width, panel_height, panel_y, colors)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+</span><span style="color:#a6e22e">+                  screen_height, bar_width, panel_height, panel_y, colors)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        <span class="crossed-out-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, screen_width, screen_height,</span>
+                   <span class="crossed-out-text">bar_width, panel_height, panel_y, colors)</span>
+        <span class="new-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+                   screen_height, bar_width, panel_height, panel_y, colors)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Run the project now. All our previous printed statements should now
+appear in a scrolling message log. From here on out, we won&rsquo;t be doing
+any more <code>print</code> statements, we&rsquo;ll just add everything to our message
+log.</p>
+<p>What&rsquo;s next? How about a little mouse-driven action? Our game is only
+orcs and trolls right now, but perhaps someday it will have dozens
+(hundreds?) of different monster and item types. It would be nice if we
+could see what they are by moving our mouse over them.</p>
+<p>Lucky for us, we&rsquo;re already capturing Mouse input, in the <code>mouse</code>
+variable right above the game loop. All we need to do is adjust our call
+to <code>libtcod.sys_check_for_event</code> to respond to the mouse, and write the
+code that displays the name when we move the mouse over something.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-       libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        <span class="crossed-out-text">libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)</span>
+        <span class="new-text">libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Put the following function in <code>render_functions.py</code>, above <code>render_bar</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+def get_names_under_mouse(mouse, entities, fov_map):
+</span><span style="color:#a6e22e">+   (x, y) = (mouse.cx, mouse.cy)
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+   names = [entity.name for entity in entities
+</span><span style="color:#a6e22e">+            if entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
+</span><span style="color:#a6e22e">+   names = &#39;, &#39;.join(names)
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+   return names.capitalize()
+</span><span style="color:#a6e22e"></span>
+
+def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_color):
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">def get_names_under_mouse(mouse, entities, fov_map):
+    (x, y) = (mouse.cx, mouse.cy)
+
+    names = [entity.name for entity in entities
+             if entity.x == x and entity.y == y and libtcod.map_is_in_fov(fov_map, entity.x, entity.y)]
+    names = ', '.join(names)
+
+    return names.capitalize()</span>
+
+
+def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_color):
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now we&rsquo;ll once again modify our <code>render_all</code> function (that sure has had
+a lot of changes this chapter, hasn&rsquo;t it?) to account for the mouse and
+take advantage of our new
+function.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+</span><span style="color:#f92672">-              bar_width, panel_height, panel_y, colors):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+</span><span style="color:#a6e22e">+              bar_width, panel_height, panel_y, mouse, colors):
+</span><span style="color:#a6e22e"></span>    ...
+    render_bar(panel, 1, 1, bar_width, &#39;HP&#39;, player.fighter.hp, player.fighter.max_hp,
+               libtcod.light_red, libtcod.darker_red)
+
+<span style="color:#a6e22e">+   libtcod.console_set_default_foreground(panel, libtcod.light_gray)
+</span><span style="color:#a6e22e">+   libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
+</span><span style="color:#a6e22e">+                            get_names_under_mouse(mouse, entities, fov_map))
+</span><span style="color:#a6e22e"></span>
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="crossed-out-text">def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,</span>
+               <span class="crossed-out-text">bar_width, panel_height, panel_y, colors):</span>
+<span class="new-text">def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+               bar_width, panel_height, panel_y, mouse, colors):</span>
+    ...
+    render_bar(panel, 1, 1, bar_width, 'HP', player.fighter.hp, player.fighter.max_hp,
+               libtcod.light_red, libtcod.darker_red)
+
+    <span class="new-text">libtcod.console_set_default_foreground(panel, libtcod.light_gray)
+    libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
+                             get_names_under_mouse(mouse, entities, fov_map))</span>
+
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>And, of course, we&rsquo;ll need to modify the call to <code>render_all</code> in
+<code>engine.py</code> to match our new
+definition.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+</span><span style="color:#f92672">-                  screen_height, bar_width, panel_height, panel_y, colors)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+</span><span style="color:#a6e22e">+                  screen_height, bar_width, panel_height, panel_y, mouse, colors)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        <span class="crossed-out-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,</span>
+                   <span class="crossed-out-text">screen_height, bar_width, panel_height, panel_y, colors)</span>
+        <span class="new-text">render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+                   screen_height, bar_width, panel_height, panel_y, mouse, colors)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Our game is now looking much, much better. If you ever intend for your
+game to be played by more people than just yourself (it&rsquo;s okay if you
+don&rsquo;t!) then changes like these will be of paramount importance to your
+project.</p>
+<p>If you want to see the code so far in its entirety, <a href="https://github.com/TStand90/roguelike_tutorial_revised/tree/part7">click
+here</a>.</p>
+<p><a href="/tutorials/tcod/2019/part-8">Click here to move on to the next part of this
+tutorial.</a></p>
+<!-- raw HTML omitted -->
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

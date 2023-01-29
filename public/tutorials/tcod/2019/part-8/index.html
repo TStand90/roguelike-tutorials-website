@@ -1,0 +1,2396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 8 - Items and Inventory" />
+<meta property="og:description" content="So far, our game has movement, dungeon exploring, combat, and AI (okay, we&rsquo;re stretching the meaning of &ldquo;intelligence&rdquo; in artificial intelligence to its limits, but bear with me here). Now it&rsquo;s time for another staple of the roguelike genre: items! Why would our rogue venture into the dungeons of doom if not for some sweet loot, after all?
+We&rsquo;ll start by placing one type of item, the healing potion in this case, and then we&rsquo;ll work on our implementation of the inventory." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/2019/part-8/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2019-03-30T09:33:55-07:00" />
+<meta property="article:modified_time" content="2019-03-30T09:33:55-07:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 8 - Items and Inventory"/>
+<meta name="twitter:description" content="So far, our game has movement, dungeon exploring, combat, and AI (okay, we&rsquo;re stretching the meaning of &ldquo;intelligence&rdquo; in artificial intelligence to its limits, but bear with me here). Now it&rsquo;s time for another staple of the roguelike genre: items! Why would our rogue venture into the dungeons of doom if not for some sweet loot, after all?
+We&rsquo;ll start by placing one type of item, the healing potion in this case, and then we&rsquo;ll work on our implementation of the inventory."/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/2019/part-8/">
+
+    <title>
+      
+        Part 8 - Items and Inventory | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/2019/part-8/">Part 8 - Items and Inventory</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2019-03-30">Mar 30, 2019</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <p>So far, our game has movement, dungeon exploring, combat, and AI (okay,
+we&rsquo;re stretching the meaning of &ldquo;intelligence&rdquo; in <em>artificial
+intelligence</em> to its limits, but bear with me here). Now it&rsquo;s time for
+another staple of the roguelike genre: items! Why would our rogue
+venture into the dungeons of doom if not for some sweet loot, after all?</p>
+<p>We&rsquo;ll start by placing one type of item, the healing potion in this
+case, and then we&rsquo;ll work on our implementation of the inventory. In the
+next chapter, we&rsquo;ll add different types of items, but for now, just the
+healing potion will suffice.</p>
+<p>Make the following changes to <code>place_entities</code> to start placing some
+health potion entities. They won&rsquo;t do anything yet, but they&rsquo;ll at least
+appear on the
+map.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-   def place_entities(self, room, entities, max_monsters_per_room):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def place_entities(self, room, entities, max_monsters_per_room, max_items_per_room):
+</span><span style="color:#a6e22e"></span>        number_of_monsters = randint(0, max_monsters_per_room)
+<span style="color:#a6e22e">+       number_of_items = randint(0, max_items_per_room)
+</span><span style="color:#a6e22e"></span>
+        for i in range(number_of_monsters):
+            ...
+
+<span style="color:#a6e22e">+       for i in range(number_of_items):
+</span><span style="color:#a6e22e">+           x = randint(room.x1 + 1, room.x2 - 1)
+</span><span style="color:#a6e22e">+           y = randint(room.y1 + 1, room.y2 - 1)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+</span><span style="color:#a6e22e">+               item = Entity(x, y, &#39;!&#39;, libtcod.violet, &#39;Healing Potion&#39;, render_order=RenderOrder.ITEM)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+               entities.append(item)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    def place_entities(self, room, entities, max_monsters_per_room<span class="new-text">, max_items_per_room</span>):
+        number_of_monsters = randint(0, max_monsters_per_room)
+        <span class="new-text">number_of_items = randint(0, max_items_per_room)</span>
+
+        for i in range(number_of_monsters):
+            ...
+
+        <span class="new-text">for i in range(number_of_items):
+            x = randint(room.x1 + 1, room.x2 - 1)
+            y = randint(room.y1 + 1, room.y2 - 1)
+
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM)
+
+                entities.append(item)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Update the call to <code>place_entities</code> in
+<code>make_map</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-               self.place_entities(new_room, entities, max_monsters_per_room)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               self.place_entities(new_room, entities, max_monsters_per_room, max_items_per_room)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>                self.place_entities(new_room, entities, max_monsters_per_room<span class="new-text">, max_items_per_room</span>)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Update the definition of <code>make_map</code> to include the new
+<code>max_items_per_room</code>
+variable.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+<span style="color:#f92672">-                max_monsters_per_room):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+                max_monsters_per_room, max_items_per_room):
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+                 max_monsters_per_room<span class="new-text">, max_items_per_room</span>):</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>And finally, the call in <code>engine.py</code>. We&rsquo;ll also define the variable
+here.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    max_monsters_per_room = 3
+<span style="color:#a6e22e">+   max_items_per_room = 2
+</span><span style="color:#a6e22e"></span>    ...
+    game_map = GameMap(map_width, map_height)
+    game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+<span style="color:#f92672">-                     max_monsters_per_room)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+                     max_monsters_per_room, max_items_per_room)
+</span><span style="color:#a6e22e"></span>
+    fov_recompute = True
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    max_monsters_per_room = 3
+    <span class="new-text">max_items_per_room = 2</span>
+    ...
+    game_map = GameMap(map_width, map_height)
+    game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+                      max_monsters_per_room, <span class="new-text">max_items_per_room</span>)
+
+    fov_recompute = True
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>You should now see a few health potions here and there in the dungeon.
+But we can&rsquo;t pick anything up yet. An obvious place to start would be by
+giving the player an inventory. Let&rsquo;s create a new component, called
+Inventory, which will hold a list of items, along with the maximum
+amount of items the inventory can have. Create a new file in the
+<code>components</code> folder, named <code>inventory.py</code>, and put the following in it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Inventory</span>:
+    <span style="color:#66d9ef">def</span> __init__(self, capacity):
+        self<span style="color:#f92672">.</span>capacity <span style="color:#f92672">=</span> capacity
+        self<span style="color:#f92672">.</span>items <span style="color:#f92672">=</span> []</code></pre></div>
+<p>The <code>items</code> list will be what holds the actual item entities. Capacity
+determines how many items we can pick up in total.</p>
+<p>But what types of entities can we pick up in the first place? We may or
+may not want the player picking up <em>every</em> type of entity that can be
+walked on (corpses for example), so how do we distinguish between the
+two?</p>
+<p>Let&rsquo;s create a new component, called <code>Item</code>, which we&rsquo;ll add to entities
+when we want them to be able to be picked up. Create a file called
+<code>item.py</code> in <code>components</code>, and add the following class to it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Item</span>:
+    <span style="color:#66d9ef">def</span> __init__(self):
+        <span style="color:#66d9ef">pass</span></code></pre></div>
+<p>Wait, what? An empty class? Don&rsquo;t worry, we&rsquo;ll add some more interesting
+stuff here once we move on to using our items. But for now, if an Entity
+has this component, we can pick it up, and if not, we can&rsquo;t. Therefore,
+all we need is an empty class at the moment.</p>
+<p>Now let&rsquo;s modify the <code>Entity</code> class to accept the <code>Item</code> and <code>Inventory</code>
+components.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Entity:
+<span style="color:#f92672">-   def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None,
+</span><span style="color:#a6e22e">+                item=None, inventory=None):
+</span><span style="color:#a6e22e"></span>        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
+        self.render_order = render_order
+        self.fighter = fighter
+        self.ai = ai
+<span style="color:#a6e22e">+       self.item = item
+</span><span style="color:#a6e22e">+       self.inventory = inventory
+</span><span style="color:#a6e22e"></span>
+        if self.fighter:
+            self.fighter.owner = self
+
+        if self.ai:
+            self.ai.owner = self
+
+<span style="color:#a6e22e">+       if self.item:
+</span><span style="color:#a6e22e">+           self.item.owner = self
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       if self.inventory:
+</span><span style="color:#a6e22e">+           self.inventory.owner = self
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Entity:
+    def __init__(self, x, y, char, color, name, blocks=False, render_order=RenderOrder.CORPSE, fighter=None, ai=None<span class="new-text">,
+                 item=None, inventory=None</span>):
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
+        self.render_order = render_order
+        self.fighter = fighter
+        self.ai = ai
+        <span class="new-text">self.item = item
+        self.inventory = inventory</span>
+
+        if self.fighter:
+            self.fighter.owner = self
+
+        if self.ai:
+            self.ai.owner = self
+
+        <span class="new-text">if self.item:
+            self.item.owner = self
+
+        if self.inventory:
+            self.inventory.owner = self</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>With our <code>Entity</code> class modified, we&rsquo;ll need to modify the player and
+the healing potions to have <code>Inventory</code> and <code>Item</code> respectively. This
+tutorial won&rsquo;t give monsters an inventory, but you could attach the
+<code>Inventory</code> component to them for a similar effect.</p>
+<p>In <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    fighter_component = Fighter(hp=30, defense=2, power=5)
+<span style="color:#a6e22e">+   inventory_component = Inventory(26)
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-   player = Entity(0, 0, &#39;@&#39;, libtcod.white, &#39;Player&#39;, blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   player = Entity(0, 0, &#39;@&#39;, libtcod.white, &#39;Player&#39;, blocks=True, render_order=RenderOrder.ACTOR,
+</span><span style="color:#a6e22e">+                   fighter=fighter_component, inventory=inventory_component)
+</span><span style="color:#a6e22e"></span>    entities = [player]
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    fighter_component = Fighter(hp=30, defense=2, power=5)
+    <span class="new-text">inventory_component = Inventory(26)</span>
+    <span class="crossed-out-text">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR, fighter=fighter_component)</span>
+    <span class="new-text">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True, render_order=RenderOrder.ACTOR,
+                    fighter=fighter_component, inventory=inventory_component)</span>
+    entities = [player]
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Of course, be sure to import <code>Inventory</code> as well:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">from components.fighter import Fighter
+<span style="color:#a6e22e">+from components.inventory import Inventory
+</span><span style="color:#a6e22e"></span>from death_functions import kill_monster, kill_player
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from components.fighter import Fighter
+<span class="new-text">from components.inventory import Inventory</span>
+from death_functions import kill_monster, kill_player
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, modify where we put the healing potions in the <code>place_entities</code>
+function.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+               item_component = Item()
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-               item = Entity(x, y, &#39;!&#39;, libtcod.violet, &#39;Healing Potion&#39;, render_order=RenderOrder.ITEM)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               item = Entity(x, y, &#39;!&#39;, libtcod.violet, &#39;Healing Potion&#39;, render_order=RenderOrder.ITEM,
+</span><span style="color:#a6e22e">+                             item=item_component)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>                <span class="new-text">item_component = Item()</span>
+                <span class="crossed-out-text">item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM)</span>
+                <span class="new-text">item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM,
+                              item=item_component)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>&hellip; And don&rsquo;t forget the import:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+from components.ai import BasicMonster
+from components.fighter import Fighter
+<span style="color:#a6e22e">+from components.item import Item
+</span><span style="color:#a6e22e"></span>
+from entity import Entity
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+from components.ai import BasicMonster
+from components.fighter import Fighter
+<span class="new-text">from components.item import Item</span>
+
+from entity import Entity
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>How does our player go about picking things up then? Roguelikes
+traditionally allow you to pick up an item if you&rsquo;re standing on top of
+it, and ours will be no different. Many of them use the &lsquo;g&rsquo; key
+(probably for &lsquo;grab&rsquo; or &lsquo;get&rsquo;) for the pickup command, so we&rsquo;ll use that
+as well. Modify <code>handle_keys</code> in <code>input_handlers.py</code> to process the &lsquo;g&rsquo;
+key:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    elif key_char == &#39;n&#39;:
+        return {&#39;move&#39;: (1, 1)}
+
+<span style="color:#a6e22e">+   if key_char == &#39;g&#39;:
+</span><span style="color:#a6e22e">+       return {&#39;pickup&#39;: True}
+</span><span style="color:#a6e22e"></span>
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    elif key_char == 'n':
+        return {'move': (1, 1)}
+
+    <span class="new-text">if key_char == 'g':
+        return {'pickup': True}</span>
+
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now we&rsquo;ll need to check for the &lsquo;pickup&rsquo; action in our engine.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        move = action.get(&#39;move&#39;)
+<span style="color:#a6e22e">+       pickup = action.get(&#39;pickup&#39;)
+</span><span style="color:#a6e22e"></span>        exit = action.get(&#39;exit&#39;)
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        move = action.get('move')
+        <span class="new-text">pickup = action.get('pickup')</span>
+        exit = action.get('exit')
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now we&rsquo;ll need to actually <em>do</em> something when this &lsquo;pickup&rsquo; variable is
+true. First, let&rsquo;s create a method for the <code>Inventory</code> class to add an
+item to the inventory. We&rsquo;ll use the same &ldquo;results&rdquo; pattern as before.
+If adding the item to the inventory was successful, then we&rsquo;ll return a
+result saying we picked up the item. If not, we&rsquo;ll send a result that
+indicates a failure. The engine will then have to determine what to do
+with the item entity.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+import tcod as libtcod
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+from game_messages import Message
+</span><span style="color:#a6e22e"></span>
+
+class Inventory:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.items = []
+
+<span style="color:#a6e22e">+   def add_item(self, item):
+</span><span style="color:#a6e22e">+       results = []
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       if len(self.items) &gt;= self.capacity:
+</span><span style="color:#a6e22e">+           results.append({
+</span><span style="color:#a6e22e">+               &#39;item_added&#39;: None,
+</span><span style="color:#a6e22e">+               &#39;message&#39;: Message(&#39;You cannot carry any more, your inventory is full&#39;, libtcod.yellow)
+</span><span style="color:#a6e22e">+           })
+</span><span style="color:#a6e22e">+       else:
+</span><span style="color:#a6e22e">+           results.append({
+</span><span style="color:#a6e22e">+               &#39;item_added&#39;: item,
+</span><span style="color:#a6e22e">+               &#39;message&#39;: Message(&#39;You pick up the {0}!&#39;.format(item.name), libtcod.blue)
+</span><span style="color:#a6e22e">+           })
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           self.items.append(item)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       return results
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">import tcod as libtcod
+
+from game_messages import Message</span>
+
+
+class Inventory:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.items = []
+
+    <span class="new-text">def add_item(self, item):
+        results = []
+
+        if len(self.items) >= self.capacity:
+            results.append({
+                'item_added': None,
+                'message': Message('You cannot carry any more, your inventory is full', libtcod.yellow)
+            })
+        else:
+            results.append({
+                'item_added': item,
+                'message': Message('You pick up the {0}!'.format(item.name), libtcod.blue)
+            })
+
+            self.items.append(item)
+
+        return results</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Let&rsquo;s add some code in <code>engine.py</code> to process the results of adding an
+item to the inventory.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        if move and game_state == GameStates.PLAYERS_TURN:
+            ...
+
+<span style="color:#a6e22e">+       elif pickup and game_state == GameStates.PLAYERS_TURN:
+</span><span style="color:#a6e22e">+           for entity in entities:
+</span><span style="color:#a6e22e">+               if entity.item and entity.x == player.x and entity.y == player.y:
+</span><span style="color:#a6e22e">+                   pickup_results = player.inventory.add_item(entity)
+</span><span style="color:#a6e22e">+                   player_turn_results.extend(pickup_results)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+                   break
+</span><span style="color:#a6e22e">+           else:
+</span><span style="color:#a6e22e">+               message_log.add_message(Message(&#39;There is nothing here to pick up.&#39;, libtcod.yellow))
+</span><span style="color:#a6e22e"></span>
+        if exit:
+            ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        if move and game_state == GameStates.PLAYERS_TURN:
+            ...
+
+        <span class="new-text">elif pickup and game_state == GameStates.PLAYERS_TURN:
+            for entity in entities:
+                if entity.item and entity.x == player.x and entity.y == player.y:
+                    pickup_results = player.inventory.add_item(entity)
+                    player_turn_results.extend(pickup_results)
+
+                    break
+            else:
+                message_log.add_message(Message('There is nothing here to pick up.', libtcod.yellow))</span>
+
+        if exit:
+            ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;ll need to import <code>Message</code> for this to work:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-from game_messages import MessageLog
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from game_messages import Message, MessageLog
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from game_messages import <span class="new-text">Message,</span> MessageLog</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Basically, we loop through each entity on the map, checking if it&rsquo;s an
+item and if it is occupying the same space as the player. If so, we add
+it to the inventory and tack on the results to <code>player_turn_results</code>,
+and if not, we create a message informing the player that nothing can be
+picked up. The &lsquo;break&rsquo; statement makes it so that we can only pick up
+one item at a time (though perhaps in your game, you&rsquo;ll allow the player
+to pick up several things at once).</p>
+<p>Now let&rsquo;s process the results of the pickup, in our loop that processes
+the player&rsquo;s turn results:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get(&#39;message&#39;)
+            dead_entity = player_turn_result.get(&#39;dead&#39;)
+<span style="color:#a6e22e">+           item_added = player_turn_result.get(&#39;item_added&#39;)
+</span><span style="color:#a6e22e"></span>
+            if message:
+                message_log.add_message(message)
+
+            if dead_entity:
+                if dead_entity == player:
+                    message, game_state = kill_player(dead_entity)
+                else:
+                    message = kill_monster(dead_entity)
+
+                message_log.add_message(message)
+
+<span style="color:#a6e22e">+           if item_added:
+</span><span style="color:#a6e22e">+               entities.remove(item_added)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+               game_state = GameStates.ENEMY_TURN
+</span><span style="color:#a6e22e"></span>
+        if game_state == GameStates.ENEMY_TURN:
+            ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get('message')
+            dead_entity = player_turn_result.get('dead')
+            <span class="new-text">item_added = player_turn_result.get('item_added')</span>
+
+            if message:
+                message_log.add_message(message)
+
+            if dead_entity:
+                if dead_entity == player:
+                    message, game_state = kill_player(dead_entity)
+                else:
+                    message = kill_monster(dead_entity)
+
+                message_log.add_message(message)
+
+            <span class="new-text">if item_added:
+                entities.remove(item_added)
+
+                game_state = GameStates.ENEMY_TURN</span>
+
+        if game_state == GameStates.ENEMY_TURN:
+            ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>This just handles removing the entity from the entities list (since it&rsquo;s
+now located in the player&rsquo;s inventory, not the map) and sets the game
+state to the enemy&rsquo;s turn. Simple enough.</p>
+<p>Run the project, and you should be able to pick the healing potions up
+off the ground. Of course, this doesn&rsquo;t do our rogue any good at the
+moment; we can&rsquo;t use any of them yet, so we&rsquo;re really just wasting a
+turn.</p>
+<p>Before we get into how to use items, we need to have a way to look at
+and select which item to use. We&rsquo;ll create an inventory interface, which
+the player can open and select an item from. Let&rsquo;s start by creating a
+new file, called <code>menus.py</code>, where we&rsquo;ll store our menu functions for
+the inventory and any other menus we&rsquo;ll need for this tutorial. Put the
+following code in that file:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">import</span> tcod <span style="color:#66d9ef">as</span> libtcod
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">menu</span>(con, header, options, width, screen_width, screen_height):
+    <span style="color:#66d9ef">if</span> len(options) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">26</span>: <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">ValueError</span>(<span style="color:#e6db74">&#39;Cannot have a menu with more than 26 options.&#39;</span>)
+
+    <span style="color:#75715e"># calculate total height for the header (after auto-wrap) and one line per option</span>
+    header_height <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>console_get_height_rect(con, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, width, screen_height, header)
+    height <span style="color:#f92672">=</span> len(options) <span style="color:#f92672">+</span> header_height
+
+    <span style="color:#75715e"># create an off-screen console that represents the menu&#39;s window</span>
+    window <span style="color:#f92672">=</span> libtcod<span style="color:#f92672">.</span>console_new(width, height)
+
+    <span style="color:#75715e"># print the header, with auto-wrap</span>
+    libtcod<span style="color:#f92672">.</span>console_set_default_foreground(window, libtcod<span style="color:#f92672">.</span>white)
+    libtcod<span style="color:#f92672">.</span>console_print_rect_ex(window, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, width, height, libtcod<span style="color:#f92672">.</span>BKGND_NONE, libtcod<span style="color:#f92672">.</span>LEFT, header)
+
+    <span style="color:#75715e"># print all the options</span>
+    y <span style="color:#f92672">=</span> header_height
+    letter_index <span style="color:#f92672">=</span> ord(<span style="color:#e6db74">&#39;a&#39;</span>)
+    <span style="color:#66d9ef">for</span> option_text <span style="color:#f92672">in</span> options:
+        text <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#f92672">+</span> chr(letter_index) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;) &#39;</span> <span style="color:#f92672">+</span> option_text
+        libtcod<span style="color:#f92672">.</span>console_print_ex(window, <span style="color:#ae81ff">0</span>, y, libtcod<span style="color:#f92672">.</span>BKGND_NONE, libtcod<span style="color:#f92672">.</span>LEFT, text)
+        y <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+        letter_index <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+
+    <span style="color:#75715e"># blit the contents of &#34;window&#34; to the root console</span>
+    x <span style="color:#f92672">=</span> int(screen_width <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">-</span> width <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>)
+    y <span style="color:#f92672">=</span> int(screen_height <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">-</span> height <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>)
+    libtcod<span style="color:#f92672">.</span>console_blit(window, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, width, height, <span style="color:#ae81ff">0</span>, x, y, <span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">0.7</span>)</code></pre></div>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def menu(con, header, options, width, screen_width, screen_height):
+    ...
+
+<span style="color:#a6e22e">+def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
+</span><span style="color:#a6e22e">+   # show a menu with each item of the inventory as an option
+</span><span style="color:#a6e22e">+   if len(inventory.items) == 0:
+</span><span style="color:#a6e22e">+       options = [&#39;Inventory is empty.&#39;]
+</span><span style="color:#a6e22e">+   else:
+</span><span style="color:#a6e22e">+       options = [item.name for item in inventory.items]
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   menu(con, header, options, inventory_width, screen_width, screen_height)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def menu(con, header, options, width, screen_width, screen_height):
+    ...
+
+<span class="new-text">def inventory_menu(con, header, inventory, inventory_width, screen_width, screen_height):
+    # show a menu with each item of the inventory as an option
+    if len(inventory.items) == 0:
+        options = ['Inventory is empty.']
+    else:
+        options = [item.name for item in inventory.items]
+
+    menu(con, header, options, inventory_width, screen_width, screen_height)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>How might we display this menu? One way is to switch our game state, and
+when the game state is set to &ldquo;inventory menu&rdquo;, we&rsquo;ll display the menu
+and accept input for it. So let&rsquo;s add the option to <code>GameStates</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">from enum import Enum
+
+
+class GameStates(Enum):
+    PLAYERS_TURN = 1
+    ENEMY_TURN = 2
+    PLAYER_DEAD = 3
+<span style="color:#a6e22e">+   SHOW_INVENTORY = 4
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from enum import Enum
+
+
+class GameStates(Enum):
+    PLAYERS_TURN = 1
+    ENEMY_TURN = 2
+    PLAYER_DEAD = 3
+    <span class="new-text">SHOW_INVENTORY = 4</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>When do we switch to this new state? Let&rsquo;s add a new key command to
+switch to &ldquo;inventory&rdquo; mode. As you may have guessed, we&rsquo;ll press the &lsquo;i&rsquo;
+key to do this.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    if key_char == &#39;g&#39;:
+        return {&#39;pickup&#39;: True}
+
+<span style="color:#a6e22e">+   elif key_char == &#39;i&#39;:
+</span><span style="color:#a6e22e">+       return {&#39;show_inventory&#39;: True}
+</span><span style="color:#a6e22e"></span>
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    if key_char == 'g':
+        return {'pickup': True}
+
+    <span class="new-text">elif key_char == 'i':
+        return {'show_inventory': True}</span>
+
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Not only do we want to switch the game state to <code>SHOW_INVENTORY</code>, we&rsquo;ll
+also want to switch back to the previous game state if we exit the menu
+without doing anything. This makes it so that just opening the inventory
+doesn&rsquo;t waste a turn, and so that we can view our inventory after death
+(this makes it sting that much more). So we&rsquo;ll need a variable to keep
+track of the last game state.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    game_state = GameStates.PLAYERS_TURN
+<span style="color:#a6e22e">+   previous_game_state = game_state
+</span><span style="color:#a6e22e"></span>
+    while not libtcod.console_is_window_closed():
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    game_state = GameStates.PLAYERS_TURN
+    <span class="new-text">previous_game_state = game_state</span>
+
+    while not libtcod.console_is_window_closed():
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        pickup = action.get(&#39;pickup&#39;)
+<span style="color:#a6e22e">+       show_inventory = action.get(&#39;show_inventory&#39;)
+</span><span style="color:#a6e22e"></span>        exit = action.get(&#39;exit&#39;)
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        pickup = action.get('pickup')
+        <span class="new-text">show_inventory = action.get('show_inventory')</span>
+        exit = action.get('exit')
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        elif pickup and game_state == GameStates.PLAYERS_TURN:
+            ...
+
+<span style="color:#a6e22e">+       if show_inventory:
+</span><span style="color:#a6e22e">+           previous_game_state = game_state
+</span><span style="color:#a6e22e">+           game_state = GameStates.SHOW_INVENTORY
+</span><span style="color:#a6e22e"></span>
+        if exit:
+<span style="color:#f92672">-           return True
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           if game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#a6e22e">+               game_state = previous_game_state
+</span><span style="color:#a6e22e">+           else:
+</span><span style="color:#a6e22e">+               return True
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>
+        elif pickup and game_state == GameStates.PLAYERS_TURN:
+            ...
+
+        <span class="new-text">if show_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.SHOW_INVENTORY</span>
+
+        if exit:
+            <span class="new-text">if game_state == GameStates.SHOW_INVENTORY:
+                game_state = previous_game_state
+            else:</span>
+                <span style="color: blue">return True</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;re modifying our previous &ldquo;exit&rdquo; section to just revert back to the
+previous game state if we open the inventory. That way, the &ldquo;escape&rdquo; key
+just closes the menu, rather than closing the game.</p>
+<p>Now we&rsquo;re switching the game&rsquo;s state, but we still need to display the
+menu. Needless to say, we&rsquo;ll need to modify <code>render_all</code>. Because we&rsquo;ll
+only display the inventory when the game state is <code>SHOW_INVENTORY</code>, the
+<code>render_all</code> function will need to be aware of the state. Modify the
+call in
+<code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+</span><span style="color:#f92672">-                  screen_height, bar_width, panel_height, panel_y, mouse, colors)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+</span><span style="color:#a6e22e">+                  screen_height, bar_width, panel_height, panel_y, mouse, colors, game_state)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width,
+                   screen_height, bar_width, panel_height, panel_y, mouse, colors, <span class="new-text">game_state</span>)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>And now for the
+definition:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+<span style="color:#f92672">-              bar_width, panel_height, panel_y, mouse, colors):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+              bar_width, panel_height, panel_y, mouse, colors, game_state):
+</span><span style="color:#a6e22e"></span>    ...
+    ...
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
+
+<span style="color:#a6e22e">+   if game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#a6e22e">+       inventory_menu(con, &#39;Press the key next to an item to use it, or Esc to cancel.\n&#39;,
+</span><span style="color:#a6e22e">+                      player.inventory, 50, screen_width, screen_height)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height,
+               bar_width, panel_height, panel_y, mouse, colors<span class="new-text">, game_state</span>):
+    ...
+    ...
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
+
+    <span class="new-text">if game_state == GameStates.SHOW_INVENTORY:
+        inventory_menu(con, 'Press the key next to an item to use it, or Esc to cancel.\n',
+                       player.inventory, 50, screen_width, screen_height)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;ll need to import <code>GameStates</code> and <code>inventory_menu</code> for this to work.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+from enum import Enum
+
+<span style="color:#a6e22e">+from game_states import GameStates
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+from menus import inventory_menu
+</span><span style="color:#a6e22e"></span>
+
+class RenderOrder(Enum):
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+from enum import Enum
+
+<span class="new-text">from game_states import GameStates
+
+from menus import inventory_menu</span>
+
+
+class RenderOrder(Enum):
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Run the project now. You should be able to open the inventory menu and
+see all the items you&rsquo;ve picked up so far. We can&rsquo;t quite use them yet,
+but we&rsquo;re almost there!</p>
+<p>In order to actually select an inventory item, we&rsquo;ll need to modify
+<code>handle_keys</code>. Why? Because we&rsquo;re selecting items using the letter keys,
+which is fine and good, but some of those keys we&rsquo;re using for movement
+and other things. It&rsquo;d be nice if our function reacted differently
+depending on what our game&rsquo;s state was.</p>
+<p>Here&rsquo;s what we&rsquo;ll do: We&rsquo;ll split <code>handle_keys</code> up into several
+different functions, which will return different results depending on
+the game&rsquo;s state. Rename the <code>handle_keys</code> function to
+<code>handle_player_turn_keys</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-def handle_keys(key):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+def handle_player_turn_keys(key):
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="crossed-out-text">def handle_keys(key):</span>
+<span class="new-text">def handle_player_turn_keys(key):</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, create a new <code>handle_keys</code> function, which calls
+<code>handle_player_turn_keys</code></p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod as libtcod
+
+<span style="color:#a6e22e">+from game_states import GameStates
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+def handle_keys(key, game_state):
+</span><span style="color:#a6e22e">+   if game_state == GameStates.PLAYERS_TURN:
+</span><span style="color:#a6e22e">+       return handle_player_turn_keys(key)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return {}
+</span><span style="color:#a6e22e"></span>
+
+def handle_player_turn_keys(key):
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>import tcod as libtcod
+
+<span class="new-text">from game_states import GameStates
+
+
+def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+
+    return {}</span>
+
+
+def handle_player_turn_keys(key):
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Don&rsquo;t forget to modify the call to <code>handle_keys</code> in <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-action = handle_keys(key)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+action = handle_keys(key, game_state)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>action = handle_keys(key<span class="new-text">, game_state</span>)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Before we move on to the inventory part, let&rsquo;s cover our bases and put
+in a key handler for when the player is dead.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+<span style="color:#a6e22e">+   elif game_state == GameStates.PLAYER_DEAD:
+</span><span style="color:#a6e22e">+       return handle_player_dead_keys(key)
+</span><span style="color:#a6e22e"></span>
+    return {}
+
+
+def handle_player_turn_keys(key):
+    ...
+
+
+<span style="color:#a6e22e">+def handle_player_dead_keys(key):
+</span><span style="color:#a6e22e">+   key_char = chr(key.c)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   if key_char == &#39;i&#39;:
+</span><span style="color:#a6e22e">+       return {&#39;show_inventory&#39;: True}
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   if key.vk == libtcod.KEY_ENTER and key.lalt:
+</span><span style="color:#a6e22e">+       # Alt+Enter: toggle full screen
+</span><span style="color:#a6e22e">+       return {&#39;fullscreen&#39;: True}
+</span><span style="color:#a6e22e">+   elif key.vk == libtcod.KEY_ESCAPE:
+</span><span style="color:#a6e22e">+       # Exit the menu
+</span><span style="color:#a6e22e">+       return {&#39;exit&#39;: True}
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return {}
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+    <span class="new-text">elif game_state == GameStates.PLAYER_DEAD:
+        return handle_player_dead_keys(key)</span>
+
+    return {}
+
+
+def handle_player_turn_keys(key):
+    ...
+
+
+<span class="new-text">def handle_player_dead_keys(key):
+    key_char = chr(key.c)
+
+    if key_char == 'i':
+        return {'show_inventory': True}
+
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        # Alt+Enter: toggle full screen
+        return {'fullscreen': True}
+    elif key.vk == libtcod.KEY_ESCAPE:
+        # Exit the menu
+        return {'exit': True}
+
+    return {}</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now, let&rsquo;s create a new function, called <code>handle_inventory_keys</code>, which
+will handle our input when the inventory menu is open.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+    elif game_state == GameStates.PLAYER_DEAD:
+        return handle_player_dead_keys(key)
+<span style="color:#a6e22e">+   elif game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#a6e22e">+       return handle_inventory_keys(key)
+</span><span style="color:#a6e22e"></span>
+    return {}
+...
+
+<span style="color:#a6e22e">+def handle_inventory_keys(key):
+</span><span style="color:#a6e22e">+   index = key.c - ord(&#39;a&#39;)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   if index &gt;= 0:
+</span><span style="color:#a6e22e">+       return {&#39;inventory_index&#39;: index}
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   if key.vk == libtcod.KEY_ENTER and key.lalt:
+</span><span style="color:#a6e22e">+       # Alt+Enter: toggle full screen
+</span><span style="color:#a6e22e">+       return {&#39;fullscreen&#39;: True}
+</span><span style="color:#a6e22e">+   elif key.vk == libtcod.KEY_ESCAPE:
+</span><span style="color:#a6e22e">+       # Exit the menu
+</span><span style="color:#a6e22e">+       return {&#39;exit&#39;: True}
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return {}
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+    elif game_state == GameStates.PLAYER_DEAD:
+        return handle_player_dead_keys(key)
+    <span class="new-text">elif game_state == GameStates.SHOW_INVENTORY:
+        return handle_inventory_keys(key)</span>
+
+    return {}
+...
+
+<span class="new-text">def handle_inventory_keys(key):
+    index = key.c - ord('a')
+
+    if index >= 0:
+        return {'inventory_index': index}
+
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        # Alt+Enter: toggle full screen
+        return {'fullscreen': True}
+    elif key.vk == libtcod.KEY_ESCAPE:
+        # Exit the menu
+        return {'exit': True}
+
+    return {}</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>What&rsquo;s with the <code>ord</code> function? Long story short, we&rsquo;re converting the
+key pressed to an index. &lsquo;a&rsquo; will be 0, &lsquo;b&rsquo; will be 1, and so on. This
+will allow us to select an item out of the inventory in <code>engine.py</code>. All
+we need the input handler to do is give us the index of what we picked;
+it doesn&rsquo;t need to know anything about the item or what it should do.</p>
+<p>Let&rsquo;s get this index in <code>engine.py</code> and do something with it!</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        show_inventory = action.get(&#39;show_inventory&#39;)
+<span style="color:#a6e22e">+       inventory_index = action.get(&#39;inventory_index&#39;)
+</span><span style="color:#a6e22e"></span>        exit = action.get(&#39;exit&#39;)
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        show_inventory = action.get('show_inventory')
+        <span class="new-text">inventory_index = action.get('inventory_index')</span>
+        exit = action.get('exit')
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if show_inventory:
+            ...
+
+<span style="color:#a6e22e">+       if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index &lt; len(
+</span><span style="color:#a6e22e">+               player.inventory.items):
+</span><span style="color:#a6e22e">+           item = player.inventory.items[inventory_index]
+</span><span style="color:#a6e22e">+           print(item)
+</span><span style="color:#a6e22e"></span>
+        if exit:
+            ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if show_inventory:
+            ...
+
+        <span class="new-text">if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
+                player.inventory.items):
+            item = player.inventory.items[inventory_index]
+            print(item)</span>
+
+        if exit:
+            ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p><em>*Note: The print statement is just a placeholder for now. We&rsquo;re close
+to actually using the item, I promise!</em></p>
+<p>We&rsquo;re taking the index that we selected, and &ldquo;using&rdquo; (printing for now)
+the item selected. Run the project and verify that this works. Now that
+we have a way of opening the menu and selecting an item, we can, at long
+last, move on to using the item.</p>
+<p>So, how do we use the item? The <code>Item</code> component seems like an obvious
+place to do something. But, each item should do something different,
+right? So the <code>Item</code> class won&rsquo;t actually contain the functions for
+healing the player, or doing damage to an enemy. Instead, it will just
+hold the healing and damaging functions, along with whatever arguments
+we need to make that function work. We&rsquo;ll then take the results of that
+function (like usual) and process them.</p>
+<p>Modify <code>Item</code> like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Item:
+<span style="color:#f92672">-   def __init__(self):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(self, use_function=None, **kwargs):
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-       pass
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       self.use_function = use_function
+</span><span style="color:#a6e22e">+       self.function_kwargs = kwargs
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Item:
+    def __init__(self<span class="new-text">, use_function=None, **kwargs</span>):
+        <span class="crossed-out-text">pass</span>
+        <span class="new-text">self.use_function = use_function
+        self.function_kwargs = kwargs</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>What about the actual function though? We&rsquo;ll define that separately,
+which will allow us (in the next chapter) to freely assign functions to
+the <code>use_function</code>, thus changing the behavior of each item depending on
+our needs.</p>
+<p>Create a file, called <code>item_functions.py</code>, and put the following
+function in it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">import</span> tcod <span style="color:#66d9ef">as</span> libtcod
+
+<span style="color:#f92672">from</span> game_messages <span style="color:#f92672">import</span> Message
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">heal</span>(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+    entity <span style="color:#f92672">=</span> args[<span style="color:#ae81ff">0</span>]
+    amount <span style="color:#f92672">=</span> kwargs<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;amount&#39;</span>)
+
+    results <span style="color:#f92672">=</span> []
+
+    <span style="color:#66d9ef">if</span> entity<span style="color:#f92672">.</span>fighter<span style="color:#f92672">.</span>hp <span style="color:#f92672">==</span> entity<span style="color:#f92672">.</span>fighter<span style="color:#f92672">.</span>max_hp:
+        results<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#39;consumed&#39;</span>: <span style="color:#66d9ef">False</span>, <span style="color:#e6db74">&#39;message&#39;</span>: Message(<span style="color:#e6db74">&#39;You are already at full health&#39;</span>, libtcod<span style="color:#f92672">.</span>yellow)})
+    <span style="color:#66d9ef">else</span>:
+        entity<span style="color:#f92672">.</span>fighter<span style="color:#f92672">.</span>heal(amount)
+        results<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#39;consumed&#39;</span>: <span style="color:#66d9ef">True</span>, <span style="color:#e6db74">&#39;message&#39;</span>: Message(<span style="color:#e6db74">&#39;Your wounds start to feel better!&#39;</span>, libtcod<span style="color:#f92672">.</span>green)})
+
+    <span style="color:#66d9ef">return</span> results</code></pre></div>
+<p>We&rsquo;re taking the <code>entity</code> that&rsquo;s using the item as the first argument
+(all of our functions will do this, even if they don&rsquo;t need it). We&rsquo;re
+also extracting the &ldquo;amount&rdquo; from &ldquo;kwargs&rdquo;, which will be provided by
+the <code>function_kwargs</code> from the <code>Item</code> component.</p>
+<p>We&rsquo;ll need to add the <code>heal</code> method to the <code>Fighter</code> component for this
+to work right (note: both functions are called &ldquo;heal&rdquo;, but they are not
+the same).</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    def take_damage(self, amount):
+        ...
+
+<span style="color:#a6e22e">+   def heal(self, amount):
+</span><span style="color:#a6e22e">+       self.hp += amount
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       if self.hp &gt; self.max_hp:
+</span><span style="color:#a6e22e">+           self.hp = self.max_hp
+</span><span style="color:#a6e22e"></span>
+    def attack(self, target):
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    def take_damage(self, amount):
+        ...
+
+    <span class="new-text">def heal(self, amount):
+        self.hp += amount
+
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp</span>
+
+    def attack(self, target):
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>This may make more sense once we pass the <code>heal</code> function to the healing
+potions. Let&rsquo;s do that now; in the <code>place_entities</code> function in
+<code>game_map</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">            ...
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+<span style="color:#f92672">-               item_component = Item()
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               item_component = Item(use_function=heal, amount=4)
+</span><span style="color:#a6e22e"></span>                item = Entity(x, y, &#39;!&#39;, libtcod.violet, &#39;Healing Potion&#39;, render_order=RenderOrder.ITEM,
+                              item=item_component)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>            ...
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                <span class="crossed-out-text">item_component = Item()</span>
+                <span class="new-text">item_component = Item(use_function=heal, amount=4)</span>
+                item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM,
+                              item=item_component)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>You&rsquo;ll need to import <code>heal</code> for this.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+from entity import Entity
+
+<span style="color:#a6e22e">+from item_functions import heal
+</span><span style="color:#a6e22e"></span>
+from map_objects.rectangle import Rect
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+from entity import Entity
+
+<span class="new-text">from item_functions import heal</span>
+
+from map_objects.rectangle import Rect
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now our item has an actual function to fire off when it gets used. But
+<em>where</em> does this get called? Why not have our inventory call the
+function? Add the following functions to <code>Inventory</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+<span style="color:#a6e22e">+   def use(self, item_entity, **kwargs):
+</span><span style="color:#a6e22e">+       results = []
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       item_component = item_entity.item
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       if item_component.use_function is None:
+</span><span style="color:#a6e22e">+           results.append({&#39;message&#39;: Message(&#39;The {0} cannot be used&#39;.format(item_entity.name), libtcod.yellow)})
+</span><span style="color:#a6e22e">+       else:
+</span><span style="color:#a6e22e">+           kwargs = {**item_component.function_kwargs, **kwargs}
+</span><span style="color:#a6e22e">+           item_use_results = item_component.use_function(self.owner, **kwargs)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           for item_use_result in item_use_results:
+</span><span style="color:#a6e22e">+               if item_use_result.get(&#39;consumed&#39;):
+</span><span style="color:#a6e22e">+                   self.remove_item(item_entity)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           results.extend(item_use_results)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       return results
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   def remove_item(self, item):
+</span><span style="color:#a6e22e">+       self.items.remove(item)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    <span class="new-text">def use(self, item_entity, **kwargs):
+        results = []
+
+        item_component = item_entity.item
+
+        if item_component.use_function is None:
+            results.append({'message': Message('The {0} cannot be used'.format(item_entity.name), libtcod.yellow)})
+        else:
+            kwargs = {**item_component.function_kwargs, **kwargs}
+            item_use_results = item_component.use_function(self.owner, **kwargs)
+
+            for item_use_result in item_use_results:
+                if item_use_result.get('consumed'):
+                    self.remove_item(item_entity)
+
+            results.extend(item_use_results)
+
+        return results
+
+    def remove_item(self, item):
+        self.items.remove(item)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index &lt; len(
+                player.inventory.items):
+            item = player.inventory.items[inventory_index]
+<span style="color:#f92672">-           print(item)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           player_turn_results.extend(player.inventory.use(item))
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
+                player.inventory.items):
+            item = player.inventory.items[inventory_index]
+            <span class="crossed-out-text">print(item)</span>
+            <span class="new-text">player_turn_results.extend(player.inventory.use(item))</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Finally, let&rsquo;s handle the results of the item use function in
+<code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get(&#39;message&#39;)
+            dead_entity = player_turn_result.get(&#39;dead&#39;)
+            item_added = player_turn_result.get(&#39;item_added&#39;)
+<span style="color:#a6e22e">+           item_consumed = player_turn_result.get(&#39;consumed&#39;)
+</span><span style="color:#a6e22e"></span>            ...
+            if item_added:
+                entities.remove(item_added)
+
+                game_state = GameStates.ENEMY_TURN
+
+<span style="color:#a6e22e">+           if item_consumed:
+</span><span style="color:#a6e22e">+               game_state = GameStates.ENEMY_TURN
+</span><span style="color:#a6e22e"></span>            ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get('message')
+            dead_entity = player_turn_result.get('dead')
+            item_added = player_turn_result.get('item_added')
+            <span class="new-text">item_consumed = player_turn_result.get('consumed')</span>
+            ...
+            if item_added:
+                entities.remove(item_added)
+
+                game_state = GameStates.ENEMY_TURN
+
+            <span class="new-text">if item_consumed:
+                game_state = GameStates.ENEMY_TURN</span>
+            ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Run the project now. You can now consume the health potions, and this
+will take a turn. Potions will not be used if you&rsquo;re at full health
+already.</p>
+<p>Final thing before we end the chapter: dropping items. This may seem
+pointless now, but later on, when we have multiple levels in the
+dungeon, the player may have to make some decisions about which items to
+keep and which to drop.</p>
+<p>First, add a new game state:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class GameStates(Enum):
+    PLAYERS_TURN = 1
+    ENEMY_TURN = 2
+    PLAYER_DEAD = 3
+    SHOW_INVENTORY = 4
+<span style="color:#a6e22e">+   DROP_INVENTORY = 5
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class GameStates(Enum):
+    PLAYERS_TURN = 1
+    ENEMY_TURN = 2
+    PLAYER_DEAD = 3
+    SHOW_INVENTORY = 4
+    <span class="new-text">DROP_INVENTORY = 5</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, modify <code>handle_player_turn_keys</code> to respond to the &rsquo;d' key:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    elif key_char == &#39;i&#39;:
+        return {&#39;show_inventory&#39;: True}
+
+<span style="color:#a6e22e">+   elif key_char == &#39;d&#39;:
+</span><span style="color:#a6e22e">+       return {&#39;drop_inventory&#39;: True}
+</span><span style="color:#a6e22e"></span>
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    elif key_char == 'i':
+        return {'show_inventory': True}
+
+    <span class="new-text">elif key_char == 'd':
+        return {'drop_inventory': True}</span>
+
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Update the action handler section to accept this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        show_inventory = action.get(&#39;show_inventory&#39;)
+<span style="color:#a6e22e">+       drop_inventory = action.get(&#39;drop_inventory&#39;)
+</span><span style="color:#a6e22e"></span>        inventory_index = action.get(&#39;inventory_index&#39;)
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        show_inventory = action.get('show_inventory')
+        <span class="new-text">drop_inventory = action.get('drop_inventory')</span>
+        inventory_index = action.get('inventory_index')
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;ll need to switch the game state when the player presses this key:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if show_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.SHOW_INVENTORY
+
+<span style="color:#a6e22e">+       if drop_inventory:
+</span><span style="color:#a6e22e">+           previous_game_state = game_state
+</span><span style="color:#a6e22e">+           game_state = GameStates.DROP_INVENTORY
+</span><span style="color:#a6e22e"></span>
+        if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index &lt; len(
+                player.inventory.items):
+            ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if show_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.SHOW_INVENTORY
+
+        <span class="new-text">if drop_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.DROP_INVENTORY</span>
+
+        if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
+                player.inventory.items):
+            ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>You might think we need to add another function to handle the keys for
+dropping inventory, but we actually don&rsquo;t; we can just use our code for
+<code>SHOW_INVENTORY</code> for this same purpose. Just modify the &ldquo;if&rdquo; statement
+in <code>handle_keys</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+    elif game_state == GameStates.PLAYER_DEAD:
+        return handle_player_dead_keys(key)
+<span style="color:#f92672">-   elif game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   elif game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+</span><span style="color:#a6e22e"></span>        return handle_inventory_keys(key)
+
+    return {}
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def handle_keys(key, game_state):
+    if game_state == GameStates.PLAYERS_TURN:
+        return handle_player_turn_keys(key)
+    elif game_state == GameStates.PLAYER_DEAD:
+        return handle_player_dead_keys(key)
+    <span class="crossed-out-text">elif game_state == GameStates.SHOW_INVENTORY:</span>
+    <span class="new-text">elif game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):</span>
+        return handle_inventory_keys(key)
+
+    return {}</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Also, modify the <code>exit</code> section:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if exit:
+<span style="color:#f92672">-           if game_state in GameStates.SHOW_INVENTORY:
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+</span><span style="color:#a6e22e"></span>                game_state = previous_game_state
+            else:
+                return True
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if exit:
+            <span class="crossed-out-text">if game_state in GameStates.SHOW_INVENTORY:</span>
+            <span class="new-text">if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):</span>
+                game_state = previous_game_state
+            else:
+                return True
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now for displaying the drop menu. It&rsquo;s really not different from the
+inventory menu, so we can use the same function, and send a different
+title to it.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+<span style="color:#f92672">-   if game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#f92672">-       inventory_menu(con, &#39;Press the key next to an item to use it, or Esc to cancel.\n&#39;,
+</span><span style="color:#f92672">-                      player.inventory, 50, screen_width, screen_height)
+</span><span style="color:#f92672"></span>
+<span style="color:#a6e22e">+   if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+</span><span style="color:#a6e22e">+       if game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#a6e22e">+           inventory_title = &#39;Press the key next to an item to use it, or Esc to cancel.\n&#39;
+</span><span style="color:#a6e22e">+       else:
+</span><span style="color:#a6e22e">+           inventory_title = &#39;Press the key next to an item to drop it, or Esc to cancel.\n&#39;
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       inventory_menu(con, inventory_title, player.inventory, 50, screen_width, screen_height)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    <span class="crossed-out-text">if game_state == GameStates.SHOW_INVENTORY:</span>
+        <span class="crossed-out-text">inventory_menu(con, 'Press the key next to an item to use it, or Esc to cancel.\n',</span>
+                       <span class="crossed-out-text">player.inventory, 50, screen_width, screen_height)</span>
+
+    <span class="new-text">if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+        if game_state == GameStates.SHOW_INVENTORY:
+            inventory_title = 'Press the key next to an item to use it, or Esc to cancel.\n'
+        else:
+            inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
+
+        inventory_menu(con, inventory_title, player.inventory, 50, screen_width, screen_height)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>What happens when the player pressed a key in this menu? Let&rsquo;s modify
+the part in <code>engine.py</code> that handled the <code>inventory_index</code> to take the
+game&rsquo;s state into account. If it&rsquo;s <code>SHOW_INVENTORY</code>, then use the item,
+and if it&rsquo;s <code>DROP_INVENTORY</code>, then call a function to drop the
+item.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index &lt; len(
+                player.inventory.items):
+            item = player.inventory.items[inventory_index]
+
+<span style="color:#f92672">-           player_turn_results.extend(player.inventory.use(item))
+</span><span style="color:#f92672"></span>
+<span style="color:#a6e22e">+           if game_state == GameStates.SHOW_INVENTORY:
+</span><span style="color:#a6e22e"></span>                player_turn_results.extend(player.inventory.use(item))
+<span style="color:#a6e22e">+           elif game_state == GameStates.DROP_INVENTORY:
+</span><span style="color:#a6e22e">+               player_turn_results.extend(player.inventory.drop_item(item))
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
+                player.inventory.items):
+            item = player.inventory.items[inventory_index]
+
+            <span class="new-text">if game_state == GameStates.SHOW_INVENTORY:</span>
+                <span style="color: blue">player_turn_results.extend(player.inventory.use(item))</span>
+            <span class="new-text">elif game_state == GameStates.DROP_INVENTORY:
+                player_turn_results.extend(player.inventory.drop_item(item))</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We haven&rsquo;t defined the <code>drop_item</code> method of inventory yet, so let&rsquo;s do
+that now. It will remove the item from the inventory, set the item&rsquo;s
+coordinates to match the player (since the item gets dropped at the
+player&rsquo;s feet), and return the results.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    def remove_item(self, item):
+        self.items.remove(item)
+
+<span style="color:#a6e22e">+   def drop_item(self, item):
+</span><span style="color:#a6e22e">+       results = []
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       item.x = self.owner.x
+</span><span style="color:#a6e22e">+       item.y = self.owner.y
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       self.remove_item(item)
+</span><span style="color:#a6e22e">+       results.append({&#39;item_dropped&#39;: item, &#39;message&#39;: Message(&#39;You dropped the {0}&#39;.format(item.name),
+</span><span style="color:#a6e22e">+                                                                libtcod.yellow)})
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       return results
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    def remove_item(self, item):
+        self.items.remove(item)
+
+    <span class="new-text">def drop_item(self, item):
+        results = []
+
+        item.x = self.owner.x
+        item.y = self.owner.y
+
+        self.remove_item(item)
+        results.append({'item_dropped': item, 'message': Message('You dropped the {0}'.format(item.name),
+                                                                 libtcod.yellow)})
+
+        return results</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Finally, handle the results in <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get(&#39;message&#39;)
+            dead_entity = player_turn_result.get(&#39;dead&#39;)
+            item_added = player_turn_result.get(&#39;item_added&#39;)
+            item_consumed = player_turn_result.get(&#39;consumed&#39;)
+<span style="color:#a6e22e">+           item_dropped = player_turn_result.get(&#39;item_dropped&#39;)
+</span><span style="color:#a6e22e"></span>            ...
+            if item_consumed:
+                game_state = GameStates.ENEMY_TURN
+
+<span style="color:#a6e22e">+           if item_dropped:
+</span><span style="color:#a6e22e">+               entities.append(item_dropped)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+               game_state = GameStates.ENEMY_TURN
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        for player_turn_result in player_turn_results:
+            message = player_turn_result.get('message')
+            dead_entity = player_turn_result.get('dead')
+            item_added = player_turn_result.get('item_added')
+            item_consumed = player_turn_result.get('consumed')
+            <span class="new-text">item_dropped = player_turn_result.get('item_dropped')</span>
+            ...
+            if item_consumed:
+                game_state = GameStates.ENEMY_TURN
+
+            <span class="new-text">if item_dropped:
+                entities.append(item_dropped)
+
+                game_state = GameStates.ENEMY_TURN</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>That was quite the chapter! It took a lot of setup to get using the
+items, but now we&rsquo;ve got a framework that we can add on to. In the next
+chapter, we&rsquo;ll do just that, by adding some scrolls to cast spells at
+our enemies.</p>
+<p>If you want to see the code so far in its entirety, <a href="https://github.com/TStand90/roguelike_tutorial_revised/tree/part8">click
+here</a>.</p>
+<p><a href="/tutorials/tcod/2019/part-9">Click here to move on to the next part of this
+tutorial.</a></p>
+<!-- raw HTML omitted -->
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

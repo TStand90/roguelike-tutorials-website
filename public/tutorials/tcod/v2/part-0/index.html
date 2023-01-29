@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 0 - Setting Up" />
+<meta property="og:description" content="Prior knowledge This tutorial assumes some basic familiarity with programming in general, and with Python. If you&rsquo;ve never used Python before, this tutorial could be a little confusing. There are many free resources online about learning programming and Python (too many to list here), and I&rsquo;d recommend learning about objects and functions in Python at the very least before attempting to read this tutorial.
+&hellip; Of course, there are those who have ignored this advice and done well with this tutorial anyway, so feel free to ignore that last paragraph if you&rsquo;re feeling bold!" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/v2/part-0/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2020-06-14T11:25:36-07:00" />
+<meta property="article:modified_time" content="2020-06-14T11:25:36-07:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 0 - Setting Up"/>
+<meta name="twitter:description" content="Prior knowledge This tutorial assumes some basic familiarity with programming in general, and with Python. If you&rsquo;ve never used Python before, this tutorial could be a little confusing. There are many free resources online about learning programming and Python (too many to list here), and I&rsquo;d recommend learning about objects and functions in Python at the very least before attempting to read this tutorial.
+&hellip; Of course, there are those who have ignored this advice and done well with this tutorial anyway, so feel free to ignore that last paragraph if you&rsquo;re feeling bold!"/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/v2/part-0/">
+
+    <title>
+      
+        Part 0 - Setting Up | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/v2/part-0/">Part 0 - Setting Up</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2020-06-14">Jun 14, 2020</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <!-- raw HTML omitted -->
+<h4 id="prior-knowledge">Prior knowledge</h4>
+<p>This tutorial assumes some basic familiarity with programming in
+general, and with Python. If you&rsquo;ve never used Python before, this
+tutorial could be a little confusing. There are many free resources
+online about learning programming and Python (too many to list here),
+and I&rsquo;d recommend learning about objects and functions in Python at the
+very least before attempting to read this tutorial.</p>
+<p>&hellip; Of course, there are those who have ignored this advice and done
+well with this tutorial anyway, so feel free to ignore that last
+paragraph if you&rsquo;re feeling bold!</p>
+<h4 id="installation">Installation</h4>
+<p>To do this tutorial, you&rsquo;ll need Python version 3.7 or higher. The
+latest version of Python is recommended (currently 3.8 as of June
+2020). <strong>Note: Python 2 is not compatible.</strong></p>
+<p><a href="https://www.python.org/downloads/">Download Python here</a>.</p>
+<p>You&rsquo;ll also want the latest version of the TCOD library, which is what
+this tutorial is based on.</p>
+<p><a href="https://python-tcod.readthedocs.io/en/latest/installation.html">Installation instructions for TCOD can be found
+here.</a></p>
+<p>While you can certainly install TCOD and complete this tutorial without
+it, I&rsquo;d highly recommend using a virtual environment. <a href="https://docs.python.org/3/library/venv.html">Documentation on
+how to do that can be found
+here.</a></p>
+<p>Additionally, if you are going to use a virtual environment, you may want to take the time to set up a <code>requirements.txt</code> file. This will allow you to track your project dependencies if you add any in the future, and more easily install them if you need to (for example, if you pull from a remote git repository).</p>
+<p>You can set up your <code>requirements.txt</code> file in the same directory that you plan on working in for the project. Create the file <code>requirements.txt</code> and put the following in it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">tcod&gt;=11.13
+numpy&gt;=1.18</code></pre></div>
+<p>Once that&rsquo;s done, with your virtual environment activated, type the following command:</p>
+<p><code>pip install -r requirements.txt</code></p>
+<p>This should install the TCOD library, along with its dependency, numpy.</p>
+<p>Depending on your computer, you might also need to install SDL2.
+Check the instructions for installing it based on your operating system.
+For example, Ubuntu can install it with the following command:</p>
+<p><code>sudo apt-get install libsdl2-dev</code></p>
+<h4 id="editors">Editors</h4>
+<p>Any text editor can work for writing Python. You could even use Notepad
+if you really wanted to. Personally, I&rsquo;m a fan of
+<a href="https://www.jetbrains.com/pycharm/">Pycharm</a> and <a href="https://code.visualstudio.com/">Visual Studio
+Code</a>. Whatever you choose, I strongly
+recommend something that can help catch Python syntax errors at the very
+least. I&rsquo;ve been working with Python for over five years, and I still
+make these types of mistakes all the time!</p>
+<h4 id="making-sure-python-works">Making sure Python works</h4>
+<p>To verify that your installation of both Python 3 and TCOD are working,
+create a new file (in whatever directory you plan on using for the
+tutorial) called <code>main.py</code>, and enter the following text into it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#75715e">#!/usr/bin/env python3</span>
+<span style="color:#f92672">import</span> tcod
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    print(<span style="color:#e6db74">&#34;Hello World!&#34;</span>)
+
+
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+    main()
+</code></pre></div><p>Run the file in your terminal (or alternatively in your editor, if
+possible):</p>
+<p><code>python main.py</code></p>
+<p>If you&rsquo;re not using <code>virtualenv</code>, the command will probably look like
+this:</p>
+<p><code>python3 main.py</code></p>
+<p>You should see &ldquo;Hello World!&rdquo; printed out to the terminal. If you
+receive an error, there is probably an issue with either your Python or
+TCOD installation.</p>
+<h3 id="downloading-the-image-file">Downloading the Image File</h3>
+<p>For this tutorial, we&rsquo;ll need an image file. The default one is provided below.</p>
+<p><img src="/images/dejavu10x10_gs_tc.png" alt="Font File"></p>
+<p>Right click the image and save it to the same directory that you&rsquo;re planning on
+placing your code in. If the above image is not displaying for some reason,
+it is also <a href="https://raw.githubusercontent.com/TStand90/tcod_tutorial_v2/1667c8995fb0d0fd6df98bd84c0be46cb8b78dac/dejavu10x10_gs_tc.png">available for download here.</a></p>
+<h3 id="about-this-site">About this site</h3>
+<p>Code snippets in this website are presented in a way that tries to convey
+exactly what the user should be adding to a file at what time. When a user
+is expected to create a file from scratch and enter code into it, it will
+be represented with standard Python code highlighting, like so:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Fighter</span>:
+    <span style="color:#66d9ef">def</span> __init__(self, hp, defense, power):
+        self<span style="color:#f92672">.</span>max_hp <span style="color:#f92672">=</span> hp
+        self<span style="color:#f92672">.</span>hp <span style="color:#f92672">=</span> hp
+        self<span style="color:#f92672">.</span>defense <span style="color:#f92672">=</span> defense
+        self<span style="color:#f92672">.</span>power <span style="color:#f92672">=</span> power</code></pre></div>
+<p>*<em>Taken from part 6</em>.</p>
+<p>Most of the time, you&rsquo;ll be editing a file and code that already exists.
+In such cases, the code will be displayed like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Entity:
+<span style="color:#f92672">-   def __init__(self, x, y, char, color, name, blocks=False):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):
+</span><span style="color:#a6e22e"></span>        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
+<span style="color:#a6e22e">+       self.fighter = fighter
+</span><span style="color:#a6e22e">+       self.ai = ai
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       if self.fighter:
+</span><span style="color:#a6e22e">+           self.fighter.owner = self
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       if self.ai:
+</span><span style="color:#a6e22e">+           self.ai.owner = self
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Entity:
+    <span class="crossed-out-text">def __init__(self, x, y, char, color, name, blocks=False):</span>
+    <span class="new-text">def __init__(self, x, y, char, color, name, blocks=False, fighter=None, ai=None):</span>
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        self.name = name
+        self.blocks = blocks
+        <span class="new-text">self.fighter = fighter
+        self.ai = ai
+
+        if self.fighter:
+            self.fighter.owner = self
+
+        if self.ai:
+            self.ai.owner = self</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>*<em>Also taken from part 6.</em></p>
+<p>Clicking a button above the code section changes the &ldquo;style&rdquo; for not just that code block,
+but the entire website. You can switch between these styles at any time.</p>
+<p>In the case of the example above, you would remove the old <code>__init__</code> definition, replacing
+it with the new one. Then, you&rsquo;d add the necessary lines at the bottom. Both styles convey
+the same idea.</p>
+<p>But what&rsquo;s the difference? The &ldquo;Diff&rdquo; style shows the code as you might find it when doing
+a Git diff comparison (hence the name). It shows plusses and minuses on the side to denote
+whether you should be adding or subtracting a line from a file. The &ldquo;Original&rdquo; style shows
+the same thing, but it crosses out the lines to remove and does not have plusses nor minuses.</p>
+<p>The benefit of the &ldquo;Diff&rdquo; style is that it doesn&rsquo;t rely on color to denote what to add, making
+it more accessible all around. The drawback is that it&rsquo;s impossible to accurately display the
+proper indentation in some instances. The plusses and minuses take up one space, so in a code
+section like this one, be sure not to leave the space for the plus in your code (there should
+be no spaces before &ldquo;from&rdquo;):</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">import tcod
+
+<span style="color:#a6e22e">+from input_handlers import handle_keys
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+    <pre>import tcod
+
+<span class="new-text">from input_handlers import handle_keys</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>The &ldquo;Original&rdquo; style omits the + and - symbols and doesn&rsquo;t have the indentation issue,
+making it a bit easier to copy and paste code sections.</p>
+<p>Which style you use is a matter of personal preference. The actual code of the tutorial
+remains the same.</p>
+<h3 id="getting-help">Getting help</h3>
+<p>Be sure to check out the <a href="https://www.reddit.com/r/roguelikedev">Roguelike Development
+Subreddit</a> for help. There&rsquo;s a
+link there to the Discord channel as well.</p>
+<hr>
+<h3 id="ready-to-go">Ready to go?</h3>
+<p>Once you&rsquo;re set up and ready to go, you can proceed to <a href="/tutorials/tcod/v2/part-1">Part
+1</a>.</p>
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

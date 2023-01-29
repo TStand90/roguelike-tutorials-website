@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 5 - Placing Enemies and kicking them (harmlessly)" />
+<meta property="og:description" content="What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&rsquo;ll save for next time). To start, we&rsquo;ll need a function to place the enemies in the dungeon; let&rsquo;s call it place_entities and put it in the GameMap class.
+DiffOriginaldef create_v_tunnel(self, y1, y2, x): ." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/2019/part-5/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2019-03-30T09:33:48-07:00" />
+<meta property="article:modified_time" content="2019-03-30T09:33:48-07:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 5 - Placing Enemies and kicking them (harmlessly)"/>
+<meta name="twitter:description" content="What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&rsquo;ll save for next time). To start, we&rsquo;ll need a function to place the enemies in the dungeon; let&rsquo;s call it place_entities and put it in the GameMap class.
+DiffOriginaldef create_v_tunnel(self, y1, y2, x): ."/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/2019/part-5/">
+
+    <title>
+      
+        Part 5 - Placing Enemies and kicking them (harmlessly) | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/2019/part-5/">Part 5 - Placing Enemies and kicking them (harmlessly)</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2019-03-30">Mar 30, 2019</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <p>What good is a dungeon with no monsters to bash? This chapter will focus
+on placing the enemies throughout the dungeon, and setting them up to be
+attacked (the actual attacking part we&rsquo;ll save for next time). To start,
+we&rsquo;ll need a function to place the enemies in the dungeon; let&rsquo;s call it
+<code>place_entities</code> and put it in the <code>GameMap</code> class.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    def create_v_tunnel(self, y1, y2, x):
+        ...
+
+<span style="color:#a6e22e">+   def place_entities(self, room, entities, max_monsters_per_room):
+</span><span style="color:#a6e22e">+       # Get a random number of monsters
+</span><span style="color:#a6e22e">+       number_of_monsters = randint(0, max_monsters_per_room)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+       for i in range(number_of_monsters):
+</span><span style="color:#a6e22e">+           # Choose a random location in the room
+</span><span style="color:#a6e22e">+           x = randint(room.x1 + 1, room.x2 - 1)
+</span><span style="color:#a6e22e">+           y = randint(room.y1 + 1, room.y2 - 1)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+</span><span style="color:#a6e22e">+               if randint(0, 100) &lt; 80:
+</span><span style="color:#a6e22e">+                   monster = Entity(x, y, &#39;o&#39;, libtcod.desaturated_green)
+</span><span style="color:#a6e22e">+               else:
+</span><span style="color:#a6e22e">+                   monster = Entity(x, y, &#39;T&#39;, libtcod.darker_green)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+               entities.append(monster)
+</span><span style="color:#a6e22e"></span>
+    def is_blocked(self, x, y):
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    def create_v_tunnel(self, y1, y2, x):
+        ...
+
+    <span class="new-text">def place_entities(self, room, entities, max_monsters_per_room):
+        # Get a random number of monsters
+        number_of_monsters = randint(0, max_monsters_per_room)
+
+        for i in range(number_of_monsters):
+            # Choose a random location in the room
+            x = randint(room.x1 + 1, room.x2 - 1)
+            y = randint(room.y1 + 1, room.y2 - 1)
+
+            if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+                if randint(0, 100) < 80:
+                    monster = Entity(x, y, 'o', libtcod.desaturated_green)
+                else:
+                    monster = Entity(x, y, 'T', libtcod.darker_green)
+
+                entities.append(monster)</span>
+
+    def is_blocked(self, x, y):
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>In this function, we&rsquo;re choosing a random amount of enemies to place,
+between 0 and the maximum we specify. Then, we take a random x and y,
+and, if no other monster is currently at that location, we place a
+monster there. There&rsquo;s an 80% chance of it being an Orc, and a 20%
+chance of it being a Troll.</p>
+<p>We&rsquo;ll need to import both <code>libtcod</code> and the <code>Entity</code> class.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+import tcod as libtcod
+</span><span style="color:#a6e22e"></span>from random import randint
+
+<span style="color:#a6e22e">+from entity import Entity
+</span><span style="color:#a6e22e"></span>from map_objects.rectangle import Rect
+from map_objects.tile import Tile
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+    <pre><span class="new-text">import tcod as libtcod</span>
+from random import randint
+
+<span class="new-text">from entity import Entity</span>
+from map_objects.rectangle import Rect
+from map_objects.tile import Tile</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now let&rsquo;s modify our <code>make_map</code> function to include the <code>place_entities</code>
+function.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">                        ...
+                        self.create_h_tunnel(prev_x, new_x, new_y)
+
+<span style="color:#a6e22e">+               self.place_entities(new_room, entities, max_monsters_per_room)
+</span><span style="color:#a6e22e"></span>
+                rooms.append(new_room)
+                ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>                        ...
+                        self.create_h_tunnel(prev_x, new_x, new_y)
+
+                <span class="new-text">self.place_entities(new_room, entities, max_monsters_per_room)</span>
+
+                rooms.append(new_room)
+                ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Because we now need the <code>entities</code> and <code>max_monsters_per_room</code>
+variables, we should modify our <code>make_map</code> function definition to
+include
+them.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-   def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+</span><span style="color:#a6e22e">+                max_monsters_per_room):
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    <span class="crossed-out-text">def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player):</span>
+    <span class="new-text">def make_map(self, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities,
+                 max_monsters_per_room):</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;re all set up here; now we have to modify <code>engine.py</code> to match this
+new <code>make_map</code> function. Also, we&rsquo;ll need to create the
+<code>max_room_per_monsters</code> variable before calling the function. Finally,
+we&rsquo;ll change our <code>entities</code> list to include only the player at first,
+and we&rsquo;ll completely remove our dummy NPC from before.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    fov_radius = 10
+
+<span style="color:#a6e22e">+   max_monsters_per_room = 3
+</span><span style="color:#a6e22e"></span>
+    colors = {
+        &#39;dark_wall&#39;: libtcod.Color(0, 0, 100),
+        &#39;dark_ground&#39;: libtcod.Color(50, 50, 150),
+        &#39;light_wall&#39;: libtcod.Color(130, 110, 50),
+        &#39;light_ground&#39;: libtcod.Color(200, 180, 50)
+    }
+
+<span style="color:#f92672">-   player = Entity(int(screen_width / 2), int(screen_height / 2), &#39;@&#39;, libtcod.white)
+</span><span style="color:#f92672">-   npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), &#39;@&#39;, libtcod.yellow)
+</span><span style="color:#f92672">-   entities = [npc, player]
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   player = Entity(0, 0, &#39;@&#39;, libtcod.white)
+</span><span style="color:#a6e22e">+   entities = [player]
+</span><span style="color:#a6e22e"></span>
+    libtcod.console_set_custom_font(&#39;arial10x10.png&#39;, libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(screen_width, screen_height, &#39;libtcod tutorial revised&#39;, False)
+
+    con = libtcod.console_new(screen_width, screen_height)
+
+    game_map = GameMap(map_width, map_height)
+<span style="color:#f92672">-   game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities, max_monsters_per_room)
+</span><span style="color:#a6e22e"></span>
+    fov_recompute = True
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    fov_radius = 10
+
+    <span class="new-text">max_monsters_per_room = 3</span>
+
+    colors = {
+        'dark_wall': libtcod.Color(0, 0, 100),
+        'dark_ground': libtcod.Color(50, 50, 150),
+        'light_wall': libtcod.Color(130, 110, 50),
+        'light_ground': libtcod.Color(200, 180, 50)
+    }
+
+    <span class="crossed-out-text">player = Entity(int(screen_width / 2), int(screen_height / 2), '@', libtcod.white)</span>
+    <span class="crossed-out-text">npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), '@', libtcod.yellow)</span>
+    <span class="crossed-out-text">entities = [npc, player]</span>
+    <span class="new-text">player = Entity(0, 0, '@', libtcod.white)</span>
+    <span class="new-text">entities = [player]</span>
+
+    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+    libtcod.console_init_root(screen_width, screen_height, 'libtcod tutorial revised', False)
+
+    con = libtcod.console_new(screen_width, screen_height)
+
+    game_map = GameMap(map_width, map_height)
+    <span class="crossed-out-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player)</span>
+    <span class="new-text">game_map.make_map(max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities, max_monsters_per_room)</span>
+
+    fov_recompute = True
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Run the project now, and you should see some orcs and trolls beginning
+to populate our dungeon!</p>
+<p>One obvious issue with our newly created monsters (you know, besides the
+fact that they just sit there lifelessly) is that the player can just
+walk right through them. Unless you&rsquo;re planning on making a game about a
+ghost walking through monsters and possessing them (doesn&rsquo;t sound like a
+bad idea actually!), this isn&rsquo;t what we want; if the player &ldquo;moves
+into&rdquo; an enemy, we should attack!</p>
+<p>One might think that we can just check if we&rsquo;re moving into an Entity,
+and attack it if we are, but we actually do want some Entities to not
+block movement. Why? Because we&rsquo;ll be using that same Entity class to
+represent items, and we&rsquo;ll want to be able to move over those and pick
+them up. So it seems we need a class attribute that tells us if the
+Entity &ldquo;blocks&rdquo; our movement or not.</p>
+<p>Let&rsquo;s modify the <code>Entity</code> class to include the &ldquo;blocks&rdquo; variable. While
+we&rsquo;re modifying this class, we should also pass in a &ldquo;name&rdquo; for the
+Entity, which will be useful a little later.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Entity:
+<span style="color:#f92672">-   def __init__(self, x, y, char, color):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(self, x, y, char, color, name, blocks=False):
+</span><span style="color:#a6e22e"></span>        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+<span style="color:#a6e22e">+       self.name = name
+</span><span style="color:#a6e22e">+       self.blocks = blocks
+</span><span style="color:#a6e22e"></span>
+    def move(self, dx, dy):
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Entity:
+    <span class="crossed-out-text">def __init__(self, x, y, char, color):</span>
+    <span class="new-text">def __init__(self, x, y, char, color, name, blocks=False):</span>
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        <span class="new-text">self.name = name
+        self.blocks = blocks</span>
+
+    def move(self, dx, dy):
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Notice that &ldquo;blocks&rdquo; is optional; if we don&rsquo;t pass it on initialization,
+it will be False by default.</p>
+<p>Go back to <code>game_map.py</code> and modify the <code>place_entities</code> method, where
+we declare our monsters.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">            if randint(0, 100) &lt; 80:
+<span style="color:#f92672">-               monster = Entity(x, y, &#39;o&#39;, libtcod.desaturated_green)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               monster = Entity(x, y, &#39;o&#39;, libtcod.desaturated_green, &#39;Orc&#39;, blocks=True)
+</span><span style="color:#a6e22e"></span>            else:
+<span style="color:#f92672">-               monster = Entity(x, y, &#39;T&#39;, libtcod.darker_green)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               monster = Entity(x, y, &#39;T&#39;, libtcod.darker_green, &#39;Troll&#39;, blocks=True)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>            if randint(0, 100) < 80:
+                <span class="crossed-out-text">monster = Entity(x, y, 'o', libtcod.desaturated_green)</span>
+                <span class="new-text">monster = Entity(x, y, 'o', libtcod.desaturated_green, 'Orc', blocks=True)</span>
+            else:
+                <span class="crossed-out-text">monster = Entity(x, y, 'T', libtcod.darker_green)</span>
+                <span class="new-text">monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We also need to update the initialization of the player in <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-   player = Entity(0, 0, &#39;@&#39;, libtcod.white)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   player = Entity(0, 0, &#39;@&#39;, libtcod.white, &#39;Player&#39;, blocks=True)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    <span class="crossed-out-text">player = Entity(0, 0, '@', libtcod.white)</span>
+    <span class="new-text">player = Entity(0, 0, '@', libtcod.white, 'Player', blocks=True)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>With our new attribute in place, we need to make a check if a blocking
+entity is in the way when we try to move into a tile. One thing that
+will definitely help is a function to get a &ldquo;blocking&rdquo; entity in a tile,
+given the list of entities and the x and y coordinates. We&rsquo;ll put this
+function in <code>entity.py</code>, but not in the <code>Entity</code> class itself. The
+reasoning is that it&rsquo;s a function that relates to the entities, but it
+doesn&rsquo;t relate to a specific Entity, so it doesn&rsquo;t need to belong to the
+class.</p>
+<p>Add the function to <code>entity.py</code> like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Entity:
+    ...
+
+
+<span style="color:#a6e22e">+def get_blocking_entities_at_location(entities, destination_x, destination_y):
+</span><span style="color:#a6e22e">+   for entity in entities:
+</span><span style="color:#a6e22e">+       if entity.blocks and entity.x == destination_x and entity.y == destination_y:
+</span><span style="color:#a6e22e">+           return entity
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+   return None
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Entity:
+    ...
+
+
+<span class="new-text">def get_blocking_entities_at_location(entities, destination_x, destination_y):
+    for entity in entities:
+        if entity.blocks and entity.x == destination_x and entity.y == destination_y:
+            return entity
+
+    return None</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>The function loops through the entities, and if one of them is
+&ldquo;blocking&rdquo; and is at the x and y location we specified, we return it. If
+none of them match, then we return &ldquo;None&rdquo; instead. Note that the
+function is assuming that only one &ldquo;blocking&rdquo; entity will be at each
+location; this should be fine, as we&rsquo;ll make sure two entities can&rsquo;t
+move into the same tile.</p>
+<p>With that in place, let&rsquo;s return to our movement function. Modify the
+code that moves the player in <code>engine.py</code> like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        if move:
+            dx, dy = move
+
+<span style="color:#f92672">-           player.move(dx, dy)
+</span><span style="color:#f92672">-
+</span><span style="color:#f92672">-           fov_recompute = True
+</span><span style="color:#f92672"></span>
+<span style="color:#a6e22e">+           destination_x = player.x + dx
+</span><span style="color:#a6e22e">+           destination_y = player.y + dy
+</span><span style="color:#a6e22e"></span>
+<span style="color:#f92672">-           if not game_map.is_blocked(player.x + dx, player.y + dy):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           if not game_map.is_blocked(destination_x, destination_y):
+</span><span style="color:#a6e22e">+               target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+               if target:
+</span><span style="color:#a6e22e">+                   print(&#39;You kick the &#39; + target.name + &#39; in the shins, much to its annoyance!&#39;)
+</span><span style="color:#a6e22e">+               else:
+</span><span style="color:#a6e22e">+                   player.move(dx, dy)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+                   fov_recompute = True
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        if move:
+            dx, dy = move
+            <span class="new-text">destination_x = player.x + dx
+            destination_y = player.y + dy</span>
+
+            <span class="crossed-out-text">if not game_map.is_blocked(player.x + dx, player.y + dy):</span>
+            <span class="new-text">if not game_map.is_blocked(destination_x, destination_y):</span>
+                <span class="new-text">target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                if target:
+                    print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
+                else:</span>
+                    <span style="color: blue">player.move(dx, dy)
+
+                    fov_recompute = True</span>
+</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Also be sure to import the function <code>get_blocking_entities_at_location</code>
+at the top of <code>engine.py</code>.
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-   from entity import Entity
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   from entity import Entity, get_blocking_entities_at_location
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from entity import Entity<span class="new-text">, get_blocking_entities_at_location</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script></p>
+<p>Now the player gets blocked when trying to move through another entity.
+We&rsquo;re putting that humorous (hey, I think it&rsquo;s funny!) print statement
+as a placeholder, for the moment. We&rsquo;ll implement real combat in the
+next chapter.</p>
+<p>Our player should only be able to move during their turn, and the same
+applies for the monsters. We&rsquo;ll need a variable to keep track of whose
+turn it actually is. We could store a string in this variable, say,
+&lsquo;players_turn&rsquo; and &lsquo;enemy_turn&rsquo;, but that seems error prone. If you
+happen to mistype one of those strings, you&rsquo;ll end up with some bugs.
+Not to mention our number of game states will inevitably grow, and we&rsquo;ll
+need a better way to keep track of them all.</p>
+<p>Let&rsquo;s keep the game states in an Enum. An &ldquo;Enum&rdquo; is a set of named
+values that won&rsquo;t change, so it&rsquo;s perfect for things like game states.
+Create a new file called <code>game_states.py</code> and put the following class in
+it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">from</span> enum <span style="color:#f92672">import</span> Enum
+
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">GameStates</span>(Enum):
+    PLAYERS_TURN <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+    ENEMY_TURN <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span></code></pre></div>
+<p>This will make our game state switching much easier to manage,
+especially in the future when we have more than two.</p>
+<p><em>* Note: The numbers for the states don&rsquo;t necessarily mean anything. In
+fact, if you&rsquo;re using Python 3.6 or higher, you can use the &lsquo;auto&rsquo;
+feature to just increment the number for you. Check it out if you&rsquo;re
+able to.</em></p>
+<p>Let&rsquo;s put this new <code>GameStates</code> enum into action. Start by importing it
+at the top.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+from fov_functions import initialize_fov, recompute_fov
+<span style="color:#a6e22e">+from game_states import GameStates
+</span><span style="color:#a6e22e"></span>from input_handlers import handle_keys
+...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+    <pre>...
+from fov_functions import initialize_fov, recompute_fov
+<span class="new-text">from game_states import GameStates</span>
+from input_handlers import handle_keys
+...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, create a variable called <code>game_state</code>, which we&rsquo;ll set initially
+to the player&rsquo;s turn.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    mouse = libtcod.Mouse()
+
+<span style="color:#a6e22e">+   game_state = GameStates.PLAYERS_TURN
+</span><span style="color:#a6e22e"></span>
+    while not libtcod.console_is_window_closed():
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    mouse = libtcod.Mouse()
+
+    <span class="new-text">game_state = GameStates.PLAYERS_TURN</span>
+
+    while not libtcod.console_is_window_closed():
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Depending on whether or not its the players turn, we want to control the
+player&rsquo;s movement. The player can only move on the players turn, so
+let&rsquo;s modify our <code>if move:</code> section to handle this. After the player
+successfully moves, we&rsquo;ll set the state to <code>ENEMY_TURN</code>.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-       if move:
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+       if move and game_state == GameStates.PLAYERS_TURN:
+</span><span style="color:#a6e22e"></span>            dx, dy = move
+            destination_x = player.x + dx
+            destination_y = player.y + dy
+
+            if not game_map.is_blocked(destination_x, destination_y):
+                target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                if target:
+                    print(&#39;You kick the &#39; + target.name + &#39; in the shins, much to its annoyance!&#39;)
+                else:
+                    player.move(dx, dy)
+
+                    fov_recompute = True
+
+<span style="color:#a6e22e">+               game_state = GameStates.ENEMY_TURN
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        <span class="crossed-out-text">if move:</span>
+        <span class="new-text">if move and game_state == GameStates.PLAYERS_TURN:</span>
+            dx, dy = move
+            destination_x = player.x + dx
+            destination_y = player.y + dy
+
+            if not game_map.is_blocked(destination_x, destination_y):
+                target = get_blocking_entities_at_location(entities, destination_x, destination_y)
+
+                if target:
+                    print('You kick the ' + target.name + ' in the shins, much to its annoyance!')
+                else:
+                    player.move(dx, dy)
+
+                    fov_recompute = True
+
+                <span class="new-text">game_state = GameStates.ENEMY_TURN</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>If you run the project now, the player will be able to move once&hellip; and
+then get stuck forever. That&rsquo;s because we need to implement the enemy&rsquo;s
+moves, and set the <code>game_state</code> back to the player&rsquo;s turn afterwards.
+Note that you <em>can</em> exit the game and make it full screen, because we&rsquo;re
+not stopping the player from doing those things when it isn&rsquo;t the
+player&rsquo;s turn.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+   <div class="data-pane active" data-pane="diff">
+   <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">        ...
+        if fullscreen:
+            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+
+<span style="color:#a6e22e">+       if game_state == GameStates.ENEMY_TURN:
+</span><span style="color:#a6e22e">+           for entity in entities:
+</span><span style="color:#a6e22e">+               if entity != player:
+</span><span style="color:#a6e22e">+                   print(&#39;The &#39; + entity.name + &#39; ponders the meaning of its existence.&#39;)
+</span><span style="color:#a6e22e">+
+</span><span style="color:#a6e22e">+           game_state = GameStates.PLAYERS_TURN
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>        ...
+        if fullscreen:
+            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+
+        <span class="new-text">if game_state == GameStates.ENEMY_TURN:
+            for entity in entities:
+                if entity != player:
+                    print('The ' + entity.name + ' ponders the meaning of its existence.')
+
+            game_state = GameStates.PLAYERS_TURN</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>This is simple enough. Assuming it&rsquo;s the enemy turn, we&rsquo;re looping
+through each of the entities (excluding the player) and allowing them to
+take a turn. Right now, we don&rsquo;t have any AI in place for our enemies,
+so they&rsquo;ll just sit there contemplating their lives for now. In the next
+chapter, we&rsquo;ll give them some more interesting behavior, but for now,
+this works as a placeholder.</p>
+<p>If you want to see the code so far in its entirety, <a href="https://github.com/TStand90/roguelike_tutorial_revised/tree/part5">click
+here</a>.</p>
+<p><a href="/tutorials/tcod/2019/part-6">Click here to move on to the next part of this
+tutorial.</a></p>
+<!-- raw HTML omitted -->
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

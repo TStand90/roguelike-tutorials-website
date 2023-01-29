@@ -1,0 +1,1507 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<meta property="og:title" content="Part 5 - Placing Enemies and kicking them (harmlessly)" />
+<meta property="og:description" content="What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&rsquo;ll save for next time).
+When we&rsquo;re building our dungeon, we&rsquo;ll need to place the enemies in the rooms. In order to do that, we will need to make a change to the way entities are stored in our game." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://rogueliketutorials.com/tutorials/tcod/v2/part-5/" /><meta property="article:section" content="tutorials" />
+<meta property="article:published_time" content="2020-06-29T00:00:00&#43;00:00" />
+<meta property="article:modified_time" content="2020-06-29T00:00:00&#43;00:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Part 5 - Placing Enemies and kicking them (harmlessly)"/>
+<meta name="twitter:description" content="What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&rsquo;ll save for next time).
+When we&rsquo;re building our dungeon, we&rsquo;ll need to place the enemies in the rooms. In order to do that, we will need to make a change to the way entities are stored in our game."/>
+
+
+
+    <link rel="canonical" href="https://rogueliketutorials.com/tutorials/tcod/v2/part-5/">
+
+    <title>
+      
+        Part 5 - Placing Enemies and kicking them (harmlessly) | Roguelike Tutorials
+      
+    </title>
+
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://rogueliketutorials.com/css/style.css" rel="stylesheet">
+
+    
+
+    
+
+    
+  </head>
+  <body>
+    
+      
+
+<header class="blog-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            Roguelike Tutorials
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav">
+                
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/">Home</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/2019/">TCOD Tutorial (2019)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/tutorials/tcod/v2/">TCOD Tutorial (2020)</a>
+                    
+                </li>
+                
+                <li class="nav-item ">
+                    
+                        <a class="nav-link" href="/about/">About</a>
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+    </nav>
+</header>
+
+    
+
+    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-8 blog-main">
+
+          
+
+<header>
+    <h2 class="blog-post-title">
+    <a class="text-dark" href="/tutorials/tcod/v2/part-5/">Part 5 - Placing Enemies and kicking them (harmlessly)</a>
+</h2>
+
+    
+
+
+<div class="blog-post-date text-secondary">
+    
+        <time datetime="2020-06-29">Jun 29, 2020</time>
+    
+    
+</div>
+
+    
+    
+    <hr>
+</header>
+<article class="blog-post">
+    <p>What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&rsquo;ll save for next time).</p>
+<p>When we&rsquo;re building our dungeon, we&rsquo;ll need to place the enemies in the rooms. In order to do that, we will need to make a change to the way <code>entities</code> are stored in our game. Currently, they&rsquo;re saved in the <code>Engine</code> class. However, for the sake of placing enemies in the dungeon, and when we get to the part where we move between dungeon floors, it will be better to store them in the <code>GameMap</code> class. That way, the map has access to the entities directly, and we can preserve which entities are on which floors fairly easily.</p>
+<p>Start by modifying <code>GameMap</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+from __future__ import annotations
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+from typing import Iterable, TYPE_CHECKING
+</span><span style="color:#a6e22e"></span>
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
+<span style="color:#a6e22e">+if TYPE_CHECKING:
+</span><span style="color:#a6e22e">+   from entity import Entity
+</span><span style="color:#a6e22e"></span>
+
+class GameMap:
+<span style="color:#f92672">-   def __init__(self, width: int, height: int):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()):
+</span><span style="color:#a6e22e"></span>        self.width, self.height = width, height
+<span style="color:#a6e22e">+       self.entities = set(entities)
+</span><span style="color:#a6e22e"></span>        self.tiles = np.full((width, height), fill_value=tile_types.wall, order=&#34;F&#34;)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">from __future__ import annotations
+
+from typing import Iterable, TYPE_CHECKING</span>
+
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
+<span class="new-text">if TYPE_CHECKING:
+    from entity import Entity</span>
+
+
+class GameMap:
+    <span class="crossed-out-text">def __init__(self, width: int, height: int):</span>
+    <span class="new-text">def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()):</span>
+        self.width, self.height = width, height
+        <span class="new-text">self.entities = set(entities)</span>
+        self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Then, let&rsquo;s modify <code>Engine</code> to remove the <code>entities</code> from it:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#f92672">-from typing import Set, Iterable, Any
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from typing import Iterable, Any
+</span><span style="color:#a6e22e"></span>
+
+class Engine:
+<span style="color:#f92672">-   def __init__(self, entities: Set[Entity], event_handler: EventHandler, game_map: GameMap, player: Entity):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(self, event_handler: EventHandler, game_map: GameMap, player: Entity):
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-       self.entities = entities
+</span><span style="color:#f92672"></span>        self.event_handler = event_handler
+        self.game_map = game_map
+        self.player = player
+        self.update_fov()
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="crossed-out-text">from typing import Set, Iterable, Any</span>
+<span class="new-text">from typing import Iterable, Any</span>
+
+
+class Engine:
+    <span class="crossed-out-text">def __init__(self, entities: Set[Entity], event_handler: EventHandler, game_map: GameMap, player: Entity):</span>
+    <span class="new-text">def __init__(self, event_handler: EventHandler, game_map: GameMap, player: Entity):</span>
+        <span class="crossed-out-text">self.entities = entities</span>
+        self.event_handler = event_handler
+        self.game_map = game_map
+        self.player = player
+        self.update_fov()</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Because we&rsquo;ve modified the definition of <code>Engine.__init__</code>, we need to modify <code>main.py</code> where we create our <code>game_map</code> variable. We might as well remove that <code>npc</code> as well, since we won&rsquo;t be needing it anymore.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    player = Entity(int(screen_width / 2), int(screen_height / 2), &#34;@&#34;, (255, 255, 255))
+<span style="color:#f92672">-   npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), &#34;@&#34;, (255, 255, 0))
+</span><span style="color:#f92672">-   entities = {npc, player}
+</span><span style="color:#f92672"></span>
+    game_map = generate_dungeon(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        player=player,
+    )
+
+<span style="color:#f92672">-   engine = Engine(entities=entities, event_handler=event_handler, game_map=game_map, player=player)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   engine = Engine(event_handler=event_handler, game_map=game_map, player=player)
+</span><span style="color:#a6e22e"></span>
+    with tcod.context.new_terminal(
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    player = Entity(int(screen_width / 2), int(screen_height / 2), "@", (255, 255, 255))
+    <span class="crossed-out-text">npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), "@", (255, 255, 0))</span>
+    <span class="crossed-out-text">entities = {npc, player}</span>
+
+    game_map = generate_dungeon(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        player=player,
+    )
+
+    <span class="crossed-out-text">engine = Engine(entities=entities, event_handler=event_handler, game_map=game_map, player=player)</span>
+    <span class="new-text">engine = Engine(event_handler=event_handler, game_map=game_map, player=player)</span>
+
+    with tcod.context.new_terminal(
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We can remove the part in <code>Engine.render</code> that loops through the entities and renders the ones that are visible. That part will also be handled by the <code>GameMap</code> from now on.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Engine:
+    ...
+
+    def render(self, console: Console, context: Context) -&gt; None:
+        self.game_map.render(console)
+
+<span style="color:#f92672">-       for entity in self.entities:
+</span><span style="color:#f92672">-           # Only print entities that are in the FOV
+</span><span style="color:#f92672">-           if self.game_map.visible[entity.x, entity.y]:
+</span><span style="color:#f92672">-               console.print(entity.x, entity.y, entity.char, fg=entity.color)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Engine:
+    ...
+
+    def render(self, console: Console, context: Context) -> None:
+        self.game_map.render(console)
+
+        <span class="crossed-out-text">for entity in self.entities:</span>
+            <span class="crossed-out-text"># Only print entities that are in the FOV</span>
+            <span class="crossed-out-text">if self.game_map.visible[entity.x, entity.y]:</span>
+                <span class="crossed-out-text">console.print(entity.x, entity.y, entity.char, fg=entity.color)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We can move this block into <code>GameMap.render</code>, though take note that the line that checks for visibility has a slight change: it goes from:</p>
+<p><code>if self.game_map.visible[entity.x, entity.y]:</code></p>
+<p>To:</p>
+<p><code>if self.visible[entity.x, entity.y]:</code>.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class GameMap:
+    ...
+
+    def render(self, console: Console) -&gt; None:
+        &#34;&#34;&#34;
+        Renders the map.
+
+        If a tile is in the &#34;visible&#34; array, then draw it with the &#34;light&#34; colors.
+        If it isn&#39;t, but it&#39;s in the &#34;explored&#34; array, then draw it with the &#34;dark&#34; colors.
+        Otherwise, the default is &#34;SHROUD&#34;.
+        &#34;&#34;&#34;
+        console.tiles_rgb[0:self.width, 0:self.height] = np.select(
+            condlist=[self.visible, self.explored],
+            choicelist=[self.tiles[&#34;light&#34;], self.tiles[&#34;dark&#34;]],
+            default=tile_types.SHROUD
+        )
+
+<span style="color:#a6e22e">+       for entity in self.entities:
+</span><span style="color:#a6e22e">+           # Only print entities that are in the FOV
+</span><span style="color:#a6e22e">+           if self.visible[entity.x, entity.y]:
+</span><span style="color:#a6e22e">+               console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class GameMap:
+    ...
+
+    def render(self, console: Console) -> None:
+        """
+        Renders the map.
+
+        If a tile is in the "visible" array, then draw it with the "light" colors.
+        If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
+        Otherwise, the default is "SHROUD".
+        """
+        console.tiles_rgb[0:self.width, 0:self.height] = np.select(
+            condlist=[self.visible, self.explored],
+            choicelist=[self.tiles["light"], self.tiles["dark"]],
+            default=tile_types.SHROUD
+        )
+
+        <span class="new-text">for entity in self.entities:
+            # Only print entities that are in the FOV
+            if self.visible[entity.x, entity.y]:
+                console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Finally, we need to alter the part in <code>generate_dungeon</code> that creates the instance of <code>GameMap</code>, so that the <code>player</code> is passed into the <code>entities</code> argument.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def generate_dungeon(
+    max_rooms: int,
+    room_min_size: int,
+    room_max_size: int,
+    map_width: int,
+    map_height: int,
+    player: Entity,
+) -&gt; GameMap:
+    &#34;&#34;&#34;Generate a new dungeon map.&#34;&#34;&#34;
+<span style="color:#f92672">-   dungeon = GameMap(map_width, map_height)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   dungeon = GameMap(map_width, map_height, entities=[player])
+</span><span style="color:#a6e22e"></span>
+    rooms: List[RectangularRoom] = []
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def generate_dungeon(
+    max_rooms: int,
+    room_min_size: int,
+    room_max_size: int,
+    map_width: int,
+    map_height: int,
+    player: Entity,
+) -> GameMap:
+    """Generate a new dungeon map."""
+    <span class="crossed-out-text">dungeon = GameMap(map_width, map_height)</span>
+    <span class="new-text">dungeon = GameMap(map_width, map_height, entities=[player])</span>
+
+    rooms: List[RectangularRoom] = []
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>If you run the project now, things should look the same as before, minus the NPC that we had earlier for testing.</p>
+<p>Now, moving on to actually placing monsters in our dungeon. Our logic will be simple enough: For each room that&rsquo;s created in our dungeon, we&rsquo;ll place a random number of enemies, between 0 and a maximum (2 for now). We&rsquo;ll make it so that there&rsquo;s an 80% chance of spawning an Orc (a weaker enemy) and a 20% chance of it being a Troll (a stronger enemy).</p>
+<p>In order to specify the maximum number of monsters that can be spawned into a room, let&rsquo;s create a new variable, <code>max_monsters_per_room</code>, and place it in <code>main.py</code>. We&rsquo;ll also modify our call to <code>generate_dungeon</code> to pass this new variable in.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">    ...
+    max_rooms = 30
+
+<span style="color:#a6e22e">+   max_monsters_per_room = 2
+</span><span style="color:#a6e22e"></span>
+    tileset = tcod.tileset.load_tilesheet(
+        &#34;dejavu10x10_gs_tc.png&#34;, 32, 8, tcod.tileset.CHARMAP_TCOD
+    )
+
+    event_handler = EventHandler()
+
+    player = Entity(int(screen_width / 2), int(screen_height / 2), &#34;@&#34;, (255, 255, 255))
+
+    game_map = generate_dungeon(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+<span style="color:#a6e22e">+       max_monsters_per_room=max_monsters_per_room,
+</span><span style="color:#a6e22e"></span>        player=player
+    )
+
+    engine = Engine(event_handler=event_handler, game_map=game_map, player=player)
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>    ...
+    max_rooms = 30
+
+    <span class="new-text">max_monsters_per_room = 2</span>
+
+    tileset = tcod.tileset.load_tilesheet(
+        "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+    )
+
+    event_handler = EventHandler()
+
+    player = Entity(int(screen_width / 2), int(screen_height / 2), "@", (255, 255, 255))
+
+    game_map = generate_dungeon(
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
+        map_width=map_width,
+        map_height=map_height,
+        <span class="new-text">max_monsters_per_room=max_monsters_per_room,</span>
+        player=player
+    )
+
+    engine = Engine(event_handler=event_handler, game_map=game_map, player=player)
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Pretty straightforward. Now we&rsquo;ll need to modify the definition of <code>generate_dungeon</code> to take this new variable, like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">def generate_dungeon(
+    max_rooms: int,
+    room_min_size: int,
+    room_max_size: int,
+    map_width: int,
+    map_height: int,
+<span style="color:#a6e22e">+   max_monsters_per_room: int,
+</span><span style="color:#a6e22e"></span>    player: Entity,
+) -&gt; GameMap:
+    &#34;&#34;&#34;Generate a new dungeon map.&#34;&#34;&#34;
+    dungeon = GameMap(map_width, map_height, entities=[player])
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>def generate_dungeon(
+    max_rooms: int,
+    room_min_size: int,
+    room_max_size: int,
+    map_width: int,
+    map_height: int,
+    <span class="new-text">max_monsters_per_room: int,</span>
+    player: Entity,
+) -> GameMap:
+    """Generate a new dungeon map."""
+    dungeon = GameMap(map_width, map_height, entities=[player])</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Easy enough, but now how do we actually place the enemies?</p>
+<p>After we&rsquo;ve created our room, we&rsquo;ll want to call a function to put the entities in their places. Let&rsquo;s call the function <code>place_entities</code>, and it will take three arguments: The <code>RectangularRoom</code> that we&rsquo;ve created, the <code>dungeon</code> so that it can add the entities to it (remember that <code>dungeon</code> is an instance of <code>GameMap</code>, which now holds entities), and the <code>max_monsters_per_room</code>, so that we know how many monsters to make.</p>
+<p>While we haven&rsquo;t written the function yet, let&rsquo;s place our call to it in <code>generate_dungeon</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">            ...
+                dungeon.tiles[x, y] = tile_types.floor
+
+<span style="color:#a6e22e">+       place_entities(new_room, dungeon, max_monsters_per_room)
+</span><span style="color:#a6e22e"></span>
+        # Finally, append the new room to the list.
+        rooms.append(new_room)
+
+    return dungeon
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>            ...
+                dungeon.tiles[x, y] = tile_types.floor
+
+        <span class="new-text">place_entities(new_room, dungeon, max_monsters_per_room)</span>
+
+        # Finally, append the new room to the list.
+        rooms.append(new_room)
+
+    return dungeon</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Now, let&rsquo;s write the <code>place_entities</code> function so that this actually works.</p>
+<p>Our first version of <code>place_entities</code> won&rsquo;t actually place the entities. Why not? Because we&rsquo;ll need to do a few other things to make spawning the entities here work. However, we can at least fill in most of the function, and skip over the part that actually creates the entities for the moment.</p>
+<p>Create the function like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class RectangularRoom:
+    ...
+
+
+<span style="color:#a6e22e">+def place_entities(
+</span><span style="color:#a6e22e">+   room: RectangularRoom, dungeon: GameMap, maximum_monsters: int,
+</span><span style="color:#a6e22e">+) -&gt; None:
+</span><span style="color:#a6e22e">+   number_of_monsters = random.randint(0, maximum_monsters)
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+   for i in range(number_of_monsters):
+</span><span style="color:#a6e22e">+       x = random.randint(room.x1 + 1, room.x2 - 1)
+</span><span style="color:#a6e22e">+       y = random.randint(room.y1 + 1, room.y2 - 1)
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+       if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
+</span><span style="color:#a6e22e">+           if random.random() &lt; 0.8:
+</span><span style="color:#a6e22e">+               pass  # TODO: Place an Orc here
+</span><span style="color:#a6e22e">+           else:
+</span><span style="color:#a6e22e">+               pass  # TODO: Place a Troll here
+</span><span style="color:#a6e22e"></span>
+
+def tunnel_between(
+    ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class RectangularRoom:
+    ...
+
+
+<span class="new-text">def place_entities(
+    room: RectangularRoom, dungeon: GameMap, maximum_monsters: int,
+) -> None:
+    number_of_monsters = random.randint(0, maximum_monsters)
+
+    for i in range(number_of_monsters):
+        x = random.randint(room.x1 + 1, room.x2 - 1)
+        y = random.randint(room.y1 + 1, room.y2 - 1)
+
+        if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
+            if random.random() < 0.8:
+                pass  # TODO: Place an Orc here
+            else:
+                pass  # TODO: Place a Troll here</span>
+
+
+def tunnel_between(
+    ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>The first line in the function takes a random number between 0 and the provided maximum (2, in this case). From there, it iterates from 0 to the number.</p>
+<p>We select a random <code>x</code> and <code>y</code> to place the entity, and do a quick check to make sure there&rsquo;s no other entities in that location before dropping the enemy there. This is to ensure we don&rsquo;t get stacks of enemies.</p>
+<p>As described earlier, there should be an 80% chance of there being an Orc, and 20% chance for a Troll. For now, we&rsquo;re using <code>pass</code> to skip over actually putting them down, because that requires a bit more work first.</p>
+<p>There&rsquo;s a few ways we could go about creating the new entities. Assuming that every Orc and Troll we spawn will always have the same attributes as their brethren, we can create initial instances of <code>orc</code> and <code>troll</code>, then copy those every time we want to create a new one.</p>
+<p>Why not just create the entities right here in the function? We could (the 1st version of this tutorial does, in fact), but that&rsquo;s a bit of a pain to go back and edit. Imagine if you had 100 enemies in your game at some point in the future. Would you rather search for those entity definitions in one file that <em>only</em> exists to define entities, or try finding it in the file that generates our dungeon? Not to mention, what happens if you want to create a new dungeon generator? Are you going to copy over the entity definitions and have them defined in two places?</p>
+<p>Let&rsquo;s modify <code>Entity</code> to prepare for this new copying method. Modify <code>entity.py</code> like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff"><span style="color:#a6e22e">+from __future__ import annotations
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+import copy
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-from typing import Tuple
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from typing import Tuple, TypeVar, TYPE_CHECKING
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+if TYPE_CHECKING:
+</span><span style="color:#a6e22e">+   from game_map import GameMap
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+T = TypeVar(&#34;T&#34;, bound=&#34;Entity&#34;)
+</span><span style="color:#a6e22e"></span>
+
+class Entity:
+    &#34;&#34;&#34;
+    A generic object to represent players, enemies, items, etc.
+    &#34;&#34;&#34;
+<span style="color:#f92672">-   def __init__(self, x: int, y: int, char: str, color: Tuple[int, int, int]):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   def __init__(
+</span><span style="color:#a6e22e">+       self,
+</span><span style="color:#a6e22e">+       x: int = 0,
+</span><span style="color:#a6e22e">+       y: int = 0,
+</span><span style="color:#a6e22e">+       char: str = &#34;?&#34;,
+</span><span style="color:#a6e22e">+       color: Tuple[int, int, int] = (255, 255, 255),
+</span><span style="color:#a6e22e">+       name: str = &#34;&lt;Unnamed&gt;&#34;,
+</span><span style="color:#a6e22e">+       blocks_movement: bool = False,
+</span><span style="color:#a6e22e">+   ):
+</span><span style="color:#a6e22e"></span>        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+<span style="color:#a6e22e">+       self.name = name
+</span><span style="color:#a6e22e">+       self.blocks_movement = blocks_movement
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+   def spawn(self: T, gamemap: GameMap, x: int, y: int) -&gt; T:
+</span><span style="color:#a6e22e">+       &#34;&#34;&#34;Spawn a copy of this instance at the given location.&#34;&#34;&#34;
+</span><span style="color:#a6e22e">+       clone = copy.deepcopy(self)
+</span><span style="color:#a6e22e">+       clone.x = x
+</span><span style="color:#a6e22e">+       clone.y = y
+</span><span style="color:#a6e22e">+       gamemap.entities.add(clone)
+</span><span style="color:#a6e22e">+       return clone
+</span><span style="color:#a6e22e"></span>
+    def move(self, dx: int, dy: int) -&gt; None:
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre><span class="new-text">from __future__ import annotations
+
+import copy</span>
+<span class="crossed-out-text">from typing import Tuple</span>
+<span class="new-text">from typing import Tuple, TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game_map import GameMap
+
+T = TypeVar("T", bound="Entity")</span>
+
+
+class Entity:
+    """
+    A generic object to represent players, enemies, items, etc.
+    """
+    <span class="crossed-out-text">def __init__(self, x: int, y: int, char: str, color: Tuple[int, int, int]):</span>
+    <span class="new-text">def __init__(
+        self,
+        x: int = 0,
+        y: int = 0,
+        char: str = "?",
+        color: Tuple[int, int, int] = (255, 255, 255),
+        name: str = "&lt;Unnamed&gt;",
+        blocks_movement: bool = False,
+    ):</span>
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+        <span class="new-text">self.name = name
+        self.blocks_movement = blocks_movement</span>
+
+    <span class="new-text">def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
+        """Spawn a copy of this instance at the given location."""
+        clone = copy.deepcopy(self)
+        clone.x = x
+        clone.y = y
+        gamemap.entities.add(clone)
+        return clone</span>
+
+    def move(self, dx: int, dy: int) -> None:
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>We&rsquo;ve added two new attributes to <code>Entity</code>: <code>name</code> and <code>blocks_movement</code>. <code>name</code> is straightforward: it&rsquo;s what the Entity is called. <code>blocks_movement</code> describes whether or not this <code>Entity</code> can be moved over or not. Enemies will have <code>blocks_movement</code> set to <code>True</code>, while in the future, things like consumable items and equipment will be set to <code>False</code>.</p>
+<p>Notice that we&rsquo;ve also provided defaults for each of the attributes in the <code>__init__</code> function as well, whereas we were not before. This is because we&rsquo;ll soon not need to pass <code>x</code> and <code>y</code> during the initialization. More on that in a second.</p>
+<p>The more complex section is the <code>spawn</code> method. It takes the <code>GameMap</code> instance, along with <code>x</code> and <code>y</code> for locations. It then creates a <code>clone</code> of the instance of <code>Entity</code>, and assigns the <code>x</code> and <code>y</code> variables to it (this is why we don&rsquo;t need <code>x</code> and <code>y</code> in the initializer anymore, they&rsquo;re set here). It then adds the entity to the <code>gamemap</code>&rsquo;s entities, and returns the <code>clone</code>.</p>
+<p>This new <code>spawn</code> method will probably make a lot more sense by putting it to use. To do that, let&rsquo;s create a new file, called <code>entity_factories.py</code>, and fill it with the following contents:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py3" data-lang="py3"><span style="color:#f92672">from</span> entity <span style="color:#f92672">import</span> Entity
+
+player <span style="color:#f92672">=</span> Entity(char<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;@&#34;</span>, color<span style="color:#f92672">=</span>(<span style="color:#ae81ff">255</span>, <span style="color:#ae81ff">255</span>, <span style="color:#ae81ff">255</span>), name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Player&#34;</span>, blocks_movement<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+
+orc <span style="color:#f92672">=</span> Entity(char<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;o&#34;</span>, color<span style="color:#f92672">=</span>(<span style="color:#ae81ff">63</span>, <span style="color:#ae81ff">127</span>, <span style="color:#ae81ff">63</span>), name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Orc&#34;</span>, blocks_movement<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+troll <span style="color:#f92672">=</span> Entity(char<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;T&#34;</span>, color<span style="color:#f92672">=</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">127</span>, <span style="color:#ae81ff">0</span>), name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Troll&#34;</span>, blocks_movement<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</code></pre></div><p>This is where we&rsquo;re defining our entities. <code>player</code> should look familiar, and <code>orc</code> and <code>troll</code> are not all that different, besides their characters and colors.</p>
+<p>These are the instances we&rsquo;ll be cloning to create our new entities. Using these, we can at last fill in our <code>place_entities</code> function back in <code>procgen.py</code>.</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+import tcod
+
+<span style="color:#a6e22e">+import entity_factories
+</span><span style="color:#a6e22e"></span>from game_map import GameMap
+...
+
+        ...
+            if random.random() &lt; 0.8:
+<span style="color:#f92672">-               pass  # TODO: Place an Orc here
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               entity_factories.orc.spawn(dungeon, x, y)
+</span><span style="color:#a6e22e"></span>            else:
+<span style="color:#f92672">-               pass  # TODO: Place a Troll here
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+               entity_factories.troll.spawn(dungeon, x, y)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>
+...
+import tcod
+
+<span class="new-text">import entity_factories</span>
+from game_map import GameMap
+...
+
+        ...
+            if random.random() < 0.8:
+                <span class="crossed-out-text">pass  # TODO: Place an Orc here</span>
+                <span class="new-text">entity_factories.orc.spawn(dungeon, x, y)</span>
+            else:
+                <span class="crossed-out-text">pass  # TODO: Place a Troll here</span>
+                <span class="new-text">entity_factories.troll.spawn(dungeon, x, y)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Let&rsquo;s also modify the way we create the <code>player</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">#!/usr/bin/env python3
+<span style="color:#a6e22e">+import copy
+</span><span style="color:#a6e22e"></span>
+import tcod
+
+from engine import Engine
+<span style="color:#f92672">-from entity import Entity
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+import entity_factories
+</span><span style="color:#a6e22e"></span>from input_handlers import EventHandler
+from procgen import generate_dungeon
+...
+
+    ...
+    event_handler = EventHandler()
+
+<span style="color:#f92672">-   player = Entity(int(screen_width / 2), int(screen_height / 2), &#34;@&#34;, (255, 255, 255))
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+   player = copy.deepcopy(entity_factories.player)
+</span><span style="color:#a6e22e"></span>
+    game_map = generate_dungeon(
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>#!/usr/bin/env python3
+<span class="new-text">import copy</span>
+
+import tcod
+
+from engine import Engine
+<span class="crossed-out-text">from entity import Entity</span>
+<span class="new-text">import entity_factories</span>
+from input_handlers import EventHandler
+from procgen import generate_dungeon
+...
+
+    ...
+    event_handler = EventHandler()
+
+    <span class="crossed-out-text">player = Entity(int(screen_width / 2), int(screen_height / 2), "@", (255, 255, 255))</span>
+    <span class="new-text">player = copy.deepcopy(entity_factories.player)</span>
+
+    game_map = generate_dungeon(
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p><em>Note: We can&rsquo;t use <code>player.spawn</code> here, because <code>spawn</code> requires the <code>GameMap</code>, which isn&rsquo;t created until after we create the player.</em></p>
+<p>With that, your dungeon should now be populated with enemies.</p>
+<p><img src="/images/part-5-monsters.png" alt="Font File"></p>
+<p>They&rsquo;re&hellip; not exactly intimidating, are they? In fact, they don&rsquo;t really do much of anything right now. But that&rsquo;s okay, we&rsquo;ll work on that.</p>
+<p>The first step towards making our monsters scarier is making them stand their ground&hellip; literally! The player can currently walk over (or under) the enemies by simply moving into the same space. Let&rsquo;s fix that, and ensure that when the player tries to move towards an enemy, we attack instead.</p>
+<p>To begin, we need to determine if the space the player is trying to move into has an Entity in it. Not just any Entity, however: we&rsquo;ll check if the Entity has &ldquo;blocks_movement&rdquo; set to <code>True</code>. If it does, our player can&rsquo;t move there, and tries to attack instead.</p>
+<p>Add the following to the map:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">from __future__ import annotations
+
+<span style="color:#f92672">-from typing import Iterable, TYPE_CHECKING
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from typing import Iterable, Optional, TYPE_CHECKING
+</span><span style="color:#a6e22e"></span>
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
+if TYPE_CHECKING:
+    from entity import Entity
+
+
+class GameMap:
+    def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()):
+        self.width, self.height = width, height
+        self.entities = set(entities)
+        self.tiles = np.full((width, height), fill_value=tile_types.wall, order=&#34;F&#34;)
+
+        self.visible = np.full((width, height), fill_value=False, order=&#34;F&#34;)  # Tiles the player can currently see
+        self.explored = np.full((width, height), fill_value=False, order=&#34;F&#34;)  # Tiles the player has seen before
+
+<span style="color:#a6e22e">+   def get_blocking_entity_at_location(self, location_x: int, location_y: int) -&gt; Optional[Entity]:
+</span><span style="color:#a6e22e">+       for entity in self.entities:
+</span><span style="color:#a6e22e">+           if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
+</span><span style="color:#a6e22e">+               return entity
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+       return None
+</span><span style="color:#a6e22e"></span>
+    def in_bounds(self, x: int, y: int) -&gt; bool:
+        ...
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from __future__ import annotations
+
+<span class="crossed-out-text">from typing import Iterable, TYPE_CHECKING</span>
+<span class="new-text">from typing import Iterable, Optional, TYPE_CHECKING</span>
+
+import numpy as np  # type: ignore
+from tcod.console import Console
+
+import tile_types
+
+if TYPE_CHECKING:
+    from entity import Entity
+
+
+class GameMap:
+    def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()):
+        self.width, self.height = width, height
+        self.entities = set(entities)
+        self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
+
+        self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
+        self.explored = np.full((width, height), fill_value=False, order="F")  # Tiles the player has seen before
+
+    <span class="new-text">def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
+                return entity
+
+        return None</span>
+
+    def in_bounds(self, x: int, y: int) -> bool:
+        ...</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>This new function iterates through all the <code>entities</code>, and if one is found that both blocks movement and occupies the given <code>location_x</code> and <code>location_y</code> coordinates, it returns that Entity. Otherwise, we return <code>None</code> instead.</p>
+<p>Where can we check if a tile is occupied or not? And what do we do if it is?</p>
+<p>One way to handle all this is to modify our &ldquo;actions&rdquo; a bit. Our current <code>MovementAction</code> doesn&rsquo;t take into account what occupies the tile we&rsquo;re moving into. That&rsquo;s fine, it doesn&rsquo;t necessarily need to, but there probably should be an action that does. What if we created an <code>Action</code> subclass that could tell what was in the tile, and call either <code>MovementAction</code> if it was empty, or some other &ldquo;attack&rdquo; action if it wasn&rsquo;t?</p>
+<p>Let&rsquo;s do a few things. We&rsquo;ll start by defining a new class, called <code>ActionWithDirection</code>, which will actually become the new superclass for <code>MovementAction</code>. This new class will take the initializer from <code>MovementAction</code>, but won&rsquo;t implement its own <code>perform</code> method. It looks like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">...
+class EscapeAction(Action):
+    def perform(self, engine: Engine, entity: Entity) -&gt; None:
+        raise SystemExit()
+
+
+<span style="color:#a6e22e">+class ActionWithDirection(Action):
+</span><span style="color:#a6e22e">+   def __init__(self, dx: int, dy: int):
+</span><span style="color:#a6e22e">+       super().__init__()
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+       self.dx = dx
+</span><span style="color:#a6e22e">+       self.dy = dy
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+   def perform(self, engine: Engine, entity: Entity) -&gt; None:
+</span><span style="color:#a6e22e">+       raise NotImplementedError()
+</span><span style="color:#a6e22e"></span>
+
+<span style="color:#f92672">-class MovementAction(Action):
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+class MovementAction(ActionWithDirection):
+</span><span style="color:#a6e22e"></span><span style="color:#f92672">-   def __init__(self, dx: int, dy: int):
+</span><span style="color:#f92672">-       super().__init__()
+</span><span style="color:#f92672"></span>
+<span style="color:#f92672">-       self.dx = dx
+</span><span style="color:#f92672">-       self.dy = dy
+</span><span style="color:#f92672"></span>
+    def perform(self, engine: Engine, entity: Entity) -&gt; None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles[&#34;walkable&#34;][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+<span style="color:#a6e22e">+       if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+</span><span style="color:#a6e22e">+           return  # Destination is blocked by an entity.
+</span><span style="color:#a6e22e"></span>
+        entity.move(self.dx, self.dy)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>...
+class EscapeAction(Action):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        raise SystemExit()
+
+
+<span class="new-text">class ActionWithDirection(Action):
+    def __init__(self, dx: int, dy: int):
+        super().__init__()
+
+        self.dx = dx
+        self.dy = dy
+
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        raise NotImplementedError()</span>
+
+
+<span class="crossed-out-text">class MovementAction(Action):</span>
+<span class="new-text">class MovementAction(ActionWithDirection):</span>
+    <span class="crossed-out-text">def __init__(self, dx: int, dy: int):</span>
+        <span class="crossed-out-text">super().__init__()</span>
+
+        <span class="crossed-out-text">self.dx = dx</span>
+        <span class="crossed-out-text">self.dy = dy</span>
+
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+        <span class="new-text">if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.</span>
+
+        entity.move(self.dx, self.dy)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Notice that we&rsquo;ve added an extra check in <code>MovementAction</code> to ensure we&rsquo;re not moving into a space with a blocking entity. Theoretically, this bit of code won&rsquo;t ever trigger, but it&rsquo;s nice to have it there as a safeguard.</p>
+<p>But wait, <code>MovementAction</code> still doesn&rsquo;t do anything differently. So what&rsquo;s the point? Well, now we can use the new <code>ActionWithDirection</code> class to define two more subclasses, which will do what we want.</p>
+<p>The first one will be the action we use to actually attack. It looks like this:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class ActionWithDirection(Action):
+    def __init__(self, dx: int, dy: int):
+        super().__init__()
+
+        self.dx = dx
+        self.dy = dy
+
+    def perform(self, engine: Engine, entity: Entity) -&gt; None:
+        raise NotImplementedError()
+
+
+<span style="color:#a6e22e">+class MeleeAction(ActionWithDirection):
+</span><span style="color:#a6e22e">+   def perform(self, engine: Engine, entity: Entity) -&gt; None:
+</span><span style="color:#a6e22e">+       dest_x = entity.x + self.dx
+</span><span style="color:#a6e22e">+       dest_y = entity.y + self.dy
+</span><span style="color:#a6e22e">+       target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+</span><span style="color:#a6e22e">+       if not target:
+</span><span style="color:#a6e22e">+           return  # No entity to attack.
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+       print(f&#34;You kick the {target.name}, much to its annoyance!&#34;)
+</span><span style="color:#a6e22e"></span>
+
+class MovementAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -&gt; None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles[&#34;walkable&#34;][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+            return  # Destination is blocked by an entity.
+
+        entity.move(self.dx, self.dy)
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class ActionWithDirection(Action):
+    def __init__(self, dx: int, dy: int):
+        super().__init__()
+
+        self.dx = dx
+        self.dy = dy
+
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        raise NotImplementedError()
+
+
+<span class="new-text">class MeleeAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+        target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+        if not target:
+            return  # No entity to attack.
+
+        print(f"You kick the {target.name}, much to its annoyance!")</span>
+
+
+class MovementAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.
+
+        entity.move(self.dx, self.dy)</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Just like <code>MovementAction</code>, <code>MeleeAction</code> inherits from <code>ActionWithDirection</code>. The <code>perform</code> method it implements is what we&rsquo;ll use to attack&hellip; eventually. Right now, we&rsquo;re just printing out a little message. The actual attacking will have to wait until the next part (this one is getting long as it is).</p>
+<p>Still, we&rsquo;re not actually <em>using</em> <code>MeleeAction</code> anywhere, yet. Let&rsquo;s add one more class, which is what will make the determination on whether our player is moving or attacking:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class MovementAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -&gt; None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles[&#34;walkable&#34;][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.
+
+        entity.move(self.dx, self.dy)
+
+
+<span style="color:#a6e22e">+class BumpAction(ActionWithDirection):
+</span><span style="color:#a6e22e">+   def perform(self, engine: Engine, entity: Entity) -&gt; None:
+</span><span style="color:#a6e22e">+       dest_x = entity.x + self.dx
+</span><span style="color:#a6e22e">+       dest_y = entity.y + self.dy
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+       if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+</span><span style="color:#a6e22e">+           return MeleeAction(self.dx, self.dy).perform(engine, entity)
+</span><span style="color:#a6e22e"></span>
+<span style="color:#a6e22e">+       else:
+</span><span style="color:#a6e22e">+           return MovementAction(self.dx, self.dy).perform(engine, entity)
+</span></code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class MovementAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if not engine.game_map.in_bounds(dest_x, dest_y):
+            return  # Destination is out of bounds.
+        if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
+            return  # Destination is blocked by a tile.
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  # Destination is blocked by an entity.
+
+        entity.move(self.dx, self.dy)
+
+
+<span class="new-text">class BumpAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return MeleeAction(self.dx, self.dy).perform(engine, entity)
+
+        else:
+            return MovementAction(self.dx, self.dy).perform(engine, entity)</span></pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>This class also inherits from <code>ActionWithDirection</code>, but its <code>perform</code> method doesn&rsquo;t actually perform anything, except deciding which class, between <code>MeleeAction</code> and <code>MovementAction</code> to return. Those classes are what are actually doing the work. <code>BumpAction</code> just determines which one is appropriate to call, based on whether there is a blocking entity at the given destination or not. Notice we&rsquo;re using the function we defined earlier in our map to decide if there&rsquo;s a valid target or not.</p>
+<p>Now that our new actions are in place, we need to modify our <code>input_handlers.py</code> file to use <code>BumpAction</code> instead of <code>MovementAction</code>. It&rsquo;s a pretty simple change:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">from typing import Optional
+
+import tcod.event
+
+<span style="color:#f92672">-from actions import Action, EscapeAction, MovementAction
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+from actions import Action, BumpAction, EscapeAction
+</span><span style="color:#a6e22e"></span>
+
+class EventHandler(tcod.event.EventDispatch[Action]):
+    def ev_quit(self, event: tcod.event.Quit) -&gt; Optional[Action]:
+        raise SystemExit()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -&gt; Optional[Action]:
+        action: Optional[Action] = None
+
+        key = event.sym
+
+        if key == tcod.event.K_UP:
+<span style="color:#f92672">-           action = MovementAction(dx=0, dy=-1)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           action = BumpAction(dx=0, dy=-1)
+</span><span style="color:#a6e22e"></span>        elif key == tcod.event.K_DOWN:
+<span style="color:#f92672">-           action = MovementAction(dx=0, dy=1)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           action = BumpAction(dx=0, dy=1)
+</span><span style="color:#a6e22e"></span>        elif key == tcod.event.K_LEFT:
+<span style="color:#f92672">-           action = MovementAction(dx=-1, dy=0)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           action = BumpAction(dx=-1, dy=0)
+</span><span style="color:#a6e22e"></span>        elif key == tcod.event.K_RIGHT:
+<span style="color:#f92672">-           action = MovementAction(dx=1, dy=0)
+</span><span style="color:#f92672"></span><span style="color:#a6e22e">+           action = BumpAction(dx=1, dy=0)
+</span><span style="color:#a6e22e"></span>
+        elif key == tcod.event.K_ESCAPE:
+            action = EscapeAction()
+
+        # No valid key was pressed
+        return action
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>from typing import Optional
+
+import tcod.event
+
+<span class="crossed-out-text">from actions import Action, EscapeAction, MovementAction</span>
+<span class="new-text">from actions import Action, BumpAction, EscapeAction</span>
+
+
+class EventHandler(tcod.event.EventDispatch[Action]):
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
+        raise SystemExit()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
+        action: Optional[Action] = None
+
+        key = event.sym
+
+        if key == tcod.event.K_UP:
+            <span class="crossed-out-text">action = MovementAction(dx=0, dy=-1)</span>
+            <span class="new-text">action = BumpAction(dx=0, dy=-1)</span>
+        elif key == tcod.event.K_DOWN:
+            <span class="crossed-out-text">action = MovementAction(dx=0, dy=1)</span>
+            <span class="new-text">action = BumpAction(dx=0, dy=1)</span>
+        elif key == tcod.event.K_LEFT:
+            <span class="crossed-out-text">action = MovementAction(dx=-1, dy=0)</span>
+            <span class="new-text">action = BumpAction(dx=-1, dy=0)</span>
+        elif key == tcod.event.K_RIGHT:
+            <span class="crossed-out-text">action = MovementAction(dx=1, dy=0)</span>
+            <span class="new-text">action = BumpAction(dx=1, dy=0)</span>
+
+        elif key == tcod.event.K_ESCAPE:
+            action = EscapeAction()
+
+        # No valid key was pressed
+        return action</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>Run the project now. At this point, you shouldn&rsquo;t be able to move over the enemies, and you should get a message in the terminal, indicating that you&rsquo;re attacking the enemy (albeit not for any damage).</p>
+<p>Before we wrap this part up, let&rsquo;s set ourselves up to allow for enemy turns as well. They won&rsquo;t actually be doing anything at the moment, we&rsquo;ll just get a message in the terminal that indicates something is happening.</p>
+<p>Add these small modifications to <code>engine.py</code>:</p>
+<div>
+  <button class="btn btn-primary data-toggle-tab active" data-toggle-tab="diff">
+    Diff
+  </button>
+  <button class="btn btn-secondary data-toggle-tab" data-toggle-tab="original">
+    Original
+  </button>
+
+  
+<div class="data-pane active" data-pane="diff">
+  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-diff" data-lang="diff">class Engine:
+    def __init__(self, event_handler: EventHandler, game_map: GameMap, player: Entity):
+        self.event_handler = event_handler
+        self.game_map = game_map
+        self.player = player
+        self.update_fov()
+
+<span style="color:#a6e22e">+   def handle_enemy_turns(self) -&gt; None:
+</span><span style="color:#a6e22e">+       for entity in self.game_map.entities - {self.player}:
+</span><span style="color:#a6e22e">+           print(f&#39;The {entity.name} wonders when it will get to take a real turn.&#39;)
+</span><span style="color:#a6e22e"></span>
+    def handle_events(self, events: Iterable[Any]) -&gt; None:
+        for event in events:
+            action = self.event_handler.dispatch(event)
+
+            if action is None:
+                continue
+
+            action.perform(self, self.player)
+<span style="color:#a6e22e">+           self.handle_enemy_turns()
+</span><span style="color:#a6e22e"></span>            self.update_fov()  # Update the FOV before the players next action.
+</code></pre></div>
+
+</div>
+<div class="data-pane" data-pane="original">
+  
+<pre>class Engine:
+    def __init__(self, event_handler: EventHandler, game_map: GameMap, player: Entity):
+        self.event_handler = event_handler
+        self.game_map = game_map
+        self.player = player
+        self.update_fov()
+
+    <span class="new-text">def handle_enemy_turns(self) -> None:
+        for entity in self.game_map.entities - {self.player}:
+            print(f'The {entity.name} wonders when it will get to take a real turn.')</span>
+
+    def handle_events(self, events: Iterable[Any]) -> None:
+        for event in events:
+            action = self.event_handler.dispatch(event)
+
+            if action is None:
+                continue
+
+            action.perform(self, self.player)
+            <span class="new-text">self.handle_enemy_turns()</span>
+            self.update_fov()  # Update the FOV before the players next action.</pre>
+
+</div>
+
+</div>
+
+<script src="/js/codetabs.js"></script>
+<p>The <code>handle_enemy_turns</code> function loops through each entity (minus the player) and prints out a message for them. In the next part, we&rsquo;ll replace this with some code that will allow those entities to take real turns.</p>
+<p>We call <code>handle_enemy_turns</code> right after <code>action.perform</code>, so that the enemies move right after the player. Other roguelike games have more complex timing mechanisms for when entities take their turns, but our tutorial will stick with probably the simplest method of all: the player moves, then all the enemies move.</p>
+<p>That&rsquo;s all for this chapter. Next time, we&rsquo;ll look at moving the enemies around on their turns, and doing some real damage to both the enemies and the player.</p>
+<p>If you want to see the code so far in its entirety, <a href="https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-5">click
+here</a>.</p>
+<p><a href="/tutorials/tcod/v2/part-6">Click here to move on to the next part of this
+tutorial.</a></p>
+
+
+    
+
+    
+
+
+</article>
+
+
+
+        </div>
+
+        <aside class="col-12 col-lg-3 ml-auto blog-sidebar">
+    
+    
+        <section>
+    
+        
+    
+        
+    
+</section>
+    
+</aside>
+
+      </div>
+    </div>
+    
+
+    
+      
+
+
+
+
+
+
+
+<footer class="blog-footer w-100">
+    <nav class="navbar navbar-light bg-light">
+        <p class="w-100 text-center">Last updated July 7th, 2020</p>
+        <p class="w-100 text-center"><a href="#">Back to top</a></p>
+    </nav>
+</footer>
+
+    
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  </body>
+</html>

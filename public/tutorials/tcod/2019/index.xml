@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Roguelike Tutorial Revised - TCOD Version on Roguelike Tutorials</title>
+    <link>https://rogueliketutorials.com/tutorials/tcod/2019/</link>
+    <description>Recent content in Roguelike Tutorial Revised - TCOD Version on Roguelike Tutorials</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>Last updated July 7th, 2020</copyright>
+    <lastBuildDate>Sat, 30 Mar 2019 09:53:48 -0700</lastBuildDate><atom:link href="https://rogueliketutorials.com/tutorials/tcod/2019/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Part 0 - Setting Up</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-0/</link>
+      <pubDate>Sat, 30 Mar 2019 09:53:48 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-0/</guid>
+      <description>Prior knowledge This tutorial assumes some basic familiarity with programming in general, and with Python. If you&amp;rsquo;ve never used Python before, this tutorial could be a little confusing. There are many free resources online about learning programming and Python (too many to list here), and I&amp;rsquo;d recommend learning about objects and functions in Python at the very least before attempting to read this tutorial.
+&amp;hellip; Of course, there are those who have ignored this advice and done well with this tutorial anyway, so feel free to ignore that last paragraph if you&amp;rsquo;re feeling bold!</description>
+    </item>
+    
+    <item>
+      <title>Part 13 - Gearing up</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-13/</link>
+      <pubDate>Sat, 30 Mar 2019 09:34:10 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-13/</guid>
+      <description>For the final part of our tutorial series, we&amp;rsquo;ll take a look at implementing some equipment. Equipment is a subtype of items that the player can equip for some stat boosts. Obviously it can get more complicated than that, depending on the game, but I&amp;rsquo;ll leave it up to you to implement that depending on your needs. For this tutorial, equipping a weapon will increase attack power, and equipping a shield will increase defense.</description>
+    </item>
+    
+    <item>
+      <title>Part 12 - Increasing Difficulty</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-12/</link>
+      <pubDate>Sat, 30 Mar 2019 09:34:08 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-12/</guid>
+      <description>Right now, our game doesn&amp;rsquo;t feel like much of a roguelike. It&amp;rsquo;s far too easy! On top of that, the game doesn&amp;rsquo;t get harder as you progress. We&amp;rsquo;ll remedy that in this chapter, by making enemies stronger, and staggering enemies and equipment drops through deeper levels of the dungeon.
+Before we do that though, let&amp;rsquo;s address something in our design that will likely cause headache in the future: our random choice selection for monsters and items.</description>
+    </item>
+    
+    <item>
+      <title>Part 11 - Delving into the Dungeon</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-11/</link>
+      <pubDate>Sat, 30 Mar 2019 09:34:06 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-11/</guid>
+      <description>Our game isn&amp;rsquo;t much of a &amp;ldquo;dungeon crawler&amp;rdquo; if there&amp;rsquo;s only one floor to our dungeon. In this chapter, we&amp;rsquo;ll allow the player to go down a level, and we&amp;rsquo;ll put a very basic leveling up system in place, to make the dive all the more rewarding.
+Let&amp;rsquo;s start by modifying the GameMap to hold the current dungeon depth. This will help out when we&amp;rsquo;re writing our stairs. Open game_map and make the following modification:</description>
+    </item>
+    
+    <item>
+      <title>Part 10 - Saving and loading</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-10/</link>
+      <pubDate>Sat, 30 Mar 2019 09:34:04 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-10/</guid>
+      <description>Saving and loading is essential to almost every roguelike, but it can be a pain to manage if you don&amp;rsquo;t start early. By the end of this chapter, our game will be able to save and load one file to the disk, which you could easily expand to multiple saves if you wanted to. But before we get into that, let&amp;rsquo;s focus on our main game loop.
+The engine.py file is about 250 lines long right now.</description>
+    </item>
+    
+    <item>
+      <title>Part 9 - Ranged Scrolls and Targeting</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-9/</link>
+      <pubDate>Sat, 30 Mar 2019 09:34:01 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-9/</guid>
+      <description>Adding health potions was a big step, but we won&amp;rsquo;t stop there. Let&amp;rsquo;s continue adding a few items, this time with a focus on offense. We&amp;rsquo;ll add a few scrolls, which will give the player a one-time ranged attack. This gives the player a lot more tactical options to work with, and is definitely something you&amp;rsquo;ll want to expand upon in your own game.
+Let&amp;rsquo;s start simple, with a spell that just hits the closest enemy.</description>
+    </item>
+    
+    <item>
+      <title>Part 8 - Items and Inventory</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-8/</link>
+      <pubDate>Sat, 30 Mar 2019 09:33:55 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-8/</guid>
+      <description>So far, our game has movement, dungeon exploring, combat, and AI (okay, we&amp;rsquo;re stretching the meaning of &amp;ldquo;intelligence&amp;rdquo; in artificial intelligence to its limits, but bear with me here). Now it&amp;rsquo;s time for another staple of the roguelike genre: items! Why would our rogue venture into the dungeons of doom if not for some sweet loot, after all?
+We&amp;rsquo;ll start by placing one type of item, the healing potion in this case, and then we&amp;rsquo;ll work on our implementation of the inventory.</description>
+    </item>
+    
+    <item>
+      <title>Part 7 - Creating the Interface</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-7/</link>
+      <pubDate>Sat, 30 Mar 2019 09:33:53 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-7/</guid>
+      <description>Our game is looking more and more playable by the chapter, but before we move forward with the gameplay, we ought to take a moment to focus on how the project looks. Despite what roguelike traditionalists may tell you, a good UI goes a long way.
+Let&amp;rsquo;s start by fixing up our HP section. With not all that much code, we can add a neat little health bar, that will tell the player how much health is remaining before death.</description>
+    </item>
+    
+    <item>
+      <title>Part 6 - Doing (and taking) some damage</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-6/</link>
+      <pubDate>Sat, 30 Mar 2019 09:33:50 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-6/</guid>
+      <description>The last part of this tutorial set us up for combat, so now it&amp;rsquo;s time to actually implement it.
+In order to make &amp;ldquo;killable&amp;rdquo; Entities, rather than attaching hit points to each Entity we create, we&amp;rsquo;ll create a component, called Fighter, which will hold information related to combat, like HP, max HP, attack, and defense. If an Entity can fight, it will have this component attached to it, and if not, it won&amp;rsquo;t.</description>
+    </item>
+    
+    <item>
+      <title>Part 5 - Placing Enemies and kicking them (harmlessly)</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-5/</link>
+      <pubDate>Sat, 30 Mar 2019 09:33:48 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-5/</guid>
+      <description>What good is a dungeon with no monsters to bash? This chapter will focus on placing the enemies throughout the dungeon, and setting them up to be attacked (the actual attacking part we&amp;rsquo;ll save for next time). To start, we&amp;rsquo;ll need a function to place the enemies in the dungeon; let&amp;rsquo;s call it place_entities and put it in the GameMap class.
+DiffOriginaldef create_v_tunnel(self, y1, y2, x): .</description>
+    </item>
+    
+    <item>
+      <title>Part 4 - Field of View</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-4/</link>
+      <pubDate>Sat, 30 Mar 2019 09:33:44 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-4/</guid>
+      <description>We have a dungeon now, and we can move about it freely. But are we really exploring the dungeon if we can just see it all from the beginning?
+Most roguelikes (not all!) only let you see within a certain range of your character, and ours will be no different. We need to implement a way to calculate the &amp;ldquo;Field of View&amp;rdquo; for our adventurer, and fortunately, libtcod makes that easy!</description>
+    </item>
+    
+    <item>
+      <title>Part 3 - Generating a dungeon</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-3/</link>
+      <pubDate>Sat, 30 Mar 2019 08:39:22 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-3/</guid>
+      <description>Welcome back to the Roguelike Tutorial Revised! In this tutorial, we&amp;rsquo;ll be taking a very important step towards having a real, functioning game: Creating a procedurally generated dungeon!
+Remember that little wall we created for demonstration purposes in the last tutorial? We don&amp;rsquo;t need it anymore, so let&amp;rsquo;s take it out.
+DiffOriginal- tiles[30][22].blocked = True - tiles[30][22].block_sight = True - tiles[31][22].blocked = True - tiles[31][22].block_sight = True - tiles[32][22].</description>
+    </item>
+    
+    <item>
+      <title>Part 2 - The generic Entity, the render functions, and the map</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-2/</link>
+      <pubDate>Sat, 30 Mar 2019 08:39:20 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-2/</guid>
+      <description>Now that we can move our little &amp;lsquo;@&amp;rsquo; symbol around, we need to give it something to move around in. But before that, let&amp;rsquo;s stop for a moment and think about the player object itself.
+Right now, we just represent the player with the &amp;lsquo;@&amp;rsquo; symbol, and its x and y coordinates. Shouldn&amp;rsquo;t we tie those things together in an object, along with some other data and functions that pertain to it?</description>
+    </item>
+    
+    <item>
+      <title>Part 1 - Drawing the &#39;@&#39; symbol and moving it around</title>
+      <link>https://rogueliketutorials.com/tutorials/tcod/2019/part-1/</link>
+      <pubDate>Sat, 30 Mar 2019 08:39:15 -0700</pubDate>
+      
+      <guid>https://rogueliketutorials.com/tutorials/tcod/2019/part-1/</guid>
+      <description>Welcome to part 1 of the Roguelike Tutorial Revised! This series will help you create your very first roguelike game, written in Python!
+This tutorial is largely based off the one found on Roguebasin. Many of the design decisions were mainly to keep this tutorial in lockstep with that one (at least in terms of chapter composition and general direction). This tutorial would not have been possible without the guidance of those who wrote that tutorial, along with all the wonderful contributors to libtcod and python-tcod over the years.</description>
+    </item>
+    
+  </channel>
+</rss>
