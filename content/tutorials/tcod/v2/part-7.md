@@ -1167,4 +1167,4 @@ Now all the player has to do is press the "v" key to see a log of all past messa
 
 If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-7).
 
-[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-8)
+[Click here to move on to the next part of this tutorial.](../part-8)

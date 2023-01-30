@@ -2,7 +2,6 @@
 title: "Part 2 - The generic Entity, the render functions, and the map"
 date: 2019-03-30T08:39:20-07:00
 draft: false
-aliases: /tutorials/tcod/part-2
 ---
 
 Now that we can move our little '@' symbol around, we need to give it
@@ -575,6 +574,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part2).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/2019/part-3)
+tutorial.](../part-3)
 
 <script src="/js/codetabs.js"></script>

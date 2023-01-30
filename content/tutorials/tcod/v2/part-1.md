@@ -10,7 +10,7 @@ Welcome to part 1 of this tutorial! This series will help you create your very f
 This tutorial is largely based off the [one found on Roguebasin](http://www.roguebasin.com/index.php?title=Complete_Roguelike_Tutorial,_using_python%2Blibtcod). Many of the design decisions were mainly to keep this tutorial in lockstep
 with that one (at least in terms of chapter composition and general direction). This tutorial would not have been possible without the guidance of those who wrote that tutorial, along with all the wonderful contributors to tcod and python-tcod over the years.
 
-This part assumes that you have either checked [Part 0](/tutorials/tcod/part-0) and are already set up and ready to go. If not, be sure to check that page, and make sure that you've got Python and TCOD installed, and a file called `main.py` created in the directory that you want to work in.
+This part assumes that you have either checked [Part 0](../part-0) and are already set up and ready to go. If not, be sure to check that page, and make sure that you've got Python and TCOD installed, and a file called `main.py` created in the directory that you want to work in.
 
 Assuming that you've done all that, let's get started. Modify (or create, if you haven't already) the file `main.py` to look like this:
 
@@ -545,4 +545,4 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-1).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/v2/part-2)
+tutorial.](../part-2)

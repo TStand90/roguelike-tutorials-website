@@ -4,4 +4,4 @@ draft: false
 ---
 
 #### Extras:
-  -  [A more "Traditional" Look](/tutorials/tcod/v2/extras/traditional-look)
+  -  [A more "Traditional" Look](./traditional-look)

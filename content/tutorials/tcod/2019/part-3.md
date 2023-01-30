@@ -2,7 +2,6 @@
 title: "Part 3 - Generating a dungeon"
 date: 2019-03-30T08:39:22-07:00
 draft: false
-aliases: /tutorials/tcod/part-3
 ---
 
 Welcome back to the Roguelike Tutorial Revised\! In this tutorial, we'll
@@ -645,6 +644,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part3).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/2019/part-4)
+tutorial.](../part-4)
 
 <script src="/js/codetabs.js"></script>

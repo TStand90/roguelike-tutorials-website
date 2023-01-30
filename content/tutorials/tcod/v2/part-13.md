@@ -1160,7 +1160,7 @@ As mentioned earlier, we pass `add_message=False` to signify not to add a messag
 
 ![Part 13 - End](/images/part-13-end.png)
 
-With that, we've reached the end of the tutorial! Thank you so much for following along, and be sure to check out the [extras section](/tutorials/tcod/v2). More will be added there over time. If you have a suggestion for an extra, let me know!
+With that, we've reached the end of the tutorial! Thank you so much for following along, and be sure to check out the [extras section](../). More will be added there over time. If you have a suggestion for an extra, let me know!
 
 Be sure to check out the [Roguelike Development Subreddit](https://www.reddit.com/r/roguelikedev) for help, for inspiration, or to share your progress.
 

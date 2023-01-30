@@ -4,7 +4,7 @@ date: 2020-09-18T16:39:01-07:00
 draft: false
 ---
 
-_Prerequisites: Completion of [part 4](/tutorials/tcod/v2/part-4/)_
+_Prerequisites: Completion of [part 4](../../part-4/)_
 
 The tutorial itself goes in a much different visual direction than most roguelikes. If you like this look, great! If you want to make your game look a bit more like other roguelikes you might be more familiar with, this section is for you.
 
@@ -67,7 +67,7 @@ down_stairs = new_tile(
 {{</ original-tab >}}
 {{</ codetab >}}
 
-_Note: If you haven't completed [part 11](/tutorials/tcod/v2/part-11/) yet, just ignore the `down_stairs` tile type._
+_Note: If you haven't completed [part 11](../../part-11/) yet, just ignore the `down_stairs` tile type._
 
 The tile types are now represented by `.` and `#`, and the colors are a lighter gray if the tile is in the field of view, and a darker gray if it's outside of it.
 

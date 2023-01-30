@@ -2,7 +2,6 @@
 title: "Part 1 - Drawing the '@' symbol and moving it around"
 date: 2019-03-30T08:39:15-07:00
 draft: false
-aliases: /tutorials/tcod/part-1
 ---
 
 Welcome to part 1 of the **Roguelike Tutorial Revised**\! This series
@@ -17,7 +16,7 @@ guidance of those who wrote that tutorial, along with all the wonderful
 contributors to libtcod and python-tcod over the years.
 
 This part assumes that you have either checked [Part
-0](/tutorials/tcod/2019/part-0) and are already set up and ready to go. If
+0](../part-0) and are already set up and ready to go. If
 not, be sure to check that page, and make sure that you've got Python
 and TCOD installed, and a file called `engine.py` created in the
 directory that you want to work in.
@@ -567,6 +566,6 @@ here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part1).
 The files you'll want to check are `engine.py` and `input_handlers.py`
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/2019/part-2)
+tutorial.](../part-2)
 
 <script src="/js/codetabs.js"></script>

@@ -392,4 +392,4 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-4).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/v2/part-5)
+tutorial.](../part-5)

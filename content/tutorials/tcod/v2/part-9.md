@@ -1209,4 +1209,4 @@ With that, we've now got three different types of scrolls, and four types of con
 
 If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-9).
 
-[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-10)
+[Click here to move on to the next part of this tutorial.](../part-10)

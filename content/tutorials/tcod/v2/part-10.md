@@ -1753,4 +1753,4 @@ _The rest of the .gitignore is omitted, as your .gitignore file may look differe
 
 If you want to see the code so far in its entirety, [click here](https://github.com/TStand90/tcod_tutorial_v2/tree/2020/part-10).
 
-[Click here to move on to the next part of this tutorial.](/tutorials/tcod/v2/part-11)
+[Click here to move on to the next part of this tutorial.](../part-11)

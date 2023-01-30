@@ -2,7 +2,6 @@
 title: "Part 6 - Doing (and taking) some damage"
 date: 2019-03-30T09:33:50-07:00
 draft: false
-aliases: /tutorials/tcod/part-6
 ---
 
 The last part of this tutorial set us up for combat, so now it's time to
@@ -1432,6 +1431,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part6).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/2019/part-7)
+tutorial.](../part-7)
 
 <script src="/js/codetabs.js"></script>

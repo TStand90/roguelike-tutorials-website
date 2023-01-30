@@ -2,7 +2,6 @@
 title: "Part 4 - Field of View"
 date: 2019-03-30T09:33:44-07:00
 draft: false
-aliases: /tutorials/tcod/part-4
 ---
 
 We have a dungeon now, and we can move about it freely. But are we
@@ -490,6 +489,6 @@ If you want to see the code so far in its entirety, [click
 here](https://github.com/TStand90/roguelike_tutorial_revised/tree/part4).
 
 [Click here to move on to the next part of this
-tutorial.](/tutorials/tcod/2019/part-5)
+tutorial.](../part-5)
 
 <script src="/js/codetabs.js"></script>

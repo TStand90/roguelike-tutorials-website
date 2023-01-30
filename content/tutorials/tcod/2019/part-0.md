@@ -203,6 +203,6 @@ link there to the Discord channel as well.
 ### Ready to go?
 
 Once you're set up and ready to go, you can proceed to [Part
-1](/tutorials/tcod/2019/part-1).
+1](../part-1).
 
 <script src="/js/codetabs.js"></script>
