@@ -3,6 +3,8 @@ languageCode = "en-us"
 title = "Roguelike Tutorials"
 
 theme = "hugo-coder"
+
+pygmentsstyle = "monokai"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
@@ -36,8 +38,8 @@ pygmentscodefencesguesssyntax = true
   hidecredits = true
   hidecopyright = true
 
-  custom_css = ["css/style.css"]
-  custom_js = ["js/codetabs.js"]
+  customCSS = ["css/style.css"]
+  customJS = ["js/codetabs.js"]
 
   [params.sidebar]
     showRecent = false

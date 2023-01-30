@@ -1,6 +1,7 @@
 ---
 title: "About"
 draft: false
+aliases: /about
 ---
 
 ## Who is this tutorial for?

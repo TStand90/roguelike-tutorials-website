@@ -2,7 +2,6 @@
 title: "Welcome to the Roguelike Tutorial Revised"
 date: 2019-03-30T08:39:22-07:00
 draft: false
-aliases: /tutorials/tcod
 ---
 
 To get started with the old version of the TCOD tutorial, [click here](/tutorials/tcod/2019/).

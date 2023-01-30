@@ -2,7 +2,6 @@
 title: "Part 0 - Setting Up"
 date: 2019-03-30T09:53:48-07:00
 draft: false
-aliases: /tutorials/tcod/part-0
 ---
 
 #### Prior knowledge
