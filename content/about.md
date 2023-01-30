@@ -1,7 +1,6 @@
 ---
 title: "About"
 draft: false
-aliases: /about
 ---
 
 ## Who is this tutorial for?
@@ -34,9 +33,9 @@ On this website's [Github page](https://github.com/TStand90/roguelike-tutorials-
 
 This tutorial could not have happened without the help of the following people:
 
-* The authors and contributors to the [Roguebasin Python tutorial](http://www.roguebasin.com/index.php?title=Complete_Roguelike_Tutorial,_using_python%2Blibtcod). Without that tutorial, this one would never exist.
-* The people who have contributed to and maintained [libtcod](https://github.com/libtcod/libtcod) now and over the years. Without their hard work, so many wonderful roguelikes would not exist, and many of us would never have the ability to complete a game.
-* Everyone who has ever provided feedback on this tutorial and website. You are all kinder and more patient than I deserve.
-* All the participants in the yearly "Roguelikedev Does The Complete Roguelike Tutorial" series, year after year.
-* [/u/aaron_ds](https://www.reddit.com/user/aaron_ds/), for organizing said event.
-* [FractalWire](https://github.com/FractalWire) on Github, for doing the markdown conversion.
+-   The authors and contributors to the [Roguebasin Python tutorial](http://www.roguebasin.com/index.php?title=Complete_Roguelike_Tutorial,_using_python%2Blibtcod). Without that tutorial, this one would never exist.
+-   The people who have contributed to and maintained [libtcod](https://github.com/libtcod/libtcod) now and over the years. Without their hard work, so many wonderful roguelikes would not exist, and many of us would never have the ability to complete a game.
+-   Everyone who has ever provided feedback on this tutorial and website. You are all kinder and more patient than I deserve.
+-   All the participants in the yearly "Roguelikedev Does The Complete Roguelike Tutorial" series, year after year.
+-   [/u/aaron_ds](https://www.reddit.com/user/aaron_ds/), for organizing said event.
+-   [FractalWire](https://github.com/FractalWire) on Github, for doing the markdown conversion.

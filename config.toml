@@ -1,8 +1,8 @@
 baseURL = "https://rogueliketutorials.com/"
 languageCode = "en-us"
 title = "Roguelike Tutorials"
-
 theme = "hugo-coder"
+enableEmoji = true
 
 pygmentsstyle = "monokai"
 pygmentscodefences = true
@@ -18,15 +18,15 @@ pygmentscodefencesguesssyntax = true
     name = "Home"
     weight = 1
   [[languages.en.menu.main]]
-    url = "/tutorials/tcod/v2/"
+    url = "tutorials/tcod/v2/"
     name = "TCOD Tutorial (2020)"
     weight = 2
   [[languages.en.menu.main]]
-    url = "/tutorials/tcod/2019/"
+    url = "tutorials/tcod/2019/"
     name = "TCOD Tutorial (2019)"
     weight = 3
   [[languages.en.menu.main]]
-    url = "/about/"
+    url = "about/"
     name = "About"
     weight = 4
 
