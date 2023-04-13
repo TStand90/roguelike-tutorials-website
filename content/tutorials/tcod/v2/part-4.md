@@ -57,8 +57,8 @@ For that, we'll want a new `graphic_dt` in the `tile_dt` type, called `light`. W
 {{< highlight diff >}}
 tile_dt = np.dtype(
     [
-        ("walkable", np.bool),  # True if this tile can be walked over.
-        ("transparent", np.bool),  # True if this tile doesn't block FOV.
+        ("walkable", bool),  # True if this tile can be walked over.
+        ("transparent", bool),  # True if this tile doesn't block FOV.
         ("dark", graphic_dt),  # Graphics for when this tile is not in FOV.
 +       ("light", graphic_dt),  # Graphics for when the tile is in FOV.
     ]
@@ -99,8 +99,8 @@ wall = new_tile(
 {{< original-tab >}}
 <pre>tile_dt = np.dtype(
     [
-        ("walkable", np.bool),  # True if this tile can be walked over.
-        ("transparent", np.bool),  # True if this tile doesn't block FOV.
+        ("walkable", bool),  # True if this tile can be walked over.
+        ("transparent", bool),  # True if this tile doesn't block FOV.
         ("dark", graphic_dt),  # Graphics for when this tile is not in FOV.
         <span class="new-text">("light", graphic_dt),  # Graphics for when the tile is in FOV.</span>
     ]
@@ -144,8 +144,8 @@ Let's go through the new additions.
 ```py3
 tile_dt = np.dtype(
     [
-        ("walkable", np.bool),  # True if this tile can be walked over.
-        ("transparent", np.bool),  # True if this tile doesn't block FOV.
+        ("walkable", bool),  # True if this tile can be walked over.
+        ("transparent", bool),  # True if this tile doesn't block FOV.
         ("dark", graphic_dt),  # Graphics for when this tile is not in FOV.
         ("light", graphic_dt),  # Graphics for when the tile is in FOV.
     ]
